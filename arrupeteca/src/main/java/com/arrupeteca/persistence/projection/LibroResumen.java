@@ -44,7 +44,6 @@ public interface LibroResumen {
     @Value("#{target.obra?.obraAutores?.![ (tipoAutoria?.nombre ?: 'N/A') + ': ' + (autor?.nombre ?: autor?.seudonimo ?: 'Desconocido') ]}")
     List<String> getDetalleAutores();
 
-
     @Value("#{target.editorial?.nombre}")
     String getNombreEditorial();
 

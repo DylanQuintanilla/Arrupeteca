@@ -21,7 +21,7 @@ public class Nacionalidad {
     private Long id;
 
     @NotBlank(message = "El nombre no puede estar vacio")
-    @Size(message = "El nombreno puede exceder los 50 caracteres")
+    @Size(max = 50, message = "El nombreno puede exceder los 50 caracteres")
     @Column(length = 50, unique = true, nullable = false)
     private String nombre;
 

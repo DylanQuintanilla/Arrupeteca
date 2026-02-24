@@ -12,7 +12,7 @@ import org.mapstruct.ReportingPolicy;
  * * unmappedTargetPolicy = ReportingPolicy.IGNORE: Le dice a MapStruct que no lance
  * advertencias rojas por los campos que no mapeamos directamente (como el ID,
  * la Nacionalidad, la Auditoría, etc.), ya que esos los manejamos en el Service.
- */
+ **/
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface AutorMapper {
