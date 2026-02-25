@@ -26,14 +26,16 @@ public interface EditorialRepository extends JpaRepository<Editorial,Long> {
 
     @Modifying
     @Query("UPDATE Editorial e SET e.borradoLogico = true WHERE e.id = :id")
-    void desactivarEditorial(@Param("id") Long id);
+    void desactivar(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE Editorial e SET e.borradoLogico = false WHERE e.id = :id")
-    void activarEditorial(@Param("id") Long id);
+    void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    boolean existsByCorreoIgnoreCase(String correo);
 
 }

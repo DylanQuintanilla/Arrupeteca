@@ -1,6 +1,7 @@
 package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -36,5 +37,20 @@ public class AutorRequest {
     private Long idNacionalidad;
     private Long idGeneroPrincipal;
     private Long idObraCumbre;
+
+    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
+    public boolean isIdentidadValida() {
+        boolean tieneNombreCompleto = (nombre != null && !nombre.isBlank());
+        boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
+        return tieneNombreCompleto || tieneSeudonimo;
+    }
+
+    @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
+    public boolean isFechasValidas() {
+        if (anioNacimiento == null || anioFallecimiento == null) {
+            return true;
+        }
+        return anioNacimiento <= anioFallecimiento;
+    }
 
 }
