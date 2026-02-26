@@ -25,6 +25,9 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     List<PlantaResumen> findProjectedByEdificio_IdAndBorradoLogicoFalse(Long idEdificio);
 
     @EntityGraph(attributePaths = {"edificio"})
+    Optional<PlantaResumen> findProjectedById(Long id);
+
+    @EntityGraph(attributePaths = {"edificio"})
     List<PlantaResumen> findAllProjectedBy();
 
     @Modifying
@@ -35,9 +38,6 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     @Query("UPDATE Planta p SET p.borradoLogico = false WHERE p.id = :id")
     void activarPlanta(@Param("id") Long id);
 
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
-    // Verifica si ya existe una planta con ese nombre en ESE edificio
     boolean existsByNombreIgnoreCaseAndEdificio_Id(String nombre, Long idEdificio);
 
 }

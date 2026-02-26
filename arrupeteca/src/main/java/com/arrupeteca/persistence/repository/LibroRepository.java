@@ -98,11 +98,11 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
 
     @Modifying
     @Query("UPDATE Libro l SET l.borradoLogico = true WHERE l.id = :id")
-    void desactivarLibro(@Param("id") Long id);
+    void desactivar(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE Libro l SET l.borradoLogico = false WHERE l.id = :id")
-    void activarLibro(@Param("id") Long id);
+    void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
