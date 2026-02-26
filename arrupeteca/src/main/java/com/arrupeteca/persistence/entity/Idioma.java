@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,11 +18,13 @@ import java.util.List;
 @ToString
 @Entity
 @Table(name = "idioma")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Idioma {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_idioma")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Size(max = 50, message = "El nombre no puede ser mayor de 50 caracteres")
@@ -35,6 +39,6 @@ public class Idioma {
     @ToString.Exclude
     @ManyToMany(mappedBy = "idiomas", fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Libro> libros = new ArrayList<>();
+    private Set<Libro> libros = new HashSet<>();
 
 }

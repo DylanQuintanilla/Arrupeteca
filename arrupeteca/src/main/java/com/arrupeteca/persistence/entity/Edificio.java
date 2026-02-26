@@ -12,6 +12,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Entity
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Table(name = "edificio")
 
 public class Edificio {
@@ -19,6 +20,7 @@ public class Edificio {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_edificio")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre del edificio no puede estar vacío")

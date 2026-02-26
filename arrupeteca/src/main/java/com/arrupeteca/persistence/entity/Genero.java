@@ -6,7 +6,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -16,11 +18,13 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "genero")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Genero {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_genero")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre no puedo estar vacio")
@@ -35,6 +39,6 @@ public class Genero {
     @ToString.Exclude
     @ManyToMany(mappedBy = "generos", fetch = FetchType.LAZY)
     @Builder.Default
-    private List<Obra> obras = new ArrayList<>();
+    private Set<Obra> obras = new HashSet<>();
 
 }

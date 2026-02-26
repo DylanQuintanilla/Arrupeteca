@@ -13,11 +13,13 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "formato")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Formato {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_formato")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre del formato no puede ser vacio")

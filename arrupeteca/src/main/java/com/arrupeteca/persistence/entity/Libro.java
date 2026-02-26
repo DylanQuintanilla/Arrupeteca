@@ -9,7 +9,9 @@ import org.hibernate.validator.constraints.ISBN;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -19,11 +21,13 @@ import java.util.List;
 @Entity
 @Builder
 @Table(name = "libro")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Libro extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_libro")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @ISBN(message = "El ISBN no es valdio")
@@ -86,7 +90,7 @@ public class Libro extends Auditable {
             joinColumns = @JoinColumn(name = "id_libro"),
             inverseJoinColumns = @JoinColumn(name = "id_idioma")
     )
-    private List<Idioma> idiomas = new ArrayList<>();
+    private Set<Idioma> idiomas = new HashSet<>();
 
 
 }

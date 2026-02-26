@@ -1,7 +1,7 @@
 package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.validation.Valid; // ¡IMPORTANTE!
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -31,14 +32,13 @@ public class ObraRequest {
     private String resumen;
 
     @NotEmpty(message = "La obra debe tener al menos un género")
-    private List<Long> idGeneros;
+    private Set<Long> idGeneros;
 
     @NotEmpty(message = "Favor de elegir al menos una categoría para la obra")
-    private List<Long> idCategorias;
+    private Set<Long> idCategorias;
 
-    //Lista de objetos completo
     @NotEmpty(message = "La obra debe tener al menos un autor asociado")
-    @Valid //Muy importante
-    private List<ObraAutorRequest> autores;
+    @Valid
+    private Set<ObraAutorRequest> autores;
 
 }

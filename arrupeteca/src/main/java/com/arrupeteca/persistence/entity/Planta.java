@@ -18,11 +18,13 @@ import lombok.*;
                     columnNames = {"nombre", "id_edificio"}
             )
         })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Planta {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_planta")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre de la planta no puede estar vacío")

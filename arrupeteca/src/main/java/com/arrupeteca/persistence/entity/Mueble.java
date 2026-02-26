@@ -19,11 +19,13 @@ import lombok.*;
                 columnNames = {"nombre", "id_salon"}
         )
 })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Mueble {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_mueble")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre del mueble no puede estar vacío")

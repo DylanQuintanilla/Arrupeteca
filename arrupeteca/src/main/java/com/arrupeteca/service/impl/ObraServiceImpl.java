@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -20,19 +21,17 @@ public class ObraServiceImpl implements ObraService {
 
     private final ObraRepository obraRepository;
     private final ObraMapper obraMapper;
-    
+
     private final GeneroRepository generoRepository;
     private final CategoriaRepository categoriaRepository;
     private final AutorRepository autorRepository;
     private final TipoAutoriaRepository tipoAutoriaRepository;
 
-    // ==========================================
-    // 📖 LECTURAS SIMPLES
-    // ==========================================
 
     @Override
     @Transactional(readOnly = true)
     public List<ObraResumen> obtenerTodasActivas() {
+
         return obraRepository.findByBorradoLogicoFalse();
     }
 
@@ -46,6 +45,7 @@ public class ObraServiceImpl implements ObraService {
     @Override
     @Transactional(readOnly = true)
     public List<ObraResumen> obtenerTodas() {
+
         return obraRepository.findAllProjectedBy();
     }
 
@@ -56,9 +56,6 @@ public class ObraServiceImpl implements ObraService {
                 .orElseThrow(() -> new RuntimeException("No se encontró Obra con ID: " + id));
     }
 
-    // ==========================================
-    // 🔎 BÚSQUEDAS AVANZADAS
-    // ==========================================
 
     @Override
     @Transactional(readOnly = true)
@@ -76,21 +73,16 @@ public class ObraServiceImpl implements ObraService {
         return obraRepository.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, idAutor, termino, anioInicio, anioFin, sort);
     }
 
-    // ==========================================
-    // ✍️ ESCRITURAS (Con relaciones complejas)
-    // ==========================================
-
     @Override
     @Transactional
     public ObraResumen crear(ObraRequest request) {
-        // Validación de título único (Opcional, pero vi que pusiste el método en tu repositorio)
+
         if (obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
             throw new RuntimeException("Ya existe una obra registrada con el título: " + request.getTitulo());
         }
 
         Obra obraNueva = obraMapper.toEntity(request);
 
-        // Enganchar relaciones M:M y 1:M
         asignarGeneros(obraNueva, request.getIdGeneros());
         asignarCategorias(obraNueva, request.getIdCategorias());
         asignarAutores(obraNueva, request.getAutores());
@@ -105,7 +97,6 @@ public class ObraServiceImpl implements ObraService {
         Obra obraExistente = obraRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No se encontró Obra con ID: " + id));
 
-        // Validación de título único en actualización
         if (!obraExistente.getTitulo().equalsIgnoreCase(request.getTitulo()) &&
                 obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
             throw new RuntimeException("Ya existe otra obra registrada con el título: " + request.getTitulo());
@@ -113,7 +104,6 @@ public class ObraServiceImpl implements ObraService {
 
         obraMapper.updateEntity(request, obraExistente);
 
-        // Re-enganchar relaciones (Hibernate hará DELETE e INSERT automáticamente gracias al .clear())
         asignarGeneros(obraExistente, request.getIdGeneros());
         asignarCategorias(obraExistente, request.getIdCategorias());
         asignarAutores(obraExistente, request.getAutores());
@@ -135,11 +125,9 @@ public class ObraServiceImpl implements ObraService {
         }
     }
 
-    // ====================================================================
-    // 🛠️ MÉTODOS PRIVADOS DE APOYO
-    // ====================================================================
+    //--------------------
 
-    private void asignarGeneros(Obra obra, List<Long> idGeneros) {
+    private void asignarGeneros(Obra obra, Set<Long> idGeneros) {
         obra.getGeneros().clear();
         if (idGeneros != null && !idGeneros.isEmpty()) {
             List<Genero> generosEncontrados = generoRepository.findAllById(idGeneros);
@@ -150,7 +138,7 @@ public class ObraServiceImpl implements ObraService {
         }
     }
 
-    private void asignarCategorias(Obra obra, List<Long> idCategorias) {
+    private void asignarCategorias(Obra obra, Set<Long> idCategorias) {
         obra.getCategorias().clear();
         if (idCategorias != null && !idCategorias.isEmpty()) {
             List<Categoria> categoriasEncontradas = categoriaRepository.findAllById(idCategorias);
@@ -161,7 +149,7 @@ public class ObraServiceImpl implements ObraService {
         }
     }
 
-    private void asignarAutores(Obra obra, List<ObraAutorRequest> autoresRequest) {
+    private void asignarAutores(Obra obra, Set<ObraAutorRequest> autoresRequest) {
         // Obligatorio para orphanRemoval = true
         obra.getObraAutores().clear();
 
@@ -177,7 +165,7 @@ public class ObraServiceImpl implements ObraService {
                 ObraAutor nuevoEnlace = ObraAutor.builder()
                         .autor(autor)
                         .tipoAutoria(tipo)
-                        .obra(obra) // ¡Súper Importante: Relación Bidireccional!
+                        .obra(obra)
                         .borradoLogico(false)
                         .build();
 
@@ -186,7 +174,6 @@ public class ObraServiceImpl implements ObraService {
         }
     }
 
-    // Traductor dinámico de ordenamiento
     private Sort construirSort(String ordenarPor, String direccion) {
         String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "titulo" : ordenarPor;
         Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))

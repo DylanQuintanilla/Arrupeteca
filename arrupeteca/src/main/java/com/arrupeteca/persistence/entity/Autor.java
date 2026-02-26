@@ -15,11 +15,13 @@ import lombok.*;
 @Entity
 @Builder
 @Table(name = "autor")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Autor extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_autor")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")

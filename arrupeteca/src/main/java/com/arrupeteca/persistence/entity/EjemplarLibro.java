@@ -16,11 +16,13 @@ import lombok.*;
 @Entity
 @Builder
 @Table(name = "ejemplar_libro")//AGREGAR EL FK DE DONACION MAS ADELANTE
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class EjemplarLibro extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ejemplar_libro")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Size(message = "El comentario no puede exceder los 255 caracteres")

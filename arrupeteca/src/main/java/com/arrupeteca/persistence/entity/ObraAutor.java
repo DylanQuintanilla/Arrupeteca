@@ -16,10 +16,12 @@ import lombok.*;
                 columnNames = {"id_obra", "id_autor", "id_tipo_autoria"}
         )
 })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ObraAutor {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotNull

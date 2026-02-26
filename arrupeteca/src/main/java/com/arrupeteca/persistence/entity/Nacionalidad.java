@@ -13,11 +13,13 @@ import lombok.*;
 @Entity
 @Builder
 @Table(name = "nacionalidad")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Nacionalidad {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_nacionalidad")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre no puede estar vacio")

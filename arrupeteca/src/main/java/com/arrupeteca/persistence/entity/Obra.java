@@ -8,7 +8,9 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -18,11 +20,13 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "obra")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Obra extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_obra")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El titulo no puede estas vacio")
@@ -51,7 +55,7 @@ public class Obra extends Auditable {
             joinColumns = @JoinColumn(name = "id_obra"),
             inverseJoinColumns = @JoinColumn(name = "id_genero")
     )
-    private List<Genero> generos = new ArrayList<>();
+    private Set<Genero> generos = new HashSet<>();
 
     @NotEmpty(message = "Favor de elegir categoria para la obra")
     @ToString.Exclude
@@ -62,11 +66,11 @@ public class Obra extends Auditable {
             joinColumns = @JoinColumn(name = "id_obra"),
             inverseJoinColumns = @JoinColumn(name = "id_categoria")
     )
-    private List<Categoria> categorias = new ArrayList<>();
+    private Set<Categoria> categorias = new HashSet<>();
 
     @ToString.Exclude
     @Builder.Default
     @OneToMany(mappedBy = "obra", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ObraAutor> obraAutores = new ArrayList<>();
+    private Set<ObraAutor> obraAutores = new HashSet<>();
 
 }

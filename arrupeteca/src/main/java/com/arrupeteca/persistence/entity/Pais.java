@@ -13,11 +13,13 @@ import lombok.*;
 @Entity
 @Builder
 @Table(name = "pais")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Pais {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_pais")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @Size(max = 50, message = "El nombre no puede exceder los 50 caracteres")

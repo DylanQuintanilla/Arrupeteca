@@ -15,11 +15,13 @@ import lombok.*;
 @Builder
 @Entity
 @Table(name = "editorial")
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Editorial {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_editorial")
+    @EqualsAndHashCode.Include
     private Long id;
 
     @NotBlank(message = "El nombre de la editorial no puede estar vacia")
