@@ -22,10 +22,6 @@ public class EjemplarLibroController {
 
     private final EjemplarLibroService ejemplarLibroService;
 
-    // ==========================================
-    // 🟢 ENDPOINTS PÚBLICOS
-    // ==========================================
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<EjemplarLibroResumen>>> obtenerTodosActivos() {
         return ResponseEntity.ok(ApiResponse.exito("Lista de ejemplares activos", ejemplarLibroService.obtenerTodosActivos()));
@@ -36,8 +32,6 @@ public class EjemplarLibroController {
         return ResponseEntity.ok(ApiResponse.exito("Ejemplar encontrado", ejemplarLibroService.obtenerPorIdActivo(id)));
     }
 
-    // 🚀 ENDPOINT EXTRA: Saber cuántos hay disponibles
-    // Ejemplo: /api/v1/ejemplares/conteo?idLibro=5&disponibilidad=DISPONIBLE
     @GetMapping("/conteo")
     public ResponseEntity<ApiResponse<Long>> contarEjemplares(
             @RequestParam Long idLibro,
@@ -57,10 +51,6 @@ public class EjemplarLibroController {
         List<EjemplarLibroResumen> resultados = ejemplarLibroService.busquedaGlobalAvanzada(palabra, ordenarPor, direccion);
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", resultados));
     }
-
-    // ==========================================
-    // 📝 GESTIÓN
-    // ==========================================
 
     @PostMapping
     public ResponseEntity<ApiResponse<EjemplarLibroResumen>> crear(@Valid @RequestBody EjemplarLibroRequest request) {
@@ -88,9 +78,6 @@ public class EjemplarLibroController {
         return ResponseEntity.ok(ApiResponse.exito("Ejemplar reactivado"));
     }
 
-    // ==========================================
-    // 🕵️ ZONA ADMIN (Búsqueda Maestra)
-    // ==========================================
 
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<List<EjemplarLibroResumen>>> obtenerTodosAdmin() {
@@ -102,7 +89,6 @@ public class EjemplarLibroController {
         return ResponseEntity.ok(ApiResponse.exito("Detalle de ejemplar (Admin)", ejemplarLibroService.obtenerPorId(id)));
     }
 
-    // 📊 BÚSQUEDA MAESTRA MULTI-FILTRO
     @GetMapping("/admin/busqueda-maestra")
     public ResponseEntity<ApiResponse<List<EjemplarLibroResumen>>> busquedaMaestra(
             @RequestParam(required = false) Boolean esBorrado,

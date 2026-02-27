@@ -19,6 +19,7 @@ public class MuebleServiceImpl implements MuebleService {
 
     private final MuebleMapper muebleMapper;
     private final MuebleRepository muebleRepository;
+
     private final SalonRepository salonRepository;
 
     @Override

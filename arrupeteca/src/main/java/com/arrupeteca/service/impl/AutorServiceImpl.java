@@ -117,7 +117,7 @@ public class AutorServiceImpl implements AutorService {
         else autorRepository.desactivarAutor(id);
     }
 
-    // 🛠️ Metodos de apoyo
+    // -----------------------------
 
     private void asignarRelaciones(Autor autor, AutorRequest request) {
         if (request.getIdPaisNacimiento() != null) {

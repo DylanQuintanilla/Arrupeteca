@@ -20,10 +20,6 @@ public class ObraController {
 
     private final ObraService obraService;
 
-    // ==========================================
-    // 🟢 ENDPOINTS PÚBLICOS
-    // ==========================================
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<ObraResumen>>> obtenerTodasActivas() {
         return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", obraService.obtenerTodasActivas()));
@@ -34,8 +30,6 @@ public class ObraController {
         return ResponseEntity.ok(ApiResponse.exito("Obra encontrada", obraService.obtenerPorIdActivo(id)));
     }
 
-    // 🔍 BÚSQUEDA TIPO GOOGLE (Para usuarios normales)
-    // Ejemplo: /api/v1/obras/busqueda?palabra=Harry
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<List<ObraResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
@@ -45,10 +39,6 @@ public class ObraController {
         List<ObraResumen> resultados = obraService.busquedaGlobalAvanzada(palabra, ordenarPor, direccion);
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", resultados));
     }
-
-    // ==========================================
-    // 📝 GESTIÓN
-    // ==========================================
 
     @PostMapping
     public ResponseEntity<ApiResponse<ObraResumen>> crear(@Valid @RequestBody ObraRequest request) {
@@ -76,10 +66,6 @@ public class ObraController {
         return ResponseEntity.ok(ApiResponse.exito("Obra activada correctamente"));
     }
 
-    // ==========================================
-    // 🕵️ ZONA ADMIN (Búsqueda Maestra)
-    // ==========================================
-
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<List<ObraResumen>>> obtenerTodasAdmin() {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de obras", obraService.obtenerTodas()));
@@ -90,7 +76,6 @@ public class ObraController {
         return ResponseEntity.ok(ApiResponse.exito("Detalle de obra (Admin)", obraService.obtenerPorId(id)));
     }
 
-    // 📊 BÚSQUEDA MAESTRA MULTI-FILTRO
     @GetMapping("/admin/busqueda-maestra")
     public ResponseEntity<ApiResponse<List<ObraResumen>>> busquedaMaestra(
             @RequestParam(required = false) Boolean esBorrado,

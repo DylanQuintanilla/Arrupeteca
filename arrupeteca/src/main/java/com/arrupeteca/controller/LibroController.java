@@ -22,10 +22,6 @@ public class LibroController {
 
     private final LibroService libroService;
 
-    // ==========================================
-    // 🟢 ENDPOINTS PÚBLICOS
-    // ==========================================
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<LibroResumen>>> obtenerTodosActivos() {
         return ResponseEntity.ok(ApiResponse.exito("Lista de libros activos", libroService.obtenerTodosActivos()));
@@ -36,7 +32,6 @@ public class LibroController {
         return ResponseEntity.ok(ApiResponse.exito("Libro encontrado", libroService.obtenerPorIdActivo(id)));
     }
 
-    // 🔍 BÚSQUEDA TIPO GOOGLE
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<List<LibroResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
@@ -46,10 +41,6 @@ public class LibroController {
         List<LibroResumen> resultados = libroService.busquedaGlobalAvanzada(palabra, ordenarPor, direccion);
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", resultados));
     }
-
-    // ==========================================
-    // 📝 GESTIÓN
-    // ==========================================
 
     @PostMapping
     public ResponseEntity<ApiResponse<LibroResumen>> crear(@Valid @RequestBody LibroRequest request) {
@@ -77,10 +68,6 @@ public class LibroController {
         return ResponseEntity.ok(ApiResponse.exito("Libro activado correctamente"));
     }
 
-    // ==========================================
-    // 🕵️ ZONA ADMIN (Búsqueda Maestra)
-    // ==========================================
-
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<List<LibroResumen>>> obtenerTodosAdmin() {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de libros", libroService.obtenerTodos()));
@@ -91,7 +78,6 @@ public class LibroController {
         return ResponseEntity.ok(ApiResponse.exito("Detalle de libro (Admin)", libroService.obtenerPorId(id)));
     }
 
-    // 📊 BÚSQUEDA MAESTRA MULTI-FILTRO
     @GetMapping("/admin/busqueda-maestra")
     public ResponseEntity<ApiResponse<List<LibroResumen>>> busquedaMaestra(
             @RequestParam(required = false) Boolean esBorrado,
