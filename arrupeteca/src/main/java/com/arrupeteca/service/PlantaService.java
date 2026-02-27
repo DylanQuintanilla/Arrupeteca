@@ -1,6 +1,7 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.PlantaRequest;
+import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.projection.PlantaResumen;
 
 import java.util.List;

@@ -96,6 +96,17 @@ public class PlantaServiceImpl implements PlantaService {
         }
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<PlantaResumen> obtenerPorIdEdificio(Long idEdificio) {
+
+        if(!edificioRepository.existsById(idEdificio)){
+            throw new RuntimeException("No existe un edificio con ID: "+idEdificio);
+        }
+
+        return plantaRepository.findProjectedByEdificio_IdAndBorradoLogicoFalse(idEdificio);
+    }
+
     //------------------
 
     private void asignarRelaciones(Planta planta, PlantaRequest request) {

@@ -33,9 +33,6 @@ public interface MuebleRepository extends JpaRepository<Mueble, Long> {
     @Query("UPDATE Mueble m SET m.borradoLogico = false WHERE m.id = :id")
     void activarMueble(@Param("id") Long id);
 
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
-    // Verifica si ya existe un mueble con ese nombre en ESE salón
     boolean existsByNombreIgnoreCaseAndSalon_Id(String nombre, Long idSalon);
 
 }

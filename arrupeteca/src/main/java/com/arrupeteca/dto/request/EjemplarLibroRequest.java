@@ -17,5 +17,17 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EjemplarLibroRequest {
 
+    @Size(message = "El comentario no puede exceder los 255 caracteres")
+    private String comentario;
+
+    private EstadoFisico estadoFisico;
+
+    private Disponibilidad disponibilidad;
+
+    @NotNull(message = "Se debe elegir un libro")
+    private Long idLibro;
+
+    @NotNull(message = "Por favor ingresar donde se econtrara el ejemplar")
+    private Long idMueble;
 
 }

@@ -98,15 +98,11 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
 
     @Modifying
     @Query("UPDATE EjemplarLibro el SET el.borradoLogico = true WHERE el.id = :id")
-    void desactivarEjemplar(@Param("id") Long id);
+    void desactivar(@Param("id") Long id);
 
     @Modifying
     @Query("UPDATE EjemplarLibro el SET el.borradoLogico = false WHERE el.id = :id")
-    void activarEjemplar(@Param("id") Long id);
+    void activar(@Param("id") Long id);
 
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
-    //Dice cuantos ejemplares reales tienes disponibles en los estantes de un libro
     long countByLibro_IdAndDisponibilidadAndBorradoLogicoFalse(Long idLibro, Disponibilidad disponibilidad);
-
 }
