@@ -70,7 +70,7 @@ public class FormatoServiceImpl implements FormatoService {
 
         if (!FormatoEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
                 && formatoRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un genero con el nombre: "+request.getNombre());
+            throw new RuntimeException("Ya existe un Formato con el nombre: "+request.getNombre());
         }
 
         formatoMapper.updateEntity(request, FormatoEncontrada);

@@ -70,7 +70,7 @@ public class IdiomaServiceImpl implements IdiomaService {
 
         if (!IdiomaEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
                 && idiomaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un genero con el nombre: "+request.getNombre());
+            throw new RuntimeException("Ya existe un Idioma con el nombre: "+request.getNombre());
         }
 
         idiomaMapper.updateEntity(request, IdiomaEncontrada);

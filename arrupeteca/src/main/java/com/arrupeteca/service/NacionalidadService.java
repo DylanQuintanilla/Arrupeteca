@@ -15,9 +15,9 @@ public interface NacionalidadService {
 
     NacionalidadResumen obtenerPorId(Long id);
 
-    NacionalidadResumen crearNacionalidad(NacionalidadRequest request);
+    NacionalidadResumen crear(NacionalidadRequest request);
 
-    NacionalidadResumen actualizarNacionalidad(Long id, NacionalidadRequest request);
+    NacionalidadResumen actualizar(Long id, NacionalidadRequest request);
 
     void cambiarEstadoLogico(Long id, boolean activar);
 

@@ -48,7 +48,7 @@ public class NacionalidadServiceImpl implements NacionalidadService {
 
     @Override
     @Transactional
-    public NacionalidadResumen crearNacionalidad(NacionalidadRequest request) {
+    public NacionalidadResumen crear(NacionalidadRequest request) {
         if (nacionalidadRepository.existsByNombreIgnoreCase(request.getNombre())) {
             throw new RuntimeException("Ya existe una nacionalidad con el nombre: " + request.getNombre());
         }
@@ -61,7 +61,7 @@ public class NacionalidadServiceImpl implements NacionalidadService {
 
     @Override
     @Transactional
-    public NacionalidadResumen actualizarNacionalidad(Long id, NacionalidadRequest request) {
+    public NacionalidadResumen actualizar(Long id, NacionalidadRequest request) {
         Nacionalidad nacionalidadExistente = nacionalidadRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("La nacionalidad con ID " + id + " no existe"));
 

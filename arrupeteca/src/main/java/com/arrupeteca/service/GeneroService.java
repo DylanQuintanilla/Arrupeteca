@@ -17,7 +17,7 @@ public interface GeneroService {
 
     GeneroResumen crear(GeneroRequest request);
 
-    GeneroResumen actuaizar(Long id, GeneroRequest request);
+    GeneroResumen actualizar(Long id, GeneroRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 

@@ -61,7 +61,7 @@ public class GeneroServiceImpl implements GeneroService {
 
     @Override
     @Transactional
-    public GeneroResumen actuaizar(Long id, GeneroRequest request) {
+    public GeneroResumen actualizar(Long id, GeneroRequest request) {
         Genero generoExistente = generoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No existe un genero con el ID: "+id));
 

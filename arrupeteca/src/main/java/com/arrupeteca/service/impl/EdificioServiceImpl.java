@@ -70,7 +70,7 @@ public class EdificioServiceImpl implements EdificioService {
 
         if (!EdificioEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
                 && edificioRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un genero con el nombre: "+request.getNombre());
+            throw new RuntimeException("Ya existe un Edificio con el nombre: "+request.getNombre());
         }
 
         edificioMapper.updateEntity(request, EdificioEncontrada);
