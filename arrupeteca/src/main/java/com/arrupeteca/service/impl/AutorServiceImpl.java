@@ -7,6 +7,9 @@ import com.arrupeteca.persistence.projection.AutorResumen;
 import com.arrupeteca.persistence.repository.*;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,8 +31,9 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResumen> obtenerTodosActivos() {
-        return autorRepository.findByBorradoLogicoFalse();
+    public Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return autorRepository.findByBorradoLogicoFalse(pageable);
     }
 
     @Override
@@ -41,8 +45,9 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResumen> obtenerTodos() {
-        return autorRepository.findAllProjectedBy();
+    public Page<AutorResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return autorRepository.findAllProjectedBy(pageable);
     }
 
     @Override
@@ -52,26 +57,33 @@ public class AutorServiceImpl implements AutorService {
                 .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
     }
 
-
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin, String ordenarPor, String direccion) {
-        Sort sort = construirSort(ordenarPor, direccion);
-        return autorRepository.busquedaGlobalAvanzada(palabra, inicio, fin, sort);
+    public Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin,
+                                                     int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return autorRepository.busquedaGlobalAvanzada(palabra, inicio, fin, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObra, String terminoBusqueda, Integer anioInicio, Integer anioFin, String ordenarPor, String direccion) {
-        Sort sort = construirSort(ordenarPor, direccion);
-        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra, terminoBusqueda, anioInicio, anioFin, sort);
+    public Page<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
+                                                   Long idGenero, Long idObra, String terminoBusqueda,
+                                                   Integer anioInicio, Integer anioFin,
+                                                   int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
+                terminoBusqueda, anioInicio, anioFin, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin) {
-        return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin);
+    public Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin,
+                                                        int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin, pageable);
     }
+
 
     @Override
     @Transactional
@@ -93,7 +105,6 @@ public class AutorServiceImpl implements AutorService {
         Autor autorExistente = autorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
 
-        // Validación de seudónimo (solo si le cambia el nombre y no es nulo)
         if (request.getSeudonimo() != null &&
                 (autorExistente.getSeudonimo() == null || !autorExistente.getSeudonimo().equalsIgnoreCase(request.getSeudonimo())) &&
                 autorRepository.existsBySeudonimoIgnoreCase(request.getSeudonimo())) {
@@ -149,14 +160,18 @@ public class AutorServiceImpl implements AutorService {
         }
     }
 
-    private Sort construirSort(String ordenarPor, String direccion) {
+    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
 
         String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
 
-        Sort.Direction direction = (direccion != null
-                && direccion.equalsIgnoreCase("DESC"))
+        if ("pais".equalsIgnoreCase(campoOrden)) campoOrden = "paisNacimiento.nombre";
+        if ("nacionalidad".equalsIgnoreCase(campoOrden)) campoOrden = "nacionalidad.nombre";
+
+        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
 
-        return Sort.by(direction, campoOrden);
+        Sort sort = Sort.by(direction, campoOrden);
+
+        return PageRequest.of(page, size, sort);
     }
 }

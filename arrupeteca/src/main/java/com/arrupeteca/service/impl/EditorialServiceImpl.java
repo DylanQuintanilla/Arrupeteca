@@ -8,6 +8,10 @@ import com.arrupeteca.persistence.projection.EditorialResumen;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.service.EditorialService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,9 +27,10 @@ public class EditorialServiceImpl implements EditorialService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EditorialResumen> obtenerTodosActivos() {
+    public Page<EditorialResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
 
-        return editorialRepository.findByBorradoLogicoFalse();
+        Pageable pageable = construirPageable(page,size,ordenarPor,direccion);
+        return editorialRepository.findByBorradoLogicoFalse(pageable);
     }
 
     @Override
@@ -37,8 +42,9 @@ public class EditorialServiceImpl implements EditorialService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<EditorialResumen> obtenerTodos() {
-        return editorialRepository.findAllProjectedBy();
+    public Page<EditorialResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page,size,ordenarPor,direccion);
+        return editorialRepository.findAllProjectedBy(pageable);
     }
 
     @Override
@@ -47,6 +53,13 @@ public class EditorialServiceImpl implements EditorialService {
         return editorialRepository.findProjectedById(id)
                 .orElseThrow(() -> new RuntimeException("No se encontro una Editorial con ID: "+id));
 
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return editorialRepository.busquedaMaestraAdmin(esBorrado, termino, pageable);
     }
 
     @Override
@@ -96,5 +109,19 @@ public class EditorialServiceImpl implements EditorialService {
             editorialRepository.activar(id);
         else
             editorialRepository.desactivar(id);
+    }
+
+    //----------------------------------------
+
+    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion){
+
+        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
+
+        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
+                ? Sort.Direction.DESC : Sort.Direction.ASC;
+
+        Sort sort = Sort.by(direction, campoOrden);
+
+        return PageRequest.of(page, size, sort);
     }
 }

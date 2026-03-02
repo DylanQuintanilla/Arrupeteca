@@ -11,11 +11,12 @@ import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.MuebleRepository;
 import com.arrupeteca.service.EjemplarLibroService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,128 +24,116 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     private final EjemplarLibroRepository ejemplarLibroRepository;
     private final EjemplarLibroMapper ejemplarLibroMapper;
-
     private final LibroRepository libroRepository;
     private final MuebleRepository muebleRepository;
 
     @Override
     @Transactional(readOnly = true)
-    public List<EjemplarLibroResumen> obtenerTodosActivos() {
-        return ejemplarLibroRepository.findByBorradoLogicoFalse();
+    public Page<EjemplarLibroResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return ejemplarLibroRepository.findByBorradoLogicoFalse(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public EjemplarLibroResumen obtenerPorIdActivo(Long id) {
         return ejemplarLibroRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No está activo el ejemplar con el ID: " + id));
+                .orElseThrow(() -> new RuntimeException("No se encontró Ejemplar activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EjemplarLibroResumen> busquedaGlobalAvanzada(String palabra, String ordenarPor, String direccion) {
-        Sort sort = construirSort(ordenarPor, direccion);
-        return ejemplarLibroRepository.busquedaGlobalAvanzada(palabra, sort);
+    public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return ejemplarLibroRepository.busquedaGlobal(palabra, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EjemplarLibroResumen> obtenerTodos() {
-        return ejemplarLibroRepository.findAllProjectedBy();
+    public Page<EjemplarLibroResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+        return ejemplarLibroRepository.findAllProjectedBy(pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public EjemplarLibroResumen obtenerPorId(Long id) {
         return ejemplarLibroRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró el ejemplar con el ID: " + id));
+                .orElseThrow(() -> new RuntimeException("No se encontró Ejemplar con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EjemplarLibroResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idLibro, Long idMueble, EstadoFisico estadoFisico,
-                                                           Disponibilidad disponibilidad, String termino, String ordenarPor,
-                                                           String direccion) {
-        Sort sort = construirSort(ordenarPor, direccion);
-        return ejemplarLibroRepository.busquedaMaestraAdmin(esBorrado, idLibro, idMueble, estadoFisico, disponibilidad, termino, sort);
+    public Page<EjemplarLibroResumen> busquedaMaestraAdmin(
+            Boolean esBorrado, Long idLibro, Long idMueble, String estadoFisicoStr, String disponibilidadStr,
+            String termino, int page, int size, String ordenarPor, String direccion) {
+
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+
+        EstadoFisico estadoFisico = (estadoFisicoStr != null && !estadoFisicoStr.isEmpty())
+                ? EstadoFisico.valueOf(estadoFisicoStr) : null;
+
+        Disponibilidad disponibilidad = (disponibilidadStr != null && !disponibilidadStr.isEmpty())
+                ? Disponibilidad.valueOf(disponibilidadStr) : null;
+
+        return ejemplarLibroRepository.busquedaMaestraAdmin(esBorrado, idLibro, idMueble, estadoFisico,
+                disponibilidad, termino, pageable);
     }
 
     @Override
     @Transactional
     public EjemplarLibroResumen crear(EjemplarLibroRequest request) {
-        EjemplarLibro ejemplarLibroCreado = ejemplarLibroMapper.toEntity(request);
-        asignarRelaciones(ejemplarLibroCreado, request);
-
-        EjemplarLibro ejemplarLibroGuardado = ejemplarLibroRepository.save(ejemplarLibroCreado);
-        return obtenerPorId(ejemplarLibroGuardado.getId());
+        EjemplarLibro nuevo = ejemplarLibroMapper.toEntity(request);
+        asignarRelaciones(nuevo, request);
+        EjemplarLibro guardado = ejemplarLibroRepository.save(nuevo);
+        return obtenerPorId(guardado.getId());
     }
 
     @Override
     @Transactional
     public EjemplarLibroResumen actualizar(Long id, EjemplarLibroRequest request) {
-        EjemplarLibro ejemplarLibroEncontrado = ejemplarLibroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró un ejemplar con ID: " + id));
+        EjemplarLibro existente = ejemplarLibroRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("No se encontró Ejemplar con ID: " + id));
 
-        ejemplarLibroMapper.updateEntity(request, ejemplarLibroEncontrado);
+        ejemplarLibroMapper.updateEntity(request, existente);
+        asignarRelaciones(existente, request);
 
-        asignarRelaciones(ejemplarLibroEncontrado, request);
-
-        EjemplarLibro ejemplarLibroActualizado = ejemplarLibroRepository.save(ejemplarLibroEncontrado);
-        return obtenerPorId(ejemplarLibroActualizado.getId());
+        EjemplarLibro actualizado = ejemplarLibroRepository.save(existente);
+        return obtenerPorId(actualizado.getId());
     }
 
     @Override
     @Transactional
-    public void cambiarBorradoLogico(Long id, Boolean estado) {
-        if (!ejemplarLibroRepository.existsById(id)){
-            throw new RuntimeException("No se encontró un ejemplar con ID: " + id);
+    public void cambiarEstado(Long id, boolean estado) {
+        if (!ejemplarLibroRepository.existsById(id)) {
+            throw new RuntimeException("No se encontró Ejemplar con ID: " + id);
         }
+        if (estado) ejemplarLibroRepository.activar(id);
+        else ejemplarLibroRepository.desactivar(id);
+    }
 
-        if(estado){
-            ejemplarLibroRepository.activar(id);
-        } else {
-            ejemplarLibroRepository.desactivar(id);
+    private void asignarRelaciones(EjemplarLibro ejemplar, EjemplarLibroRequest request) {
+        if (request.getIdLibro() != null) {
+            ejemplar.setLibro(libroRepository.findById(request.getIdLibro())
+                    .orElseThrow(() -> new RuntimeException("El Libro indicado no existe")));
+        }
+        if (request.getIdMueble() != null) {
+            ejemplar.setMueble(muebleRepository.findById(request.getIdMueble())
+                    .orElseThrow(() -> new RuntimeException("El Mueble indicado no existe")));
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public Long cantidadEjemplaresActivosPorIdLibroYDisponibilidad(Long idLibro, Disponibilidad disponibilidad) {
-        return ejemplarLibroRepository.countByLibro_IdAndDisponibilidadAndBorradoLogicoFalse(idLibro, disponibilidad);
-    }
+    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
+        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "id" : ordenarPor;
 
-    //---------------
-
-    private Sort construirSort(String ordenarPor, String direccion) {
-        String campoOrden = "libro.obra.titulo";
-
-        if (ordenarPor != null && !ordenarPor.trim().isEmpty()) {
-            if (ordenarPor.equalsIgnoreCase("titulo")) {
-                campoOrden = "libro.obra.titulo";
-            } else if (ordenarPor.equalsIgnoreCase("editorial")) {
-                campoOrden = "libro.editorial.nombre";
-            } else if (ordenarPor.equalsIgnoreCase("ubicacion")) {
-                campoOrden = "mueble.nombre";
-            } else {
-                campoOrden = ordenarPor;
-            }
-        }
+        if ("libro".equalsIgnoreCase(campoOrden)) campoOrden = "libro.obra.titulo";
+        if ("mueble".equalsIgnoreCase(campoOrden)) campoOrden = "mueble.nombre";
+        if ("isbn".equalsIgnoreCase(campoOrden)) campoOrden = "libro.isbn";
 
         Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
 
-        return Sort.by(direction, campoOrden);
-    }
-
-    private void asignarRelaciones(EjemplarLibro ejemplarLibro, EjemplarLibroRequest request){
-        if (request.getIdLibro() != null){
-            ejemplarLibro.setLibro(libroRepository.findById(request.getIdLibro())
-                    .orElseThrow(() -> new RuntimeException("No se encontró un Libro con ID: " + request.getIdLibro())));
-        }
-
-        if (request.getIdMueble() != null){
-            ejemplarLibro.setMueble(muebleRepository.findById(request.getIdMueble())
-                    .orElseThrow(() -> new RuntimeException("No se encontró un Mueble con ID: " + request.getIdMueble())));
-        }
+        Sort sort = Sort.by(direction, campoOrden);
+        return PageRequest.of(page, size, sort);
     }
 }
