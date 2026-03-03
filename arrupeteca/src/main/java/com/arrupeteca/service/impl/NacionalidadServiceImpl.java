@@ -13,10 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor //Crea la inyeccion por constructor de manera automatica
+@RequiredArgsConstructor
 public class NacionalidadServiceImpl implements NacionalidadService {
 
-    //Obliga si o si poner final
     private final NacionalidadRepository nacionalidadRepository;
     private final NacionalidadMapper nacionalidadMapper;
 
