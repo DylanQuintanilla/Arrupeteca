@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -172,4 +173,22 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
     Page<AutorResumen> buscarAutoresVivosEnRango(@Param("inicio") Integer anioInicio,
                                                  @Param("fin") Integer anioFin,
                                                  Pageable pageable);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("""
+    SELECT a FROM Autor a
+    WHERE 
+        (
+           LOWER(a.nombre) = LOWER(:termino) 
+           OR 
+           LOWER(a.seudonimo) = LOWER(:termino)
+        )
+        AND (:idExcluir IS NULL OR a.id <> :idExcluir)
+        AND a.borradoLogico = false
+""")
+    List<AutorResumen> buscarPosiblesDuplicados(
+            @Param("termino") String termino,
+            @Param("idExcluir") Long idExcluir
+    );
+
 }

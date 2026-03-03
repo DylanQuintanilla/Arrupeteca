@@ -1,8 +1,9 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
-import com.arrupeteca.persistence.entity.Autor;
+import com.arrupeteca.persistence.entity.*;
 import com.arrupeteca.persistence.projection.AutorResumen;
 import com.arrupeteca.persistence.repository.*;
 import com.arrupeteca.service.AutorService;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -27,7 +29,6 @@ public class AutorServiceImpl implements AutorService {
     private final NacionalidadRepository nacionalidadRepository;
     private final GeneroRepository generoRepository;
     private final ObraRepository obraRepository;
-
 
     @Override
     @Transactional(readOnly = true)
@@ -84,16 +85,27 @@ public class AutorServiceImpl implements AutorService {
         return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin, pageable);
     }
 
-
     @Override
     @Transactional
     public AutorResumen crear(AutorRequest request) {
-        if (request.getSeudonimo() != null && autorRepository.existsBySeudonimoIgnoreCase(request.getSeudonimo())) {
-            throw new RuntimeException("El seudónimo " + request.getSeudonimo() + " ya está en uso.");
+
+        List<String> errores = new ArrayList<>();
+
+        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
+            request.setSeudonimo("Seudonimo Desconocido");
+        }
+
+        if(request.getNombre() == null || request.getNombre().isBlank()){
+            request.setSeudonimo("Nombre Desconocido");
         }
 
         Autor autorNuevo = autorMapper.toEntity(request);
-        asignarRelaciones(autorNuevo, request);
+
+        validarYAsignarRelaciones(autorNuevo, request, errores);
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
 
         Autor autorGuardado = autorRepository.save(autorNuevo);
         return obtenerPorId(autorGuardado.getId());
@@ -102,17 +114,27 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional
     public AutorResumen actualizar(Long id, AutorRequest request) {
+
         Autor autorExistente = autorRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
 
-        if (request.getSeudonimo() != null &&
-                (autorExistente.getSeudonimo() == null || !autorExistente.getSeudonimo().equalsIgnoreCase(request.getSeudonimo())) &&
-                autorRepository.existsBySeudonimoIgnoreCase(request.getSeudonimo())) {
-            throw new RuntimeException("El seudónimo " + request.getSeudonimo() + " ya está en uso por otro autor.");
+        List<String> errores = new ArrayList<>();
+
+        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
+            request.setSeudonimo("Seudonimo Desconocido");
+        }
+
+        if(request.getNombre() == null || request.getNombre().isBlank()){
+            request.setSeudonimo("Nombre Desconocido");
         }
 
         autorMapper.updateEntity(request, autorExistente);
-        asignarRelaciones(autorExistente, request);
+
+        validarYAsignarRelaciones(autorExistente, request, errores);
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
 
         Autor autorActualizado = autorRepository.save(autorExistente);
         return obtenerPorId(autorActualizado.getId());
@@ -128,40 +150,62 @@ public class AutorServiceImpl implements AutorService {
         else autorRepository.desactivarAutor(id);
     }
 
-    // -----------------------------
+    @Override
+    @Transactional(readOnly = true)
+    public List<AutorResumen> verificarDuplicados(String termino, Long idExcluir) {
+        if (termino == null || termino.isBlank()
+                || termino.trim().equalsIgnoreCase("Seudonimo Desconocido")
+                || termino.trim().equalsIgnoreCase("Nombre Desconocido")) {
+            return List.of();
+        }
 
-    private void asignarRelaciones(Autor autor, AutorRequest request) {
+        return autorRepository.buscarPosiblesDuplicados(termino.trim(), idExcluir);
+    }
+
+    private void validarYAsignarRelaciones(Autor autor, AutorRequest request, List<String> errores) {
+
         if (request.getIdPaisNacimiento() != null) {
-            autor.setPaisNacimiento(paisRepository.findById(request.getIdPaisNacimiento())
-                    .orElseThrow(() -> new RuntimeException("El País indicado no existe")));
+            paisRepository.findById(request.getIdPaisNacimiento())
+                    .ifPresentOrElse(
+                            autor::setPaisNacimiento,
+                            () -> errores.add("El País de nacimiento indicado (ID: " + request.getIdPaisNacimiento() + ") no existe.")
+                    );
         } else {
             autor.setPaisNacimiento(null);
         }
 
         if (request.getIdNacionalidad() != null) {
-            autor.setNacionalidad(nacionalidadRepository.findById(request.getIdNacionalidad())
-                    .orElseThrow(() -> new RuntimeException("La Nacionalidad indicada no existe")));
+            nacionalidadRepository.findById(request.getIdNacionalidad())
+                    .ifPresentOrElse(
+                            autor::setNacionalidad,
+                            () -> errores.add("La Nacionalidad indicada (ID: " + request.getIdNacionalidad() + ") no existe.")
+                    );
         } else {
             autor.setNacionalidad(null);
         }
 
         if (request.getIdGeneroPrincipal() != null) {
-            autor.setGeneroPrincipal(generoRepository.findById(request.getIdGeneroPrincipal())
-                    .orElseThrow(() -> new RuntimeException("El Género indicado no existe")));
+            generoRepository.findById(request.getIdGeneroPrincipal())
+                    .ifPresentOrElse(
+                            autor::setGeneroPrincipal,
+                            () -> errores.add("El Género principal indicado (ID: " + request.getIdGeneroPrincipal() + ") no existe.")
+                    );
         } else {
             autor.setGeneroPrincipal(null);
         }
 
         if (request.getIdObraCumbre() != null) {
-            autor.setObraCumbre(obraRepository.findById(request.getIdObraCumbre())
-                    .orElseThrow(() -> new RuntimeException("La Obra Cumbre indicada no existe")));
+            obraRepository.findById(request.getIdObraCumbre())
+                    .ifPresentOrElse(
+                            autor::setObraCumbre,
+                            () -> errores.add("La Obra Cumbre indicada (ID: " + request.getIdObraCumbre() + ") no existe.")
+                    );
         } else {
             autor.setObraCumbre(null);
         }
     }
 
     private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
-
         String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
 
         if ("pais".equalsIgnoreCase(campoOrden)) campoOrden = "paisNacimiento.nombre";
@@ -170,8 +214,6 @@ public class AutorServiceImpl implements AutorService {
         Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
                 ? Sort.Direction.DESC : Sort.Direction.ASC;
 
-        Sort sort = Sort.by(direction, campoOrden);
-
-        return PageRequest.of(page, size, sort);
+        return PageRequest.of(page, size, Sort.by(direction, campoOrden));
     }
 }

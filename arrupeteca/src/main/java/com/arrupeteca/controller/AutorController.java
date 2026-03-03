@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/autores")
 @RequiredArgsConstructor
@@ -117,5 +119,18 @@ public class AutorController {
                 esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, page, size, ordenarPor, direccion);
 
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
+    }
+
+    @GetMapping("/verificar-duplicados")
+    public ResponseEntity<ApiResponse<List<AutorResumen>>> verificarDuplicados(
+            @RequestParam String termino,
+            @RequestParam(required = false) Long idExcluir
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.exito(
+                        "Verificación completada",
+                        autorService.verificarDuplicados(termino, idExcluir)
+                )
+        );
     }
 }

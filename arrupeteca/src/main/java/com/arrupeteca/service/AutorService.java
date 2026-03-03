@@ -4,6 +4,8 @@ import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.persistence.projection.AutorResumen;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
+
 public interface AutorService {
 
     Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
@@ -32,4 +34,6 @@ public interface AutorService {
     AutorResumen actualizar(Long id, AutorRequest request);
 
     void cambiarEstadoLogico(Long id, boolean estado);
+
+    List<AutorResumen> verificarDuplicados(String termino, Long idExcluir);
 }

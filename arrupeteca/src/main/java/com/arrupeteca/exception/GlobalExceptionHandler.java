@@ -1,6 +1,7 @@
 package com.arrupeteca.exception;
 
 import com.arrupeteca.dto.response.ApiResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -9,6 +10,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestControllerAdvice
@@ -53,5 +55,48 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR) // Código 500
                 .body(ApiResponse.error("Ocurrió un error interno en el servidor. Por favor, contacte al administrador."));
+    }
+
+    /**
+     * 4. MANEJO DE VIOLACIÓN DE INTEGRIDAD DE DATOS (Duplicados, Llaves foráneas)
+     * Atrapa errores de base de datos como el 'Duplicate entry'.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
+
+        String mensajeRoot = ex.getRootCause() != null ? ex.getRootCause().getMessage() : ex.getMessage();
+        String mensajeCliente = "Error de integridad de datos (duplicidad o restricción violada).";
+
+        if (mensajeRoot != null) {
+            for (Map.Entry<String, String> entry : CONSTRAINTS_MAP.entrySet()) {
+                if (mensajeRoot.contains(entry.getKey())) {
+                    mensajeCliente = entry.getValue();
+                    break;
+                }
+            }
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(mensajeCliente));
+    }
+
+    /**
+     * 5. MANEJO DE ERRORES DE NEGOCIO ACUMULADOS
+     * Atrapa nuestra excepción personalizada que trae la lista de validaciones fallidas.
+     */
+    @ExceptionHandler(ValidacionNegocioException.class)
+    public ResponseEntity<ApiResponse<List<String>>> handleValidacionNegocio(ValidacionNegocioException ex) {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST) // 400 Bad Request es correcto aquí
+                .body(ApiResponse.error("No se pudo procesar la solicitud debido a errores en los datos.", ex.getErrores()));
+    }
+
+    private static final Map<String, String> CONSTRAINTS_MAP = new HashMap<>();
+
+    static {
+        // Autores
+        CONSTRAINTS_MAP.put("uk_autor_seudonimo", "El seudónimo ya está en uso.");
+
     }
 }
