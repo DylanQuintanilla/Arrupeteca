@@ -16,7 +16,7 @@ import java.util.Optional;
 @Repository
 public interface MuebleRepository extends JpaRepository<Mueble, Long> {
 
-    @EntityGraph(attributePaths = {"salon", "salon.planta", "salon.planta.edificio"})
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     Page<MuebleResumen> findByBorradoLogicoFalse(Pageable pageable);
 
     @EntityGraph(attributePaths = {"salon", "salon.planta", "salon.planta.edificio"})

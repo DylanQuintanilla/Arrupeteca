@@ -25,12 +25,13 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<AutorResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query(value = """
         SELECT a FROM Autor a
-        LEFT JOIN FETCH a.paisNacimiento p
-        LEFT JOIN FETCH a.nacionalidad n
-        LEFT JOIN FETCH a.generoPrincipal g
-        LEFT JOIN FETCH a.obraCumbre o
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
         WHERE
             a.borradoLogico = false
             AND ( :inicio IS NULL OR a.anioNacimiento >= :inicio )
@@ -84,12 +85,13 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<AutorResumen> findProjectedById(Long id);
 
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query(value = """
         SELECT a FROM Autor a
-        LEFT JOIN FETCH a.nacionalidad n
-        LEFT JOIN FETCH a.paisNacimiento p
-        LEFT JOIN FETCH a.generoPrincipal g
-        LEFT JOIN FETCH a.obraCumbre o
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
         WHERE
             ( :esBorrado IS NULL OR a.borradoLogico = :esBorrado )
             AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
@@ -156,6 +158,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
 
     boolean existsBySeudonimoIgnoreCase(String seudonimo);
 
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query(value = """
         SELECT a FROM Autor a
         WHERE 

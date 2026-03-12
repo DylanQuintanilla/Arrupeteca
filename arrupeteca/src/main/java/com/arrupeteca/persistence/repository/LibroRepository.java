@@ -16,18 +16,18 @@ import java.util.Optional;
 @Repository
 public interface LibroRepository extends JpaRepository<Libro, Long> {
 
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato", "idiomas"})
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Page<LibroResumen> findByBorradoLogicoFalse(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato", "idiomas"})
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Optional<LibroResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     @Query(value = """
         SELECT l FROM Libro l
-        LEFT JOIN FETCH l.obra o
-        LEFT JOIN FETCH l.editorial e
-        LEFT JOIN FETCH l.formato f
-        LEFT JOIN FETCH l.idiomas i
+        LEFT JOIN l.obra o
+        LEFT JOIN l.editorial e
+        LEFT JOIN l.formato f
         WHERE l.borradoLogico = false
         AND (
             :palabra IS NULL OR :palabra = '' OR
@@ -57,17 +57,18 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     """)
     Page<LibroResumen> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato", "idiomas"})
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Page<LibroResumen> findAllProjectedBy(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato", "idiomas"})
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Optional<LibroResumen> findProjectedById(Long id);
 
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     @Query(value = """
         SELECT l FROM Libro l
-        LEFT JOIN FETCH l.obra o
-        LEFT JOIN FETCH l.editorial e
-        LEFT JOIN FETCH l.formato f
+        LEFT JOIN l.obra o
+        LEFT JOIN l.editorial e
+        LEFT JOIN l.formato f
         WHERE
             ( :esBorrado IS NULL OR l.borradoLogico = :esBorrado )
             AND ( :idObra IS NULL OR o.id = :idObra )
@@ -129,5 +130,6 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
+
     boolean existsByIsbn(String isbn);
 }

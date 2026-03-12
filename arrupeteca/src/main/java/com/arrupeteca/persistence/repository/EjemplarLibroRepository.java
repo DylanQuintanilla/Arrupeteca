@@ -16,16 +16,17 @@ import java.util.Optional;
 @Repository
 public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Long> {
 
-    @EntityGraph(attributePaths = {"libro", "mueble"})
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Page<EjemplarLibroResumen> findByBorradoLogicoFalse(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"libro", "mueble"})
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Optional<EjemplarLibroResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
         SELECT e FROM EjemplarLibro e
-        LEFT JOIN FETCH e.libro l
-        LEFT JOIN FETCH e.mueble m
+        LEFT JOIN e.libro l
+        LEFT JOIN e.mueble m
         WHERE e.borradoLogico = false
         AND (
             :palabra IS NULL OR :palabra = '' OR
@@ -55,16 +56,17 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
     """)
     Page<EjemplarLibroResumen> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"libro", "mueble"})
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Page<EjemplarLibroResumen> findAllProjectedBy(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"libro", "mueble"})
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Optional<EjemplarLibroResumen> findProjectedById(Long id);
 
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
         SELECT e FROM EjemplarLibro e
-        LEFT JOIN FETCH e.libro l
-        LEFT JOIN FETCH e.mueble m
+        LEFT JOIN e.libro l
+        LEFT JOIN e.mueble m
         WHERE
             ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
             AND ( :idLibro IS NULL OR l.id = :idLibro )
