@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -120,6 +121,9 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
             @Param("anioFin") Integer anioFin,
             Pageable pageable
     );
+
+    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
+    Page<LibroResumen> findByObraId(Pageable pageable, Long obraId);
 
     @Modifying
     @Query("UPDATE Libro l SET l.borradoLogico = true WHERE l.id = :id")

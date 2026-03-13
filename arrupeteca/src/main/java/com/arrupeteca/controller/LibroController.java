@@ -47,6 +47,19 @@ public class LibroController {
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
     }
 
+    @GetMapping("/por-obra/{idObra}")
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerPorObra(
+            @RequestParam(required = false) String palabra,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "isbn") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion,
+            @PathVariable Long idObra
+    ) {
+        Page<LibroResumen> libros = libroService.obtenerPorObra(idObra, page, size, ordenarPor, direccion);
+        return ResponseEntity.ok(ApiResponse.exito("Libros de la obra", libros));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<LibroResumen>> crear(@Valid @RequestBody LibroRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)

@@ -29,4 +29,8 @@ public interface EjemplarLibroResumen {
     @Value("#{target.disponibilidad?.nombre}")
     String getNombreDisponibilidad();
 
+    @Value("#{target.mueble?.id}")
+    Long getIdMueble();
+
+
 }

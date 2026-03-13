@@ -84,6 +84,18 @@ public class LibroServiceImpl implements LibroService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public Page<LibroResumen> obtenerPorObra(Long idObra, int page, int size, String ordenarPor, String direccion) {
+        if (!obraRepository.existsById(idObra)) {
+            throw new RuntimeException("No se encontró Obra con ID: " + idObra);
+        }
+
+        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+
+        return libroRepository.findByObraId(pageable, idObra);
+    }
+
+    @Override
     @Transactional
     public LibroResumen crear(LibroRequest request) {
         if (libroRepository.existsByIsbn(request.getIsbn())) {

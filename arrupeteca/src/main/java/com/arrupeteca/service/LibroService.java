@@ -21,6 +21,8 @@ public interface LibroService {
             String grado, String ciclo, String termino, Integer anioInicio, Integer anioFin,
             int page, int size, String ordenarPor, String direccion);
 
+    Page<LibroResumen> obtenerPorObra(Long idObra, int page, int size, String ordenarPor, String direccion);
+
     LibroResumen crear(LibroRequest request);
 
     LibroResumen actualizar(Long id, LibroRequest request);

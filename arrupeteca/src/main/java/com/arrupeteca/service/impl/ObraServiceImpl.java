@@ -1,7 +1,7 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.ObraRequest;
-import com.arrupeteca.dto.request.ObraAutorRequest; // Asegúrate de tener este import
+import com.arrupeteca.dto.request.ObraAutorRequest;
 import com.arrupeteca.mapper.ObraMapper;
 import com.arrupeteca.persistence.entity.*;
 import com.arrupeteca.persistence.projection.ObraResumen;
@@ -73,7 +73,6 @@ public class ObraServiceImpl implements ObraService {
         return obraRepository.busquedaMaestraAdmin(esBorrado, termino, anioInicio, anioFin, pageable);
     }
 
-
     @Override
     @Transactional
     public ObraResumen crear(ObraRequest request) {
@@ -88,7 +87,6 @@ public class ObraServiceImpl implements ObraService {
         asignarAutores(nuevaObra, request.getAutores());
 
         Obra guardada = obraRepository.save(nuevaObra);
-
         return obtenerPorId(guardada.getId());
     }
 
@@ -107,6 +105,10 @@ public class ObraServiceImpl implements ObraService {
 
         asignarGeneros(existente, request.getIdGeneros());
         asignarCategorias(existente, request.getIdCategorias());
+
+        existente.getObraAutores().clear();
+        obraRepository.saveAndFlush(existente);
+
         asignarAutores(existente, request.getAutores());
 
         Obra actualizada = obraRepository.save(existente);
@@ -123,7 +125,7 @@ public class ObraServiceImpl implements ObraService {
         else obraRepository.desactivar(id);
     }
 
-    // ---------------------------
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
         String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "titulo" : ordenarPor;
@@ -136,14 +138,11 @@ public class ObraServiceImpl implements ObraService {
     }
 
     private void asignarGeneros(Obra obra, Set<Long> idGeneros) {
-        if (obra.getGeneros() == null) {
-            obra.setGeneros(new HashSet<>());
-        }
+        if (obra.getGeneros() == null) obra.setGeneros(new HashSet<>());
         obra.getGeneros().clear();
 
         if (idGeneros != null && !idGeneros.isEmpty()) {
             List<Genero> generosEncontrados = generoRepository.findAllById(idGeneros);
-
             if (generosEncontrados.size() != idGeneros.size()) {
                 throw new RuntimeException("Uno o más Géneros indicados no existen en la base de datos");
             }
@@ -152,14 +151,11 @@ public class ObraServiceImpl implements ObraService {
     }
 
     private void asignarCategorias(Obra obra, Set<Long> idCategorias) {
-        if (obra.getCategorias() == null) {
-            obra.setCategorias(new HashSet<>());
-        }
+        if (obra.getCategorias() == null) obra.setCategorias(new HashSet<>());
         obra.getCategorias().clear();
 
         if (idCategorias != null && !idCategorias.isEmpty()) {
             List<Categoria> categoriasEncontradas = categoriaRepository.findAllById(idCategorias);
-
             if (categoriasEncontradas.size() != idCategorias.size()) {
                 throw new RuntimeException("Una o más Categorías indicadas no existen");
             }
@@ -168,14 +164,8 @@ public class ObraServiceImpl implements ObraService {
     }
 
     private void asignarAutores(Obra obra, Set<ObraAutorRequest> autoresRequest) {
-        if (obra.getObraAutores() == null) {
-            obra.setObraAutores(new HashSet<>());
-        }
-        obra.getObraAutores().clear();
-
         if (autoresRequest != null && !autoresRequest.isEmpty()) {
             for (ObraAutorRequest req : autoresRequest) {
-
                 Autor autor = autorRepository.findById(req.getIdAutor())
                         .orElseThrow(() -> new RuntimeException("Autor con ID " + req.getIdAutor() + " no encontrado"));
 
