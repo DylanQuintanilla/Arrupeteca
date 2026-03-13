@@ -19,14 +19,15 @@ public interface MuebleRepository extends JpaRepository<Mueble, Long> {
     @EntityGraph(attributePaths = {"salon.planta.edificio"})
     Page<MuebleResumen> findByBorradoLogicoFalse(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"salon", "salon.planta", "salon.planta.edificio"})
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     Optional<MuebleResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     @Query(value = """
         SELECT m FROM Mueble m
-        LEFT JOIN FETCH m.salon s
-        LEFT JOIN FETCH s.planta p
-        LEFT JOIN FETCH p.edificio e
+        LEFT JOIN m.salon s
+        LEFT JOIN s.planta p
+        LEFT JOIN p.edificio e
         WHERE m.borradoLogico = false
         AND (
             :palabra IS NULL OR :palabra = '' OR
@@ -56,17 +57,18 @@ public interface MuebleRepository extends JpaRepository<Mueble, Long> {
     """)
     Page<MuebleResumen> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"salon", "salon.planta", "salon.planta.edificio"})
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     Page<MuebleResumen> findAllProjectedBy(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"salon", "salon.planta", "salon.planta.edificio"})
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     Optional<MuebleResumen> findProjectedById(Long id);
 
+    @EntityGraph(attributePaths = {"salon.planta.edificio"})
     @Query(value = """
         SELECT m FROM Mueble m
-        LEFT JOIN FETCH m.salon s
-        LEFT JOIN FETCH s.planta p
-        LEFT JOIN FETCH p.edificio e
+        LEFT JOIN m.salon s
+        LEFT JOIN s.planta p
+        LEFT JOIN p.edificio e
         WHERE
             ( :esBorrado IS NULL OR m.borradoLogico = :esBorrado )
             AND ( :idSalon IS NULL OR s.id = :idSalon )

@@ -14,7 +14,6 @@ import java.util.List;
 @Repository
 public interface ObraAutorRepository extends JpaRepository<ObraAutor, Long> {
 
-
     //  Admin
 
     @EntityGraph(attributePaths = {"autor", "tipoAutoria"})
