@@ -1,6 +1,7 @@
 package com.arrupeteca.exception;
 
 import com.arrupeteca.dto.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,15 +14,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
      * 1. MANEJO DE NUESTRAS EXCEPCIONES MANUALES (Reglas de negocio)
-     * Atrapa todos los 'throw new RuntimeException("...");' que pusiste en tus Services.
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
+
+        log.warn("Excepción de Runtime (Regla de negocio o fallo menor): {}", ex.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error(ex.getMessage()));
@@ -29,7 +33,6 @@ public class GlobalExceptionHandler {
 
     /**
      * 2. MANEJO DE ERRORES DE VALIDACIÓN (Los @NotNull, @Size, @NotBlank de tus DTOs)
-     * Atrapa los errores cuando el JSON que manda el Frontend no cumple las reglas.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
@@ -39,6 +42,8 @@ public class GlobalExceptionHandler {
             erroresDeCampos.put(error.getField(), error.getDefaultMessage());
         }
 
+        log.warn("Petición rechazada por DTO inválido. Campos afectados: {}", erroresDeCampos);
+
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("Existen errores de validación en los datos enviados", erroresDeCampos));
@@ -46,11 +51,11 @@ public class GlobalExceptionHandler {
 
     /**
      * 3. MANEJO DE ERRORES INESPERADOS (Caídas del sistema, NullPointers, etc.)
-     * Es nuestra red de seguridad final. Evita que el cliente vea código Java extraño.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception ex) {
-        // En un proyecto real aquí podrías poner un log.error(ex.getMessage(), ex); para ver el error en consola
+
+        log.error("Error interno grave no controlado en el servidor: ", ex);
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR) // Código 500
@@ -59,7 +64,6 @@ public class GlobalExceptionHandler {
 
     /**
      * 4. MANEJO DE VIOLACIÓN DE INTEGRIDAD DE DATOS (Duplicados, Llaves foráneas)
-     * Atrapa errores de base de datos como el 'Duplicate entry'.
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
@@ -76,6 +80,8 @@ public class GlobalExceptionHandler {
             }
         }
 
+        log.warn("Violación de integridad en BD. Mensaje devuelto al cliente: '{}' | Causa real en BD: {}", mensajeCliente, mensajeRoot);
+
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(ApiResponse.error(mensajeCliente));
@@ -83,12 +89,14 @@ public class GlobalExceptionHandler {
 
     /**
      * 5. MANEJO DE ERRORES DE NEGOCIO ACUMULADOS
-     * Atrapa nuestra excepción personalizada que trae la lista de validaciones fallidas.
      */
     @ExceptionHandler(ValidacionNegocioException.class)
     public ResponseEntity<ApiResponse<List<String>>> handleValidacionNegocio(ValidacionNegocioException ex) {
+
+        log.warn("Reglas de negocio no cumplidas. Errores: {}", ex.getErrores());
+
         return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST) // 400 Bad Request es correcto aquí
+                .status(HttpStatus.BAD_REQUEST)
                 .body(ApiResponse.error("No se pudo procesar la solicitud debido a errores en los datos.", ex.getErrores()));
     }
 
@@ -97,6 +105,5 @@ public class GlobalExceptionHandler {
     static {
         // Autores
         CONSTRAINTS_MAP.put("uk_autor_seudonimo", "El seudónimo ya está en uso.");
-
     }
 }
