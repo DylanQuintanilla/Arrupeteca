@@ -25,7 +25,6 @@ repositories {
 }
 
 dependencies {
-
 	// --- 1. CORE DE SPRING BOOT ---
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -35,33 +34,29 @@ dependencies {
 	// --- 2. BASE DE DATOS ---
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
-	// --- 3. PROCESADORES DE ANOTACIONES (ORDEN CRÍTICO) ---
-
-	// A) LOMBOK
-	compileOnly 'org.projectlombok:lombok'
-	annotationProcessor 'org.projectlombok:lombok'
-
-	// B) LOMBOK-MAPSTRUCT
-	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
-
-	// C) MAPSTRUCT
-	implementation 'org.mapstruct:mapstruct:1.6.2'
-	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
-
-	// --- 4. HERRAMIENTAS DE DESARROLLO ---
+	// --- 3. DOCUMENTACIÓN Y HERRAMIENTAS DE DESARROLLO ---
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// --- 4. MAPEO DE OBJETOS (ORDEN CRÍTICO) ---
+	// A) Lombok (Librería principal)
+	compileOnly 'org.projectlombok:lombok'
+	// B) MapStruct (Librería principal)
+	implementation 'org.mapstruct:mapstruct:1.6.2'
+
+	// C) Procesadores: El orden aquí abajo es vital
+	annotationProcessor 'org.projectlombok:lombok'
+	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
 
 	// --- 5. PRUEBAS (TESTING) ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-
-	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
 }
 
 tasks.named('test') {
