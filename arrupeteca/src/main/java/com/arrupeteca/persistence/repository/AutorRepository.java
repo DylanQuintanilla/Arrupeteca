@@ -1,8 +1,9 @@
 package com.arrupeteca.persistence.repository;
 
-import com.arrupeteca.persistence.entity.*;
+import com.arrupeteca.persistence.entity.Autor;
 import com.arrupeteca.persistence.projection.AutorResumen;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -16,20 +17,43 @@ import java.util.Optional;
 @Repository
 public interface AutorRepository extends JpaRepository<Autor, Long> {
 
-    //USUARIOS (Alumnos / Maestros)
+    // --- USUARIOS (Alumnos / Maestros) ---
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    List<AutorResumen> findByBorradoLogicoFalse();
+    Page<AutorResumen> findByBorradoLogicoFalse(Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<AutorResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    @Query("""
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query(value = """
         SELECT a FROM Autor a
-        LEFT JOIN FETCH a.paisNacimiento p
-        LEFT JOIN FETCH a.nacionalidad n
-        LEFT JOIN FETCH a.generoPrincipal g
-        LEFT JOIN FETCH a.obraCumbre o
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
+        WHERE
+            a.borradoLogico = false
+            AND ( :inicio IS NULL OR a.anioNacimiento >= :inicio )
+            AND ( :fin IS NULL OR a.anioNacimiento <= :fin )
+            AND (
+                :palabra IS NULL OR :palabra = '' OR
+                (
+                    LOWER(g.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                    LOWER(o.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                    LOWER(p.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                    LOWER(n.nombre) LIKE LOWER(CONCAT('%', :palabra, '%'))
+                )
+            )
+    """,
+            countQuery = """
+        SELECT COUNT(a) FROM Autor a
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
         WHERE
             a.borradoLogico = false
             AND ( :inicio IS NULL OR a.anioNacimiento >= :inicio )
@@ -46,35 +70,34 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
                 )
             )
     """)
-    List<AutorResumen> busquedaGlobalAvanzada(
+    Page<AutorResumen> busquedaGlobalAvanzada(
             @Param("palabra") String palabra,
             @Param("inicio") Integer inicio,
             @Param("fin") Integer fin,
-            Sort sort
+            Pageable pageable
     );
 
-    // Admin -----------------------
+    // --- ADMIN ---
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    List<AutorResumen> findAllProjectedBy();
+    Page<AutorResumen> findAllProjectedBy(Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<AutorResumen> findProjectedById(Long id);
 
-    @Query("""
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query(value = """
         SELECT a FROM Autor a
-        LEFT JOIN FETCH a.nacionalidad n
-        LEFT JOIN FETCH a.paisNacimiento p
-        LEFT JOIN FETCH a.generoPrincipal g
-        LEFT JOIN FETCH a.obraCumbre o
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
         WHERE
             ( :esBorrado IS NULL OR a.borradoLogico = :esBorrado )
-
             AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
             AND ( :idPais IS NULL OR p.id = :idPais )
             AND ( :idGenero IS NULL OR g.id = :idGenero )
             AND ( :idObra IS NULL OR o.id = :idObra )
-
             AND (
                 :terminoBusqueda IS NULL OR :terminoBusqueda = '' OR
                 (
@@ -83,11 +106,33 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
                     LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
                 )
             )
-
+            AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
+            AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
+    """,
+            countQuery = """
+        SELECT COUNT(a) FROM Autor a
+        LEFT JOIN a.nacionalidad n
+        LEFT JOIN a.paisNacimiento p
+        LEFT JOIN a.generoPrincipal g
+        LEFT JOIN a.obraCumbre o
+        WHERE
+            ( :esBorrado IS NULL OR a.borradoLogico = :esBorrado )
+            AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
+            AND ( :idPais IS NULL OR p.id = :idPais )
+            AND ( :idGenero IS NULL OR g.id = :idGenero )
+            AND ( :idObra IS NULL OR o.id = :idObra )
+            AND (
+                :terminoBusqueda IS NULL OR :terminoBusqueda = '' OR
+                (
+                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
+                    OR
+                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
+                )
+            )
             AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
             AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
     """)
-    List<AutorResumen> busquedaMaestraAdmin(
+    Page<AutorResumen> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
@@ -96,7 +141,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             @Param("terminoBusqueda") String terminoBusqueda,
             @Param("anioInicio") Integer anioInicio,
             @Param("anioFin") Integer anioFin,
-            Sort sort
+            Pageable pageable
     );
 
     @Modifying
@@ -113,14 +158,40 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
 
     boolean existsBySeudonimoIgnoreCase(String seudonimo);
 
-    @Query("""
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query(value = """
         SELECT a FROM Autor a
         WHERE 
             a.borradoLogico = false
             AND a.anioNacimiento <= :fin 
             AND (a.anioFallecimiento >= :inicio OR a.anioFallecimiento IS NULL)
+    """,
+            countQuery = """
+        SELECT COUNT(a) FROM Autor a
+        WHERE 
+            a.borradoLogico = false
+            AND a.anioNacimiento <= :fin 
+            AND (a.anioFallecimiento >= :inicio OR a.anioFallecimiento IS NULL)
     """)
-    List<AutorResumen> buscarAutoresVivosEnRango(@Param("inicio") Integer anioInicio,
-                                                 @Param("fin") Integer anioFin);
+    Page<AutorResumen> buscarAutoresVivosEnRango(@Param("inicio") Integer anioInicio,
+                                                 @Param("fin") Integer anioFin,
+                                                 Pageable pageable);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("""
+    SELECT a FROM Autor a
+    WHERE 
+        (
+           LOWER(a.nombre) = LOWER(:termino) 
+           OR 
+           LOWER(a.seudonimo) = LOWER(:termino)
+        )
+        AND (:idExcluir IS NULL OR a.id <> :idExcluir)
+        AND a.borradoLogico = false
+""")
+    List<AutorResumen> buscarPosiblesDuplicados(
+            @Param("termino") String termino,
+            @Param("idExcluir") Long idExcluir
+    );
 
 }

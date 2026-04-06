@@ -2,31 +2,38 @@ package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.persistence.projection.AutorResumen;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface AutorService {
 
-    List<AutorResumen> obtenerTodosActivos();
+    Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
 
     AutorResumen obtenerPorIdActivo(Long id);
 
-    List<AutorResumen> obtenerTodos();
+    // Admin
+    Page<AutorResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
 
     AutorResumen obtenerPorId(Long id);
 
-    List<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin, String ordenarPor, String direccion);
 
-    List<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
+    Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin,
+                                              int page, int size, String ordenarPor, String direccion);
+
+    Page<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
                                             Long idGenero, Long idObra, String terminoBusqueda,
                                             Integer anioInicio, Integer anioFin,
-                                            String ordenarPor, String direccion);
+                                            int page, int size, String ordenarPor, String direccion);
 
-    List<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin);
+    Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin,
+                                                 int page, int size, String ordenarPor, String direccion);
 
     AutorResumen crear(AutorRequest request);
 
     AutorResumen actualizar(Long id, AutorRequest request);
 
     void cambiarEstadoLogico(Long id, boolean estado);
+
+    List<AutorResumen> verificarDuplicados(String termino, Long idExcluir);
 }

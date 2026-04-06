@@ -6,6 +6,7 @@ import com.arrupeteca.persistence.projection.EditorialResumen;
 import com.arrupeteca.service.EditorialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,8 +23,13 @@ public class EditorialController {
 
     // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<EditorialResumen>>> obtenerTodosActivos() {
-        List<EditorialResumen> lista = editorialService.obtenerTodosActivos();
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosActivos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion
+    ) {
+        Page<EditorialResumen> lista = editorialService.obtenerTodosActivos(page, size, ordenarPor, direccion);
         return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activos", lista));
     }
 
@@ -68,7 +74,25 @@ public class EditorialController {
 
     // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<EditorialResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos()));
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion
+    ) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(page, size, ordenarPor, direccion)));
+    }
+
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> busquedaMaestra(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) String termino,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion
+    ) {
+        Page<EditorialResumen> lista = editorialService.busquedaMaestraAdmin(esBorrado, termino, page, size, ordenarPor, direccion);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
     }
 }

@@ -6,6 +6,7 @@ import com.arrupeteca.persistence.projection.AutorResumen;
 import com.arrupeteca.service.AutorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,8 +22,14 @@ public class AutorController {
     private final AutorService autorService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Autores activos", autorService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion
+    ) {
+        Page<AutorResumen> pagina = autorService.obtenerTodosActivos(page, size, ordenarPor, direccion);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", pagina));
     }
 
     @GetMapping("/{id}")
@@ -31,23 +38,32 @@ public class AutorController {
     }
 
     @GetMapping("/busqueda")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> busquedaGlobal(
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
             @RequestParam(required = false) Integer inicio,
             @RequestParam(required = false) Integer fin,
-            @RequestParam(required = false, defaultValue = "nombre") String ordenarPor,
-            @RequestParam(required = false, defaultValue = "ASC") String direccion) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion) {
 
-        List<AutorResumen> lista = autorService.busquedaGlobalAvanzada(palabra, inicio, fin, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
+        Page<AutorResumen> pagina = autorService.busquedaGlobalAvanzada(palabra, inicio, fin, page, size, ordenarPor, direccion);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
     }
 
     @GetMapping("/vivos-rango")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> autoresVivos(
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> autoresVivos(
             @RequestParam Integer inicio,
-            @RequestParam Integer fin) {
-        return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", autorService.buscarAutoresVivosEnRango(inicio, fin)));
+            @RequestParam Integer fin,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion) {
+
+        Page<AutorResumen> pagina = autorService.buscarAutoresVivosEnRango(inicio, fin, page, size, ordenarPor, direccion);
+        return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", pagina));
     }
+
 
     @PostMapping
     public ResponseEntity<ApiResponse<AutorResumen>> crear(@Valid @RequestBody AutorRequest request) {
@@ -72,13 +88,20 @@ public class AutorController {
         return ResponseEntity.ok(ApiResponse.exito("Autor activado"));
     }
 
+    // --- ADMIN ---
+
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos()));
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosAdmin(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion
+    ) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(page, size, ordenarPor, direccion)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> busquedaMaestra(
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaMaestra(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
@@ -87,11 +110,27 @@ public class AutorController {
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
-            @RequestParam(required = false, defaultValue = "nombre") String ordenarPor,
-            @RequestParam(required = false, defaultValue = "ASC") String direccion) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "nombre") String ordenarPor,
+            @RequestParam(defaultValue = "ASC") String direccion) {
 
-        List<AutorResumen> lista = autorService.busquedaMaestraAdmin(
-                esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
+        Page<AutorResumen> pagina = autorService.busquedaMaestraAdmin(
+                esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, page, size, ordenarPor, direccion);
+
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
+    }
+
+    @GetMapping("/verificar-duplicados")
+    public ResponseEntity<ApiResponse<List<AutorResumen>>> verificarDuplicados(
+            @RequestParam String termino,
+            @RequestParam(required = false) Long idExcluir
+    ) {
+        return ResponseEntity.ok(
+                ApiResponse.exito(
+                        "Verificación completada",
+                        autorService.verificarDuplicados(termino, idExcluir)
+                )
+        );
     }
 }

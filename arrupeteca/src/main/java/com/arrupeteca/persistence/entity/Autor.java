@@ -29,7 +29,7 @@ public class Autor extends Auditable {
     private String nombre;
 
     @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    @Column(length = 50, nullable = true, unique = true)
+    @Column(length = 50, nullable = true)
     private String seudonimo;
 
     @Column(name = "anio_nacimiento", nullable = true)

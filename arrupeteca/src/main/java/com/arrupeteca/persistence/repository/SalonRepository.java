@@ -15,19 +15,19 @@ import java.util.Optional;
 @Repository
 public interface SalonRepository extends JpaRepository<Salon, Long> {
 
-    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    @EntityGraph(attributePaths = {"planta.edificio"})
     List<SalonResumen> findByBorradoLogicoFalse();
 
-    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    @EntityGraph(attributePaths = {"planta.edificio"})
     Optional<SalonResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    @EntityGraph(attributePaths = {"planta.edificio"})
     List<SalonResumen> findProjectedByPlanta_IdAndBorradoLogicoFalse(Long idPlanta);
 
-    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    @EntityGraph(attributePaths = {"planta.edificio"})
     List<SalonResumen> findAllProjectedBy();
 
-    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    @EntityGraph(attributePaths = {"planta.edificio"})
     Optional<SalonResumen> findProjectedById(Long id);
 
     @Modifying

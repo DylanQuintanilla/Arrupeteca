@@ -32,14 +32,14 @@ public class Planta {
     @Column(length = 30, nullable = false)
     private String nombre;
 
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
+    private boolean borradoLogico = false;
+
     @NotNull
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_edificio", nullable = false)
     private Edificio edificio;
-
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
-    @Builder.Default
-    private boolean borradoLogico = false;
 
 }
