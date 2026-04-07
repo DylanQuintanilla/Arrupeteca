@@ -26,6 +26,7 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
     - [ ] Manejo de errores profesional y SLF4J.
     - [ ] **Borrado Lógico en Cascada** (Obra -> Libros -> Ejemplares).
 - [ ] **Quality Control**:
+    - [ ] **Plan de Pruebas Maestro**: Crear el suite de pruebas (Unitarias e Integración) para todo el proyecto.
     - [ ] Cobertura de pruebas al 100%.
 
 ### Phase 3: Advanced Operational Flows (Fase 3: Flujos Operativos Avanzados)
