@@ -58,4 +58,16 @@ Toda la salida del agente DEBE ser concisa y orientada a resultados. Este princi
 - Todas las implementaciones DEBEN pasar la puerta de enlace Instructions Check durante la planificación.
 - La complejidad más allá de estos principios DEBE ser justificada y documentada.
 
-**Version**: 1.0.0 | **Last Amended (Última Enmienda)**: 2026-03-31
+## Language Policy (Política de Idioma)
+
+- **Headers/Titles (Encabezados/Títulos)**: Deben mantenerse en Inglés (o bilingües) para compatibilidad con herramientas de automatización.
+- **Content/Descriptions (Contenido/Descripciones)**: Deben redactarse en Español para facilitar la comprensión del equipo.
+- **Technical Identifiers (Identificadores Técnicos)**: IDs de requerimientos (REQ-xxx), historias de usuario (US-xxx) y estados de tareas (TODO, DONE) deben permanecer en Inglés.
+
+## Governance & File Integrity (Gobernanza e Integridad de Archivos)
+
+- **Storage (Almacenamiento)**: Todos los archivos de gobernanza, especificaciones y configuración de agentes DEBEN residir exclusivamente dentro de la carpeta `governance/`.
+- **Persistence (Persistencia)**: El agente NO debe mover, renombrar o eliminar archivos dentro de `governance/` ni alterar la estructura de `governance/specs/` sin una directiva explícita del usuario.
+- **Configuration (Configuración)**: El archivo `.github/sddp-config.md` en la raíz actúa como el único puente de configuración permitido hacia la carpeta `governance/`.
+
+**Version**: 1.1.0 | **Last Amended (Última Enmienda)**: 2026-04-06

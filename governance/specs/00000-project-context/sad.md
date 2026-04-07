@@ -1,59 +1,66 @@
 # System Architecture Document (SAD) - Arrupeteca (Documento de Arquitectura del Sistema)
 
 ## 1. Executive Summary (Resumen Ejecutivo)
-Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot, diseñado para gestionar libros, autores y copias físicas (items) dentro de una jerarquía estructurada (edificios, plantas, salones, muebles). Proporciona una API REST robusta para gestionar el catálogo y el inventario físico.
+Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 4.0.2 y Java 21. El sistema utiliza una arquitectura por capas para gestionar el catálogo intelectual, el inventario físico y flujos operativos con altos estándares de calidad y optimización de datos.
 
 ## 2. Architectural Goals and Constraints (Objetivos y Restricciones Arquitectónicas)
-- **Maintainability (Mantenibilidad)**: Clara separación de responsabilidades mediante una arquitectura por capas (Controller-Service-Persistence).
-- **Data Integrity (Integridad de Datos)**: Mecanismo de borrado suave (borradoLogico) para evitar la pérdida accidental de datos.
-- **Auditability (Auditabilidad)**: Seguimiento automático de metadatos de creación y modificación a través de una clase base Auditable.
-- **Consistency (Consistencia)**: Respuestas de API estandarizadas mediante un envoltorio ApiResponse y manejo de errores centralizado.
-- **Scalability (Escalabilidad)**: Diseño de API REST sin estado (stateless) adecuado para entornos web modernos.
+- **Maintainability (Mantenibilidad)**: Uso de **Java Records** para DTOs y mapeo con MapStruct.
+- **Data Integrity (Integridad de Datos)**: Borrado lógico en cascada y bloqueo optimista mediante `@Version`.
+- **Optimization (Optimización)**: Gestión eficiente de relaciones N+1 mediante Batch Fetching y consultas optimizadas con `@EntityGraph`.
+- **Reliability (Fiabilidad)**: Manejo de errores centralizado con SLF4J logging y excepciones de negocio personalizadas.
 
 ## 3. Technology Stack (Stack Tecnológico)
-- **Language (Lenguaje)**: Java 21 (usando Records para DTOs)
-- **Framework**: Spring Boot 4.0.2
-- **Persistence (Persistencia)**: Spring Data JPA / Hibernate
-- **Database (Base de Datos)**: MySQL 8.x
-- **Build Tool (Herramienta de Construcción)**: Gradle
-- **Mapping (Mapeo)**: MapStruct (transformación Entity-DTO, soportando Java Records)
-- **Boilerplate Reduction (Reducción de Código Repetitivo)**: Lombok (principalmente para Entidades JPA)
-- **Validation (Validación)**: Jakarta Bean Validation (Hibernate Validator)
+- **Language (Lenguaje)**: Java 21 (Records para DTOs como estándar).
+- **Framework**: Spring Boot 4.0.2.
+- **Persistence (Persistencia)**: Spring Data JPA / Hibernate con **HikariCP** y **Batch Fetching (size=100)**.
+- **Database (Base de Datos)**: MySQL 8.x.
+- **Build Tool (Herramienta de Construcción)**: Gradle.
+- **Mapping (Mapeo)**: MapStruct (Transformación Entity <-> Record).
+- **Boilerplate Reduction**: Lombok (Principalmente para Entidades JPA).
+- **Validation (Validación)**: Jakarta Bean Validation (Hibernate Validator).
+- **Logging**: SLF4J (Lombok `@Slf4j`).
+- **Messaging (Notificaciones)**: Spring Boot Starter Mail (SMTP) para notificaciones por correo.
 
-## 4. Architectural Overview (Visión General de la Arquitectura)
-El sistema sigue una **Layered Architecture (Arquitectura por Capas)** clásica:
+## 4. Domain Model and Database Schema (Modelo de Dominio y Esquema de BD)
 
-1. Web Layer (Controller): API REST versionada (/api/v1) que maneja la comunicación JSON a través de **Java Records como DTOs**.
-2. Service Layer (Service): Orquestación de lógica de negocio basada en interfaces y gestión de transacciones.
-3. Persistence Layer (Repository): Repositorios Spring Data JPA con soporte para proyecciones personalizadas.
-4. Domain Layer (Entity): Entidades JPA (usando Lombok) con capacidades de auditoría y borrado suave.
+### 4.1 Catalog Entities (Entidades del Catálogo)
+- **Obra:** Obra intelectual. Relacionada M:M con **Género** (`Obra_Genero`) y **Categoría** (`Obra_Categoria`).
+- **Autor:** Vinculado a un **GeneroPrincipal**. Relación M:M con Obra (Obra_Autor).
+- **Libro:** Edición de una Obra. Clasificado por Grado, Ciclo, Idioma, Editorial y Formato.
+- **Etiqueta (Tag):** Entidad para agrupamiento transversal (ej. "Tecnología"). Relación M:M con Libro.
+- **Popularidad:** Atributo incremental en Libros basado en la frecuencia de préstamos.
 
-## 5. Domain Model (Modelo de Dominio)
-Entidades clave y sus relaciones:
+### 4.2 Inventory and Location (Inventario y Ubicación)
+- **EjemplarLibro:** Copia física única. Rastreable por **ID Propio** (Búsqueda Global para QR) y vinculado a un **Mueble**.
+- **Mueble:** Estante físico. Incluye un campo **Estado** para registrar su condición física.
 
-- Obra: El trabajo creativo (abstracto).
-- Libro: Una edición publicada específica de una Obra.
-- EjemplarLibro: Una copia física de un Libro, asignada a un Mueble.
-- Autor: Vinculado a Obra a través de ObraAutor para soportar relaciones de muchos-a-muchos con roles (TipoAutoria).
-- Location Hierarchy (Jerarquía de Ubicación): Edificio -> Planta -> Salon -> Mueble.
+### 4.3 Operational Flow Entities (Entidades de Flujos Operativos)
+- **Prestamos, Transferencias y Donaciones:** Entidades para la gestión de solicitudes y movimientos operativos (Fase 3).
 
-### Core Class Diagram (Conceptual) (Diagrama de Clases Principal)
-```text
-Obra <1---*> Libro <1---*> EjemplarLibro
-Obra <*---*> Autor (via ObraAutor)
-EjemplarLibro ---*> Mueble ---*> Salon ---*> Planta ---*> Edificio
+## 5. Key Technical Standards (Estándares Técnicos Clave)
+
+### 5.1 API Response Structure (Estructura de Respuesta de API)
+```json
+{
+  "timestamp": "ISO-8601-Date",
+  "status": 200,
+  "error": null,
+  "message": "Mensaje informativo",
+  "path": "/api/v1/recurso",
+  "data": { ... }
+}
 ```
 
-## 6. API Design and Communication (Diseño de API y Comunicación)
-- RESTful Principles: URLs basadas en recursos y verbos HTTP estándar.
-- Response Structure (Estructura de Respuesta): Cada respuesta se envuelve en un ApiResponse<T> que contiene los campos success, message y data.
-- Efficient Retrieval (Recuperación Eficiente): Utiliza proyecciones JPA (ej. LibroResumen) para minimizar la transferencia de datos en las vistas de lista.
+### 5.2 Error Handling and Logging (Manejo de Errores y Logs)
+- **GlobalExceptionHandler**: Captura excepciones de negocio y errores graves (500).
+- **Business Exceptions**: Uso de `ReglaNegocioException`.
+- **Logging**: Registro de errores graves con StackTrace mediante `@Slf4j`.
 
-## 7. Cross-cutting Concerns (Aspectos Transversales)
-- Error Handling (Manejo de Errores): Gestionado por GlobalExceptionHandler usando @RestControllerAdvice.
-- Auditing (Auditoría): Rastrea fechaCreacion, fechaModificacion, usuarioCreacion y usuarioModificacion.
-- Soft Delete (Borrado Suave): Utiliza una bandera booleana borradoLogico para ocultar registros en lugar de eliminarlos.
+### 5.3 Data Persistence Strategy (Estrategia de Persistencia)
+- **Soft Delete in Cascade**: Propagación del borrado lógico de Obra a sus Libros y Ejemplares.
+- **Optimistic Locking**: Campo `@Version Integer version` en `Auditable.java`.
+- **Query Optimization**: Uso de `@EntityGraph` para relaciones ToOne y Batch Fetching para colecciones.
 
-## 8. Development and Deployment (Desarrollo y Despliegue)
-- Local Dev: Construcción basada en Gradle; requiere MySQL 8.x.
-- Testing (Pruebas): Enfoque TDD usando JUnit 5 y Mockito.
+## 6. Development and Quality Policy (Política de Desarrollo y Calidad)
+- **TDD Mandatory**: Cobertura del 100% mediante JUnit 5 y Mockito.
+- **Clean Code**: Eliminar anotaciones redundantes como `@Repository`.
