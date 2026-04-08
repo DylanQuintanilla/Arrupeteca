@@ -3,22 +3,23 @@ package com.arrupeteca.service;
 import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.persistence.projection.ObraResumen;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ObraService {
 
-    Page<ObraResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<ObraResumen> obtenerTodosActivos(Pageable pageable);
 
     ObraResumen obtenerPorIdActivo(Long id);
 
-    Page<ObraResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion);
+    Page<ObraResumen> busquedaGlobal(String palabra, Pageable pageable);
 
-    Page<ObraResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    Page<ObraResumen> obtenerTodos(Pageable pageable);
 
     ObraResumen obtenerPorId(Long id);
 
     Page<ObraResumen> busquedaMaestraAdmin(
             Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin,
-            int page, int size, String ordenarPor, String direccion);
+            Pageable pageable);
 
     ObraResumen crear(ObraRequest request);
 

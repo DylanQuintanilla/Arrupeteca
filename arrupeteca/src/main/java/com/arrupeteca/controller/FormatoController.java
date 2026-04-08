@@ -6,32 +6,34 @@ import com.arrupeteca.persistence.projection.FormatoResumen;
 import com.arrupeteca.service.FormatoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/formatos")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@RequestMapping("/api/v1/formatos")
 public class FormatoController {
 
     private final FormatoService formatoService;
 
     // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<FormatoResumen>>> obtenerTodosActivos() {
-        List<FormatoResumen> lista = formatoService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos activos", lista));
+    public ResponseEntity<ApiResponse<Page<FormatoResumen>>> obtenerTodosActivos(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        Page<FormatoResumen> pagina = formatoService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos activos", pagina));
     }
 
     // GET: Obtener uno por ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<FormatoResumen>> obtenerPorId(@PathVariable Long id) {
-        FormatoResumen Formato = formatoService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado", Formato));
+        FormatoResumen formato = formatoService.obtenerPorIdActivo(id);
+        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado", formato));
     }
 
     // POST: Crear nuevo
@@ -45,7 +47,7 @@ public class FormatoController {
     // PUT: Actualizar
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<FormatoResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody FormatoRequest request) {
+                                                                  @Valid @RequestBody FormatoRequest request) {
         FormatoResumen actualizado = formatoService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Formato actualizado correctamente", actualizado));
     }
@@ -68,7 +70,8 @@ public class FormatoController {
 
     // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<FormatoResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos()));
+    public ResponseEntity<ApiResponse<Page<FormatoResumen>>> obtenerTodosAdmin(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable)));
     }
 }

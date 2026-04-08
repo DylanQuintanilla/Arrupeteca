@@ -2,16 +2,16 @@ package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
 import com.arrupeteca.persistence.projection.NacionalidadResumen;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface NacionalidadService {
 
-    List<NacionalidadResumen> obtenerTodasActivas();
+    Page<NacionalidadResumen> obtenerTodasActivas(Pageable pageable);
 
     NacionalidadResumen obtenerPorIdActiva(Long id);
 
-    List<NacionalidadResumen> obtenerTodas();
+    Page<NacionalidadResumen> obtenerTodas(Pageable pageable);
 
     NacionalidadResumen obtenerPorId(Long id);
 
@@ -19,6 +19,5 @@ public interface NacionalidadService {
 
     NacionalidadResumen actualizar(Long id, NacionalidadRequest request);
 
-    void cambiarEstadoLogico(Long id, boolean activar);
-
+    void cambiarEstado(Long id, boolean estado);
 }

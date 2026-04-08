@@ -2,16 +2,16 @@ package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.GeneroRequest;
 import com.arrupeteca.persistence.projection.GeneroResumen;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface GeneroService {
 
-    List<GeneroResumen> obtenerTodosActivos();
+    Page<GeneroResumen> obtenerTodosActivos(Pageable pageable);
 
     GeneroResumen obtenerPorIdActivo(Long id);
 
-    List<GeneroResumen> obtenerTodos();
+    Page<GeneroResumen> obtenerTodos(Pageable pageable);
 
     GeneroResumen obtenerPorId(Long id);
 
@@ -20,5 +20,4 @@ public interface GeneroService {
     GeneroResumen actualizar(Long id, GeneroRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-
 }

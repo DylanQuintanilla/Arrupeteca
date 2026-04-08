@@ -7,6 +7,8 @@ import com.arrupeteca.service.EjemplarLibroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +23,10 @@ public class EjemplarLibroController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "id") Pageable pageable
     ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.obtenerTodosActivos(page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de ejemplares activos", lista));
+        Page<EjemplarLibroResumen> pagina = ejemplarLibroService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de ejemplares activos", pagina));
     }
 
     @GetMapping("/{id}")
@@ -38,13 +37,10 @@ public class EjemplarLibroController {
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "id") Pageable pageable
     ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.busquedaGlobal(palabra, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
+        Page<EjemplarLibroResumen> pagina = ejemplarLibroService.busquedaGlobal(palabra, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
     }
 
     @PostMapping
@@ -73,13 +69,10 @@ public class EjemplarLibroController {
 
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "id") Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de ejemplares",
-                ejemplarLibroService.obtenerTodos(page, size, ordenarPor, direccion)));
+                ejemplarLibroService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
@@ -90,13 +83,10 @@ public class EjemplarLibroController {
             @RequestParam(required = false) String estadoFisico,
             @RequestParam(required = false) String disponibilidad,
             @RequestParam(required = false) String termino,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "id") Pageable pageable
     ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.busquedaMaestraAdmin(
-                esBorrado, idLibro, idMueble, estadoFisico, disponibilidad, termino, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
+        Page<EjemplarLibroResumen> pagina = ejemplarLibroService.busquedaMaestraAdmin(
+                esBorrado, idLibro, idMueble, estadoFisico, disponibilidad, termino, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

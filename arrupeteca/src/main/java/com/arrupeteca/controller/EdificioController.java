@@ -6,32 +6,34 @@ import com.arrupeteca.persistence.projection.EdificioResumen;
 import com.arrupeteca.service.EdificioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/edificios")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@RequestMapping("/api/v1/edificios")
 public class EdificioController {
 
     private final EdificioService edificioService;
 
     // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<EdificioResumen>>> obtenerTodosActivos() {
-        List<EdificioResumen> lista = edificioService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de edificios activos", lista));
+    public ResponseEntity<ApiResponse<Page<EdificioResumen>>> obtenerTodosActivos(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        Page<EdificioResumen> pagina = edificioService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de edificios activos", pagina));
     }
 
     // GET: Obtener uno por ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<EdificioResumen>> obtenerPorId(@PathVariable Long id) {
-        EdificioResumen Edificio = edificioService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado", Edificio));
+        EdificioResumen edificio = edificioService.obtenerPorIdActivo(id);
+        return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado", edificio));
     }
 
     // POST: Crear nuevo
@@ -45,7 +47,7 @@ public class EdificioController {
     // PUT: Actualizar
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<EdificioResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody EdificioRequest request) {
+                                                                   @Valid @RequestBody EdificioRequest request) {
         EdificioResumen actualizado = edificioService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Edificio actualizado correctamente", actualizado));
     }
@@ -68,7 +70,8 @@ public class EdificioController {
 
     // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<EdificioResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos()));
+    public ResponseEntity<ApiResponse<Page<EdificioResumen>>> obtenerTodosAdmin(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos(pageable)));
     }
 }

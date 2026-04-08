@@ -7,11 +7,11 @@ import com.arrupeteca.service.EditorialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/editoriales")
@@ -24,20 +24,17 @@ public class EditorialController {
     // GET: Obtener todos los activos
     @GetMapping
     public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<EditorialResumen> lista = editorialService.obtenerTodosActivos(page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activos", lista));
+        Page<EditorialResumen> pagina = editorialService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activas", pagina));
     }
 
     // GET: Obtener uno por ID
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<EditorialResumen>> obtenerPorId(@PathVariable Long id) {
-        EditorialResumen Editorial = editorialService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada", Editorial));
+        EditorialResumen editorial = editorialService.obtenerPorIdActivo(id);
+        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada", editorial));
     }
 
     // POST: Crear nuevo
@@ -51,7 +48,7 @@ public class EditorialController {
     // PUT: Actualizar
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<EditorialResumen>> actualizar(@PathVariable Long id,
-                                                                       @Valid @RequestBody EditorialRequest request) {
+                                                                    @Valid @RequestBody EditorialRequest request) {
         EditorialResumen actualizado = editorialService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Editorial actualizada correctamente", actualizado));
     }
@@ -75,24 +72,18 @@ public class EditorialController {
     // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(page, size, ordenarPor, direccion)));
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
     public ResponseEntity<ApiResponse<Page<EditorialResumen>>> busquedaMaestra(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) String termino,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<EditorialResumen> lista = editorialService.busquedaMaestraAdmin(esBorrado, termino, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
+        Page<EditorialResumen> pagina = editorialService.busquedaMaestraAdmin(esBorrado, termino, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

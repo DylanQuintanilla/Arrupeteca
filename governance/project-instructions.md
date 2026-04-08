@@ -60,7 +60,7 @@ Toda la salida del agente DEBE ser concisa y orientada a resultados. Este princi
 
 ## Language Policy (Política de Idioma)
 
-- **Headers/Titles (Encabezados/Títulos)**: Deben mantenerse en Inglés (o bilingües) para compatibilidad con herramientas de automatización.
+- **Headers/Titles (Encabezados/Títulos)**: Deben mantenerse en Inglés (o bilingües) para compatibilidad con herramientas de automatización, con prioridad el titulo en ingles al primero, siguiendo el patron de: English Title (Título en Español).
 - **Content/Descriptions (Contenido/Descripciones)**: Deben redactarse en Español para facilitar la comprensión del equipo.
 - **Technical Identifiers (Identificadores Técnicos)**: IDs de requerimientos (REQ-xxx), historias de usuario (US-xxx) y estados de tareas (TODO, DONE) deben permanecer en Inglés.
 

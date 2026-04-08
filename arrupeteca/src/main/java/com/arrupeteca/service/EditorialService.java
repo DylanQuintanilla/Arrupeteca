@@ -5,17 +5,15 @@ import com.arrupeteca.persistence.projection.EditorialResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 public interface EditorialService {
 
-    Page<EditorialResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<EditorialResumen> obtenerTodosActivos(Pageable pageable);
 
     EditorialResumen obtenerPorIdActivo(Long id);
 
-    Page<EditorialResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    Page<EditorialResumen> obtenerTodos(Pageable pageable);
 
-    Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, int page, int size, String ordenarPor, String direccion);
+    Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, Pageable pageable);
 
     EditorialResumen obtenerPorId(Long id);
 
@@ -24,5 +22,4 @@ public interface EditorialService {
     EditorialResumen actualizar(Long id, EditorialRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-    
 }

@@ -7,6 +7,8 @@ import com.arrupeteca.service.AutorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,12 +25,9 @@ public class AutorController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<AutorResumen> pagina = autorService.obtenerTodosActivos(page, size, ordenarPor, direccion);
+        Page<AutorResumen> pagina = autorService.obtenerTodosActivos(pageable);
         return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", pagina));
     }
 
@@ -42,12 +41,9 @@ public class AutorController {
             @RequestParam(required = false) String palabra,
             @RequestParam(required = false) Integer inicio,
             @RequestParam(required = false) Integer fin,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion) {
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
-        Page<AutorResumen> pagina = autorService.busquedaGlobalAvanzada(palabra, inicio, fin, page, size, ordenarPor, direccion);
+        Page<AutorResumen> pagina = autorService.busquedaGlobalAvanzada(palabra, inicio, fin, pageable);
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
     }
 
@@ -55,15 +51,11 @@ public class AutorController {
     public ResponseEntity<ApiResponse<Page<AutorResumen>>> autoresVivos(
             @RequestParam Integer inicio,
             @RequestParam Integer fin,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion) {
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
-        Page<AutorResumen> pagina = autorService.buscarAutoresVivosEnRango(inicio, fin, page, size, ordenarPor, direccion);
+        Page<AutorResumen> pagina = autorService.buscarAutoresVivosEnRango(inicio, fin, pageable);
         return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", pagina));
     }
-
 
     @PostMapping
     public ResponseEntity<ApiResponse<AutorResumen>> crear(@Valid @RequestBody AutorRequest request) {
@@ -78,13 +70,13 @@ public class AutorController {
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
-        autorService.cambiarEstadoLogico(id, false);
+        autorService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Autor desactivado"));
     }
 
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
-        autorService.cambiarEstadoLogico(id, true);
+        autorService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Autor activado"));
     }
 
@@ -92,12 +84,9 @@ public class AutorController {
 
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(page, size, ordenarPor, direccion)));
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
@@ -110,13 +99,10 @@ public class AutorController {
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion) {
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
 
         Page<AutorResumen> pagina = autorService.busquedaMaestraAdmin(
-                esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, page, size, ordenarPor, direccion);
+                esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, pageable);
 
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }

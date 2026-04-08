@@ -2,23 +2,24 @@ package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Formato;
 import com.arrupeteca.persistence.projection.FormatoResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface FormatoRepository extends JpaRepository<Formato, Long> {
 
-    List<FormatoResumen> findByBorradoLogicoFalse();
+    Page<FormatoResumen> findByBorradoLogicoFalse(Pageable pageable);
 
     Optional<FormatoResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    List<FormatoResumen> findAllProjectedBy();
+    Page<FormatoResumen> findAllProjectedBy(Pageable pageable);
 
     Optional<FormatoResumen> findProjectedById(Long id);
 

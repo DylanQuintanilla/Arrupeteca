@@ -25,7 +25,7 @@ public class EjemplarLibro extends Auditable {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Size(message = "El comentario no puede exceder los 255 caracteres")
+    @Size(max = 255, message = "El comentario no puede exceder los 255 caracteres")
     @Column(nullable = true)
     private String comentario;
 

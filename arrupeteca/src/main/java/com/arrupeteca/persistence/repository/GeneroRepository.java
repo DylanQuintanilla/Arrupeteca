@@ -2,23 +2,24 @@ package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.projection.GeneroResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface GeneroRepository extends JpaRepository<Genero, Long> {
 
-    List<GeneroResumen> findByBorradoLogicoFalse();
+    Page<GeneroResumen> findByBorradoLogicoFalse(Pageable pageable);
 
     Optional<GeneroResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    List<GeneroResumen> findAllProjectedBy();
+    Page<GeneroResumen> findAllProjectedBy(Pageable pageable);
 
     Optional<GeneroResumen> findProjectedById(Long id);
 

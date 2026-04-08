@@ -2,16 +2,16 @@ package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
 import com.arrupeteca.persistence.projection.TipoAutoriaResumen;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface TipoAutoriaService {
 
-    List<TipoAutoriaResumen> obtenerTodosActivos();
+    Page<TipoAutoriaResumen> obtenerTodosActivos(Pageable pageable);
 
     TipoAutoriaResumen obtenerPorIdActivo(Long id);
 
-    List<TipoAutoriaResumen> obtenerTodos();
+    Page<TipoAutoriaResumen> obtenerTodos(Pageable pageable);
 
     TipoAutoriaResumen obtenerPorId(Long id);
 
@@ -20,5 +20,4 @@ public interface TipoAutoriaService {
     TipoAutoriaResumen actualizar(Long id, TipoAutoriaRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-
 }

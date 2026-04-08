@@ -9,9 +9,7 @@ import com.arrupeteca.persistence.repository.*;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,8 +30,7 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+    public Page<AutorResumen> obtenerTodosActivos(Pageable pageable) {
         return autorRepository.findByBorradoLogicoFalse(pageable);
     }
 
@@ -41,13 +38,12 @@ public class AutorServiceImpl implements AutorService {
     @Transactional(readOnly = true)
     public AutorResumen obtenerPorIdActivo(Long id) {
         return autorRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor activo con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AutorResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+    public Page<AutorResumen> obtenerTodos(Pageable pageable) {
         return autorRepository.findAllProjectedBy(pageable);
     }
 
@@ -55,14 +51,12 @@ public class AutorServiceImpl implements AutorService {
     @Transactional(readOnly = true)
     public AutorResumen obtenerPorId(Long id) {
         return autorRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin,
-                                                     int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+    public Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin, Pageable pageable) {
         return autorRepository.busquedaGlobalAvanzada(palabra, inicio, fin, pageable);
     }
 
@@ -71,36 +65,31 @@ public class AutorServiceImpl implements AutorService {
     public Page<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
                                                    Long idGenero, Long idObra, String terminoBusqueda,
                                                    Integer anioInicio, Integer anioFin,
-                                                   int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+                                                   Pageable pageable) {
         return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
                 terminoBusqueda, anioInicio, anioFin, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin,
-                                                        int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
+    public Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin, Pageable pageable) {
         return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin, pageable);
     }
 
     @Override
     @Transactional
     public AutorResumen crear(AutorRequest request) {
-
         List<String> errores = new ArrayList<>();
 
-        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
+        if (request.getSeudonimo() == null || request.getSeudonimo().isBlank()) {
             request.setSeudonimo("Seudonimo Desconocido");
         }
 
-        if(request.getNombre() == null || request.getNombre().isBlank()){
-            request.setSeudonimo("Nombre Desconocido");
+        if (request.getNombre() == null || request.getNombre().isBlank()) {
+            request.setNombre("Nombre Desconocido");
         }
 
         Autor autorNuevo = autorMapper.toEntity(request);
-
         validarYAsignarRelaciones(autorNuevo, request, errores);
 
         if (!errores.isEmpty()) {
@@ -114,37 +103,35 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional
     public AutorResumen actualizar(Long id, AutorRequest request) {
-
         Autor autorExistente = autorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
         List<String> errores = new ArrayList<>();
 
-        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
+        if (request.getSeudonimo() == null || request.getSeudonimo().isBlank()) {
             request.setSeudonimo("Seudonimo Desconocido");
         }
 
-        if(request.getNombre() == null || request.getNombre().isBlank()){
-            request.setSeudonimo("Nombre Desconocido");
+        if (request.getNombre() == null || request.getNombre().isBlank()) {
+            request.setNombre("Nombre Desconocido");
         }
 
         autorMapper.updateEntity(request, autorExistente);
-
         validarYAsignarRelaciones(autorExistente, request, errores);
 
         if (!errores.isEmpty()) {
             throw new ValidacionNegocioException(errores);
         }
 
-        Autor autorActualizado = autorRepository.save(autorExistente);
-        return obtenerPorId(autorActualizado.getId());
+        autorRepository.save(autorExistente);
+        return obtenerPorId(autorExistente.getId());
     }
 
     @Override
     @Transactional
-    public void cambiarEstadoLogico(Long id, boolean estado) {
+    public void cambiarEstado(Long id, boolean estado) {
         if (!autorRepository.existsById(id)) {
-            throw new RuntimeException("No se encontró Autor con ID: " + id);
+            throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
         if (estado) autorRepository.activarAutor(id);
         else autorRepository.desactivarAutor(id);
@@ -163,7 +150,6 @@ public class AutorServiceImpl implements AutorService {
     }
 
     private void validarYAsignarRelaciones(Autor autor, AutorRequest request, List<String> errores) {
-
         if (request.getIdPaisNacimiento() != null) {
             paisRepository.findById(request.getIdPaisNacimiento())
                     .ifPresentOrElse(
@@ -203,17 +189,5 @@ public class AutorServiceImpl implements AutorService {
         } else {
             autor.setObraCumbre(null);
         }
-    }
-
-    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
-        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
-
-        if ("pais".equalsIgnoreCase(campoOrden)) campoOrden = "paisNacimiento.nombre";
-        if ("nacionalidad".equalsIgnoreCase(campoOrden)) campoOrden = "nacionalidad.nombre";
-
-        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-        return PageRequest.of(page, size, Sort.by(direction, campoOrden));
     }
 }

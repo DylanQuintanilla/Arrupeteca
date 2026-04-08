@@ -6,25 +6,27 @@ import com.arrupeteca.persistence.projection.GeneroResumen;
 import com.arrupeteca.service.GeneroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/generos")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") //Debo cambiarlo depsues por el url de el frontend
+@CrossOrigin(origins = "*")
+@RequestMapping("/api/v1/generos")
 public class GeneroController {
 
     private final GeneroService generoService;
 
     // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<GeneroResumen>>> obtenerTodosActivos() {
-        List<GeneroResumen> lista = generoService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de géneros activos", lista));
+    public ResponseEntity<ApiResponse<Page<GeneroResumen>>> obtenerTodosActivos(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        Page<GeneroResumen> pagina = generoService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de géneros activos", pagina));
     }
 
     // GET: Obtener uno por ID
@@ -68,7 +70,8 @@ public class GeneroController {
 
     // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<GeneroResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de géneros", generoService.obtenerTodos()));
+    public ResponseEntity<ApiResponse<Page<GeneroResumen>>> obtenerTodosAdmin(
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de géneros", generoService.obtenerTodos(pageable)));
     }
 }

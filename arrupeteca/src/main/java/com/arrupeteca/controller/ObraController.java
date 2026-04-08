@@ -7,6 +7,8 @@ import com.arrupeteca.service.ObraService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +23,10 @@ public class ObraController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "titulo") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
     ) {
-        Page<ObraResumen> lista = obraService.obtenerTodosActivos(page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", lista));
+        Page<ObraResumen> pagina = obraService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", pagina));
     }
 
     @GetMapping("/{id}")
@@ -38,13 +37,10 @@ public class ObraController {
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "titulo") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
     ) {
-        Page<ObraResumen> lista = obraService.busquedaGlobal(palabra, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
+        Page<ObraResumen> pagina = obraService.busquedaGlobal(palabra, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
     }
 
     @PostMapping
@@ -73,13 +69,10 @@ public class ObraController {
 
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "titulo") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de obras",
-                obraService.obtenerTodos(page, size, ordenarPor, direccion)));
+                obraService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
@@ -88,13 +81,10 @@ public class ObraController {
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "titulo") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
     ) {
-        Page<ObraResumen> lista = obraService.busquedaMaestraAdmin(
-                esBorrado, termino, anioInicio, anioFin, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
+        Page<ObraResumen> pagina = obraService.busquedaMaestraAdmin(
+                esBorrado, termino, anioInicio, anioFin, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

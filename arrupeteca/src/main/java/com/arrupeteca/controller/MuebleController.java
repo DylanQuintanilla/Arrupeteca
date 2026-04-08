@@ -7,6 +7,8 @@ import com.arrupeteca.service.MuebleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,13 +23,10 @@ public class MuebleController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<MuebleResumen> lista = muebleService.obtenerTodosActivos(page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos", lista));
+        Page<MuebleResumen> pagina = muebleService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos", pagina));
     }
 
     @GetMapping("/{id}")
@@ -38,13 +37,10 @@ public class MuebleController {
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<Page<MuebleResumen>>> busquedaGlobal(
             @RequestParam(required = false) String palabra,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<MuebleResumen> lista = muebleService.busquedaGlobal(palabra, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
+        Page<MuebleResumen> pagina = muebleService.busquedaGlobal(palabra, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
     }
 
     @PostMapping
@@ -73,13 +69,10 @@ public class MuebleController {
 
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de muebles",
-                muebleService.obtenerTodos(page, size, ordenarPor, direccion)));
+                muebleService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/busqueda-maestra")
@@ -89,13 +82,10 @@ public class MuebleController {
             @RequestParam(required = false) Long idPlanta,
             @RequestParam(required = false) Long idEdificio,
             @RequestParam(required = false) String termino,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "nombre") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
+            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        Page<MuebleResumen> lista = muebleService.busquedaMaestraAdmin(
-                esBorrado, idSalon, idPlanta, idEdificio, termino, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
+        Page<MuebleResumen> pagina = muebleService.busquedaMaestraAdmin(
+                esBorrado, idSalon, idPlanta, idEdificio, termino, pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }
