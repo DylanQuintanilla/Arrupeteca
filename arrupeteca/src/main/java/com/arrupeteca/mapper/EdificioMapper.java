@@ -11,6 +11,6 @@ public interface EdificioMapper {
 
     Edificio toEntity(EdificioRequest request);
 
-    void updateEntity(EdificioRequest request, @MappingTarget Edificio Edificio);
+    void updateEntity(EdificioRequest request, @MappingTarget Edificio edificio);
 
 }

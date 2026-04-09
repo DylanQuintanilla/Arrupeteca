@@ -1,6 +1,6 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.2'
+	id 'org.springframework.boot' version '3.4.2'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'checkstyle'
 	id 'jacoco'
@@ -53,13 +53,8 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
 
 	// --- 5. PRUEBAS (TESTING) ---
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'com.h2database:h2'
-
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
@@ -96,6 +91,9 @@ checkstyle {
 dependencyCheck {
 	failBuildOnCVSS = 7.0
 	format = 'HTML'
+	if (System.getenv('NVD_API_KEY') == null) {
+		skip = true
+	}
 }
 
 compileJava {

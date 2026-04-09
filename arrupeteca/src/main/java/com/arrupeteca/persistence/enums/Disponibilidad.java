@@ -15,7 +15,7 @@ public enum Disponibilidad {
 
     private final String nombre;
 
-    Disponibilidad(String nombre){
+    Disponibilidad(String nombre) {
         this.nombre = nombre;
     }
 }

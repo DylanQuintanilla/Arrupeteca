@@ -4,9 +4,18 @@ import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.dto.request.ObraAutorRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.ObraMapper;
-import com.arrupeteca.persistence.entity.*;
+import com.arrupeteca.persistence.entity.Autor;
+import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Obra;
+import com.arrupeteca.persistence.entity.ObraAutor;
+import com.arrupeteca.persistence.entity.TipoAutoria;
 import com.arrupeteca.persistence.projection.ObraResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.CategoriaRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import com.arrupeteca.service.ObraService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -116,14 +125,19 @@ public class ObraServiceImpl implements ObraService {
         if (!obraRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Obra con ID: " + id);
         }
-        if (estado) obraRepository.activar(id);
-        else obraRepository.desactivar(id);
+        if (estado) {
+            obraRepository.activar(id);
+        } else {
+            obraRepository.desactivar(id);
+        }
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void asignarGeneros(Obra obra, Set<Long> idGeneros) {
-        if (obra.getGeneros() == null) obra.setGeneros(new HashSet<>());
+        if (obra.getGeneros() == null) {
+            obra.setGeneros(new HashSet<>());
+        }
         obra.getGeneros().clear();
 
         if (idGeneros != null && !idGeneros.isEmpty()) {
@@ -136,7 +150,9 @@ public class ObraServiceImpl implements ObraService {
     }
 
     private void asignarCategorias(Obra obra, Set<Long> idCategorias) {
-        if (obra.getCategorias() == null) obra.setCategorias(new HashSet<>());
+        if (obra.getCategorias() == null) {
+            obra.setCategorias(new HashSet<>());
+        }
         obra.getCategorias().clear();
 
         if (idCategorias != null && !idCategorias.isEmpty()) {

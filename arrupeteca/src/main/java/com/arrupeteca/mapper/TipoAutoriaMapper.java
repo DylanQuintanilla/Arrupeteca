@@ -11,6 +11,6 @@ public interface TipoAutoriaMapper {
 
     TipoAutoria toEntity(TipoAutoriaRequest request);
 
-    void updateEntity(TipoAutoriaRequest request, @MappingTarget TipoAutoria TipoAutoria);
+    void updateEntity(TipoAutoriaRequest request, @MappingTarget TipoAutoria tipoAutoria);
 
 }

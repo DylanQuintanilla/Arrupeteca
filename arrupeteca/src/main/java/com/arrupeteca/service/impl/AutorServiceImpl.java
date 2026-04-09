@@ -3,9 +3,13 @@ package com.arrupeteca.service.impl;
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
-import com.arrupeteca.persistence.entity.*;
+import com.arrupeteca.persistence.entity.Autor;
 import com.arrupeteca.persistence.projection.AutorResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.NacionalidadRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.PaisRepository;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -133,8 +137,11 @@ public class AutorServiceImpl implements AutorService {
         if (!autorRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
-        if (estado) autorRepository.activarAutor(id);
-        else autorRepository.desactivarAutor(id);
+        if (estado) {
+            autorRepository.activarAutor(id);
+        } else {
+            autorRepository.desactivarAutor(id);
+        }
     }
 
     @Override

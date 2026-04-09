@@ -80,9 +80,10 @@ public class TipoAutoriaServiceImpl implements TipoAutoriaService {
         if (!tipoAutoriaRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró un tipo de autoría con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             tipoAutoriaRepository.activar(id);
-        else
+        } else {
             tipoAutoriaRepository.desactivar(id);
+        }
     }
 }

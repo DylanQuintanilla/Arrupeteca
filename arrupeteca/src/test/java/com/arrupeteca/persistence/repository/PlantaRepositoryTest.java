@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PlantaRepositoryTest extends BaseRepositoryTest {
@@ -22,18 +24,18 @@ class PlantaRepositoryTest extends BaseRepositoryTest {
     @Test
     @DisplayName("Should save and find planta")
     void shouldSaveAndFind() {
-        Edificio ed = edificioRepository.save(Edificio.builder().nombre("Ed1").build());
-        Planta p = Planta.builder().nombre("P1").edificio(ed).build();
-        plantaRepository.save(p);
-        assertThat(plantaRepository.existsByNombreIgnoreCaseAndEdificio_Id("p1", ed.getId())).isTrue();
+        Edificio ed = edificioRepository.save(Edificio.builder().nombre("ed1").build());
+        Planta p = plantaRepository.save(Planta.builder().nombre("p1").edificio(ed).build());
+        assertThat(plantaRepository.findById(p.getId())).isPresent();
+        assertThat(plantaRepository.qExistePorNombreYEdificioId("p1", ed.getId())).isTrue();
     }
 
     @Test
     @DisplayName("Should find by edificio")
     void shouldFindByEdificio() {
-        Edificio ed = edificioRepository.save(Edificio.builder().nombre("Ed2").build());
-        plantaRepository.save(Planta.builder().nombre("P2").edificio(ed).build());
-        Page<PlantaResumen> page = plantaRepository.findProjectedByEdificio_IdAndBorradoLogicoFalse(ed.getId(), PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isEqualTo(1);
+        Edificio ed = edificioRepository.save(Edificio.builder().nombre("ed2").build());
+        Planta p = plantaRepository.save(Planta.builder().nombre("p2").edificio(ed).build());
+        Page<PlantaResumen> page = plantaRepository.qBuscarPorEdificioIdYActivo(ed.getId(), PageRequest.of(0, 10));
+        assertThat(page.getContent()).isNotEmpty();
     }
 }

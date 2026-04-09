@@ -14,13 +14,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ObraAutorRepository extends JpaRepository<ObraAutor, Long> {
 
-    //  Admin
+    @EntityGraph(attributePaths = {"autor", "tipoAutoria"})
+    @Query("SELECT oa FROM ObraAutor oa WHERE oa.obra.id = :idObra AND oa.borradoLogico = false")
+    Page<ObraAutorResumen> buscarPorObraIdYActivo(@Param("idObra") Long idObra, Pageable pageable);
 
     @EntityGraph(attributePaths = {"autor", "tipoAutoria"})
-    Page<ObraAutorResumen> findByObraIdAndBorradoLogicoFalse(Long idObra, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"autor", "tipoAutoria"})
-    Page<ObraAutorResumen> findByObraId(Long idObra, Pageable pageable);
+    @Query("SELECT oa FROM ObraAutor oa WHERE oa.obra.id = :idObra")
+    Page<ObraAutorResumen> buscarPorObraId(@Param("idObra") Long idObra, Pageable pageable);
 
     @Modifying
     @Query("UPDATE ObraAutor oa SET oa.borradoLogico = true WHERE oa.id = :id")

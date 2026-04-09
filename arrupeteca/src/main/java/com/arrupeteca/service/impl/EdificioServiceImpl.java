@@ -80,9 +80,10 @@ public class EdificioServiceImpl implements EdificioService {
         if (!edificioRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró edificio con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             edificioRepository.activar(id);
-        else
+        } else {
             edificioRepository.desactivar(id);
+        }
     }
 }

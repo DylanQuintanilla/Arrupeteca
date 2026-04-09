@@ -80,9 +80,10 @@ public class IdiomaServiceImpl implements IdiomaService {
         if (!idiomaRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Idioma con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             idiomaRepository.activar(id);
-        else
+        } else {
             idiomaRepository.desactivar(id);
+        }
     }
 }

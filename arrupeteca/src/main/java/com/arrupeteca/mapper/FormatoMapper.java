@@ -11,6 +11,6 @@ public interface FormatoMapper {
 
     Formato toEntity(FormatoRequest request);
 
-    void updateEntity(FormatoRequest request, @MappingTarget Formato Formato);
+    void updateEntity(FormatoRequest request, @MappingTarget Formato formato);
 
 }

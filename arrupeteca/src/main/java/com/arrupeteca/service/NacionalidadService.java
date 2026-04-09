@@ -9,7 +9,7 @@ public interface NacionalidadService {
 
     Page<NacionalidadResumen> obtenerTodasActivas(Pageable pageable);
 
-    NacionalidadResumen obtenerPorIdActiva(Long id);
+    NacionalidadResumen obtenerPorIdActivo(Long id);
 
     Page<NacionalidadResumen> obtenerTodas(Pageable pageable);
 

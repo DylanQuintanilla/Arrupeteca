@@ -8,7 +8,11 @@ import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.enums.Ciclo;
 import com.arrupeteca.persistence.enums.Grado;
 import com.arrupeteca.persistence.projection.LibroResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.repository.EditorialRepository;
+import com.arrupeteca.persistence.repository.FormatoRepository;
+import com.arrupeteca.persistence.repository.IdiomaRepository;
+import com.arrupeteca.persistence.repository.LibroRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -82,7 +86,7 @@ public class LibroServiceImpl implements LibroService {
         if (!obraRepository.existsById(idObra)) {
             throw new ValidacionNegocioException("No se encontró Obra con ID: " + idObra);
         }
-        return libroRepository.findByObraId(pageable, idObra);
+        return libroRepository.buscarPorObraId(idObra, pageable);
     }
 
     @Override
@@ -123,8 +127,11 @@ public class LibroServiceImpl implements LibroService {
         if (!libroRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Libro con ID: " + id);
         }
-        if (estado) libroRepository.activar(id);
-        else libroRepository.desactivar(id);
+        if (estado) {
+            libroRepository.activar(id);
+        } else {
+            libroRepository.desactivar(id);
+        }
     }
 
     private void asignarRelaciones(Libro libro, LibroRequest request) {

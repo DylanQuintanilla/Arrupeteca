@@ -51,7 +51,7 @@ public class PlantaServiceImpl implements PlantaService {
     @Override
     @Transactional
     public PlantaResumen crear(PlantaRequest request) {
-        if (plantaRepository.existsByNombreIgnoreCaseAndEdificio_Id(request.getNombre(), request.getIdEdificio())) {
+        if (plantaRepository.qExistePorNombreYEdificioId(request.getNombre(), request.getIdEdificio())) {
             throw new ValidacionNegocioException("Ya existe la planta '" + request.getNombre() + "' en el edificio indicado.");
         }
 
@@ -72,7 +72,7 @@ public class PlantaServiceImpl implements PlantaService {
         boolean cambioEdificio = plantaEncontrada.getEdificio() == null || !plantaEncontrada.getEdificio().getId().equals(request.getIdEdificio());
 
         if ((cambioNombre || cambioEdificio) &&
-                plantaRepository.existsByNombreIgnoreCaseAndEdificio_Id(request.getNombre(), request.getIdEdificio())) {
+                plantaRepository.qExistePorNombreYEdificioId(request.getNombre(), request.getIdEdificio())) {
             throw new ValidacionNegocioException("Ya existe una planta con el nombre '" + request.getNombre() + "' en este edificio.");
         }
 
@@ -104,10 +104,8 @@ public class PlantaServiceImpl implements PlantaService {
             throw new ValidacionNegocioException("No existe un edificio con ID: " + idEdificio);
         }
 
-        return plantaRepository.findProjectedByEdificio_IdAndBorradoLogicoFalse(idEdificio, pageable);
+        return plantaRepository.qBuscarPorEdificioIdYActivo(idEdificio, pageable);
     }
-
-    //------------------
 
     private void asignarRelaciones(Planta planta, PlantaRequest request) {
         if (request.getIdEdificio() != null) {

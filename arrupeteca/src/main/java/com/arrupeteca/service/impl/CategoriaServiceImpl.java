@@ -80,9 +80,10 @@ public class CategoriaServiceImpl implements CategoriaService {
         if (!categoriaRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró categoría con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             categoriaRepository.activar(id);
-        else
+        } else {
             categoriaRepository.desactivar(id);
+        }
     }
 }

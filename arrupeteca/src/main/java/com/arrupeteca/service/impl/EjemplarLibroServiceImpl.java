@@ -102,8 +102,11 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         if (!ejemplarLibroRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Ejemplar con ID: " + id);
         }
-        if (estado) ejemplarLibroRepository.activar(id);
-        else ejemplarLibroRepository.desactivar(id);
+        if (estado) {
+            ejemplarLibroRepository.activar(id);
+        } else {
+            ejemplarLibroRepository.desactivar(id);
+        }
     }
 
     private void asignarRelaciones(EjemplarLibro ejemplar, EjemplarLibroRequest request) {

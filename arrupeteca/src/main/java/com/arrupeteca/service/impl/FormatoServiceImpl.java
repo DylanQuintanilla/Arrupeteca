@@ -80,9 +80,10 @@ public class FormatoServiceImpl implements FormatoService {
         if (!formatoRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Formato con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             formatoRepository.activar(id);
-        else
+        } else {
             formatoRepository.desactivar(id);
+        }
     }
 }

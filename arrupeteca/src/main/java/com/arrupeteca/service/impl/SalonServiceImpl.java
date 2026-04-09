@@ -51,7 +51,7 @@ public class SalonServiceImpl implements SalonService {
     @Override
     @Transactional
     public SalonResumen crear(SalonRequest request) {
-        if (salonRepository.existsByNombreIgnoreCaseAndPlanta_Id(request.getNombre(), request.getIdPlanta())) {
+        if (salonRepository.qExistePorNombreYPlantaId(request.getNombre(), request.getIdPlanta())) {
             throw new ValidacionNegocioException("Ya existe el salón '" + request.getNombre() + "' en la planta indicada.");
         }
 
@@ -72,7 +72,7 @@ public class SalonServiceImpl implements SalonService {
         boolean cambioPlanta = salonEncontrado.getPlanta() == null || !salonEncontrado.getPlanta().getId().equals(request.getIdPlanta());
 
         if ((cambioNombre || cambioPlanta) &&
-                salonRepository.existsByNombreIgnoreCaseAndPlanta_Id(request.getNombre(), request.getIdPlanta())) {
+                salonRepository.qExistePorNombreYPlantaId(request.getNombre(), request.getIdPlanta())) {
             throw new ValidacionNegocioException("Ya existe un salón con el nombre '" + request.getNombre() + "' en esta planta.");
         }
 
@@ -104,10 +104,8 @@ public class SalonServiceImpl implements SalonService {
             throw new ValidacionNegocioException("No existe una planta con ID: " + idPlanta);
         }
 
-        return salonRepository.findProjectedByPlanta_IdAndBorradoLogicoFalse(idPlanta, pageable);
+        return salonRepository.qBuscarPorPlantaIdYActivo(idPlanta, pageable);
     }
-
-    //------------------
 
     private void asignarRelaciones(Salon salon, SalonRequest request) {
         if (request.getIdPlanta() != null) {

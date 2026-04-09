@@ -118,6 +118,9 @@ public interface MuebleRepository extends JpaRepository<Mueble, Long> {
     void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
-    boolean existsByNombreAndSalonId(String nombre, Long idSalon);
+
+    @Query("SELECT COUNT(m) > 0 FROM Mueble m WHERE m.nombre = :nombre AND m.salon.id = :idSalon")
+    boolean existePorNombreYSalonId(@Param("nombre") String nombre, @Param("idSalon") Long idSalon);
+
     boolean existsByNombreIgnoreCase(String nombre);
 }

@@ -11,6 +11,6 @@ public interface IdiomaMapper {
 
     Idioma toEntity(IdiomaRequest request);
 
-    void updateEntity(IdiomaRequest request, @MappingTarget Idioma Idioma);
+    void updateEntity(IdiomaRequest request, @MappingTarget Idioma idioma);
 
 }

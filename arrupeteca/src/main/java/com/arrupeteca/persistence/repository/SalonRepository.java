@@ -23,7 +23,8 @@ public interface SalonRepository extends JpaRepository<Salon, Long> {
     Optional<SalonResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"planta.edificio"})
-    Page<SalonResumen> findProjectedByPlanta_IdAndBorradoLogicoFalse(Long idPlanta, Pageable pageable);
+    @Query("SELECT s FROM Salon s WHERE s.planta.id = :idPlanta AND s.borradoLogico = false")
+    Page<SalonResumen> qBuscarPorPlantaIdYActivo(@Param("idPlanta") Long idPlanta, Pageable pageable);
 
     @EntityGraph(attributePaths = {"planta.edificio"})
     Page<SalonResumen> findAllProjectedBy(Pageable pageable);
@@ -39,6 +40,7 @@ public interface SalonRepository extends JpaRepository<Salon, Long> {
     @Query("UPDATE Salon s SET s.borradoLogico = false WHERE s.id = :id")
     void activarSalon(@Param("id") Long id);
 
-    boolean existsByNombreIgnoreCaseAndPlanta_Id(String nombre, Long idPlanta);
+    @Query("SELECT COUNT(s) > 0 FROM Salon s WHERE LOWER(s.nombre) = LOWER(:nombre) AND s.planta.id = :idPlanta")
+    boolean qExistePorNombreYPlantaId(@Param("nombre") String nombre, @Param("idPlanta") Long idPlanta);
 
 }

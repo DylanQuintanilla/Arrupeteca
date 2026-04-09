@@ -23,7 +23,8 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     Optional<PlantaResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"edificio"})
-    Page<PlantaResumen> findProjectedByEdificio_IdAndBorradoLogicoFalse(Long idEdificio, Pageable pageable);
+    @Query("SELECT p FROM Planta p WHERE p.edificio.id = :idEdificio AND p.borradoLogico = false")
+    Page<PlantaResumen> qBuscarPorEdificioIdYActivo(@Param("idEdificio") Long idEdificio, Pageable pageable);
 
     @EntityGraph(attributePaths = {"edificio"})
     Optional<PlantaResumen> findProjectedById(Long id);
@@ -39,6 +40,7 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     @Query("UPDATE Planta p SET p.borradoLogico = false WHERE p.id = :id")
     void activarPlanta(@Param("id") Long id);
 
-    boolean existsByNombreIgnoreCaseAndEdificio_Id(String nombre, Long idEdificio);
+    @Query("SELECT COUNT(p) > 0 FROM Planta p WHERE LOWER(p.nombre) = LOWER(:nombre) AND p.edificio.id = :idEdificio")
+    boolean qExistePorNombreYEdificioId(@Param("nombre") String nombre, @Param("idEdificio") Long idEdificio);
 
 }

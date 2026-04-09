@@ -65,7 +65,7 @@ public class MuebleServiceImpl implements MuebleService {
     @Override
     @Transactional
     public MuebleResumen crear(MuebleRequest request) {
-        if (muebleRepository.existsByNombreAndSalonId(request.getNombre(), request.getIdSalon())) {
+        if (muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
             throw new ValidacionNegocioException("Ya existe un mueble con el nombre '" + request.getNombre() + "' en ese salón.");
         }
 
@@ -83,7 +83,7 @@ public class MuebleServiceImpl implements MuebleService {
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Mueble con ID: " + id));
 
         if (!existente.getNombre().equalsIgnoreCase(request.getNombre()) &&
-                muebleRepository.existsByNombreAndSalonId(request.getNombre(), request.getIdSalon())) {
+                muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
             throw new ValidacionNegocioException("Ya existe un mueble con el nombre '" + request.getNombre() + "' en ese salón.");
         }
 
@@ -100,8 +100,11 @@ public class MuebleServiceImpl implements MuebleService {
         if (!muebleRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Mueble con ID: " + id);
         }
-        if (estado) muebleRepository.activar(id);
-        else muebleRepository.desactivar(id);
+        if (estado) {
+            muebleRepository.activar(id);
+        } else {
+            muebleRepository.desactivar(id);
+        }
     }
 
     private void asignarRelaciones(Mueble mueble, MuebleRequest request) {

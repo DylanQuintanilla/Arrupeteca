@@ -94,5 +94,6 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
     void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
+
     boolean existsByTituloIgnoreCase(String titulo);
 }

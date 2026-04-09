@@ -94,9 +94,10 @@ public class EditorialServiceImpl implements EditorialService {
         if (!editorialRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Editorial con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             editorialRepository.activar(id);
-        else
+        } else {
             editorialRepository.desactivar(id);
+        }
     }
 }

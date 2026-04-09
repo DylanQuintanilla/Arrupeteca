@@ -28,7 +28,7 @@ public class NacionalidadServiceImpl implements NacionalidadService {
 
     @Override
     @Transactional(readOnly = true)
-    public NacionalidadResumen obtenerPorIdActiva(Long id) {
+    public NacionalidadResumen obtenerPorIdActivo(Long id) {
         return nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(id)
                 .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe o está inactiva"));
     }
