@@ -20,7 +20,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 class CategoriaServiceImplTest extends BaseServiceTest {
 
@@ -43,6 +45,59 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThat(result).isEqualTo(expectedPage);
         verify(categoriaRepository).findByBorradoLogicoFalse(any(Pageable.class));
+    }
+
+    @Test
+    @DisplayName("Should return category by ID and active")
+    void shouldReturnByIdAndActive() {
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        when(categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+
+        CategoriaResumen result = categoriaService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(resumen);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when category not found or inactive")
+    void shouldThrowWhenNotFoundOrInactive() {
+        when(categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoriaService.obtenerPorIdActivo(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró una categoría con ID: 1, o no está activa");
+    }
+
+    @Test
+    @DisplayName("Should return all categories for admin")
+    void shouldReturnAllAdmin() {
+        Page<CategoriaResumen> expectedPage = new PageImpl<>(List.of(mock(CategoriaResumen.class)));
+        when(categoriaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+
+        Page<CategoriaResumen> result = categoriaService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result).isEqualTo(expectedPage);
+    }
+
+    @Test
+    @DisplayName("Should return category by ID")
+    void shouldReturnById() {
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+
+        CategoriaResumen result = categoriaService.obtenerPorId(1L);
+
+        assertThat(result).isEqualTo(resumen);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when category not found")
+    void shouldThrowWhenNotFound() {
+        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoriaService.obtenerPorId(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró una categoría con ID: 1");
     }
 
     @Test
@@ -78,4 +133,106 @@ class CategoriaServiceImplTest extends BaseServiceTest {
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("ya ha sido utilizado");
     }
+
+    @Test
+    @DisplayName("Should update category when name is unique or same")
+    void shouldUpdateCategory() {
+        CategoriaRequest request = new CategoriaRequest();
+        request.setNombre("Actualizada");
+
+        Categoria existing = new Categoria();
+        existing.setId(1L);
+        existing.setNombre("Antigua");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(categoriaRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
+        
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+
+        CategoriaResumen result = categoriaService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(resumen);
+        verify(categoriaMapper).updateEntity(request, existing);
+        verify(categoriaRepository).save(existing);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating category and new name exists")
+    void shouldThrowWhenUpdatingToExistingName() {
+        CategoriaRequest request = new CategoriaRequest();
+        request.setNombre("Existente");
+
+        Categoria existing = new Categoria();
+        existing.setId(1L);
+        existing.setNombre("Antigua");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(categoriaRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
+
+        assertThatThrownBy(() -> categoriaService.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe una categoría con el nombre: Existente");
+    }
+
+    @Test
+    @DisplayName("Should update category when name is same (ignore case)")
+    void shouldUpdateWhenNameSame() {
+        CategoriaRequest request = new CategoriaRequest();
+        request.setNombre("CATEGORIA");
+
+        Categoria existing = new Categoria();
+        existing.setId(1L);
+        existing.setNombre("categoria");
+
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
+        
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+
+        CategoriaResumen result = categoriaService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(resumen);
+    }
+
+    @Test
+    @DisplayName("Should throw when updating non-existent category")
+    void shouldThrowWhenUpdatingNonExistent() {
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> categoriaService.actualizar(1L, new CategoriaRequest()))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró categoría con ID: 1");
+    }
+
+    @Test
+    @DisplayName("Should deactivate category")
+    void shouldDeactivate() {
+        when(categoriaRepository.existsById(1L)).thenReturn(true);
+
+        categoriaService.cambiarEstado(1L, false);
+
+        verify(categoriaRepository).desactivar(1L);
+    }
+
+    @Test
+    @DisplayName("Should activate category")
+    void shouldActivate() {
+        when(categoriaRepository.existsById(1L)).thenReturn(true);
+
+        categoriaService.cambiarEstado(1L, true);
+
+        verify(categoriaRepository).activar(1L);
+    }
+
+    @Test
+    @DisplayName("Should throw when changing state of non-existent category")
+    void shouldThrowWhenChangingStateNonExistent() {
+        when(categoriaRepository.existsById(1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> categoriaService.cambiarEstado(1L, true))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró categoría con ID: 1");
+    }
 }
+

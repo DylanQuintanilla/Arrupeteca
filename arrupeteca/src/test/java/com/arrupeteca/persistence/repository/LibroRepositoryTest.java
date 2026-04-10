@@ -1,6 +1,12 @@
 package com.arrupeteca.persistence.repository;
 
-import com.arrupeteca.persistence.entity.*;
+import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Editorial;
+import com.arrupeteca.persistence.entity.Formato;
+import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Idioma;
+import com.arrupeteca.persistence.entity.Libro;
+import com.arrupeteca.persistence.entity.Obra;
 import com.arrupeteca.persistence.projection.LibroResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

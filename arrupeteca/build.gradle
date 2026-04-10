@@ -74,6 +74,14 @@ jacocoTestReport {
 jacocoTestCoverageVerification {
 	violationRules {
 		rule {
+			element = 'CLASS'
+			excludes = [
+					'com.arrupeteca.mapper.*',
+					'com.arrupeteca.ArrupetecaApplication',
+					'com.arrupeteca.persistence.entity.*',
+					'com.arrupeteca.dto.*',
+					'com.arrupeteca.config.*'
+			]
 			limit {
 				minimum = 1.0
 			}

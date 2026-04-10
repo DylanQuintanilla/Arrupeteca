@@ -79,7 +79,7 @@ public class GeneroServiceImpl implements GeneroService {
     @Transactional
     public void cambiarEstado(Long id, boolean estado) {
         if (!generoRepository.existsById(id)) {
-            throw new ValidacionNegocioException("No existe un género con ID: " + id);
+            throw new ValidacionNegocioException("No existe un género con el ID: " + id);
         }
 
         if (estado) {

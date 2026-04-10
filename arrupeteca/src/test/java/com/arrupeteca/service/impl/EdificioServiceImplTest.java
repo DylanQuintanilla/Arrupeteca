@@ -20,7 +20,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
 
 class EdificioServiceImplTest extends BaseServiceTest {
     @Mock private EdificioRepository repository;
@@ -44,6 +48,15 @@ class EdificioServiceImplTest extends BaseServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when active building not found")
+    void shouldThrowWhenActiveNotFound() {
+        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró un edificio con ID: 1, o no está activo");
+    }
+
+    @Test
     @DisplayName("Should return all buildings")
     void shouldReturnAll() {
         Page<EdificioResumen> page = new PageImpl<>(List.of());
@@ -60,22 +73,43 @@ class EdificioServiceImplTest extends BaseServiceTest {
     }
 
     @Test
+    @DisplayName("Should throw exception when building not found by id")
+    void shouldThrowWhenNotFoundById() {
+        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.obtenerPorId(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró un edificio con ID: 1");
+    }
+
+    @Test
     @DisplayName("Should create building")
     void shouldCreate() {
         EdificioRequest request = new EdificioRequest();
         request.setNombre("Edificio A");
 
         when(repository.existsByNombreIgnoreCase(anyString())).thenReturn(false);
-        
+
         Edificio entity = new Edificio();
         entity.setId(1L);
         when(mapper.toEntity(any())).thenReturn(entity);
         when(repository.save(any())).thenReturn(entity);
-        
+
         EdificioResumen resumen = mock(EdificioResumen.class);
         when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
 
         assertThat(service.crear(request)).isEqualTo(resumen);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when name exists on create")
+    void shouldThrowWhenNameExistsOnCreate() {
+        EdificioRequest request = new EdificioRequest();
+        request.setNombre("Edificio A");
+        when(repository.existsByNombreIgnoreCase("Edificio A")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("El nombre: Edificio A ya ha sido utilizado");
     }
 
     @Test
@@ -87,15 +121,42 @@ class EdificioServiceImplTest extends BaseServiceTest {
         Edificio existing = new Edificio();
         existing.setId(1L);
         existing.setNombre("Edificio A");
-        
+
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.existsByNombreIgnoreCase("Edificio B")).thenReturn(false);
-        
+
         EdificioResumen resumen = mock(EdificioResumen.class);
         when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
 
         assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
         verify(repository).save(existing);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when building not found on update")
+    void shouldThrowWhenNotFoundOnUpdate() {
+        when(repository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.actualizar(1L, new EdificioRequest()))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró edificio con ID: 1");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when name already exists on update")
+    void shouldThrowWhenNameExistsOnUpdate() {
+        EdificioRequest request = new EdificioRequest();
+        request.setNombre("Edificio B");
+
+        Edificio existing = new Edificio();
+        existing.setId(1L);
+        existing.setNombre("Edificio A");
+
+        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.existsByNombreIgnoreCase("Edificio B")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe un edificio con el nombre: Edificio B");
     }
 
     @Test
@@ -113,4 +174,16 @@ class EdificioServiceImplTest extends BaseServiceTest {
         service.cambiarEstado(1L, false);
         verify(repository).desactivar(1L);
     }
+
+    @Test
+    @DisplayName("Should throw exception when building not found on status change")
+    void shouldThrowWhenNotFoundOnStatusChange() {
+        when(repository.existsById(1L)).thenReturn(false);
+        assertThatThrownBy(() -> service.cambiarEstado(1L, true))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró edificio con ID: 1");
+        verify(repository, never()).activar(any());
+        verify(repository, never()).desactivar(any());
+    }
 }
+

@@ -1,6 +1,17 @@
 package com.arrupeteca.persistence.repository;
 
-import com.arrupeteca.persistence.entity.*;
+import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Edificio;
+import com.arrupeteca.persistence.entity.Editorial;
+import com.arrupeteca.persistence.entity.EjemplarLibro;
+import com.arrupeteca.persistence.entity.Formato;
+import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Idioma;
+import com.arrupeteca.persistence.entity.Libro;
+import com.arrupeteca.persistence.entity.Mueble;
+import com.arrupeteca.persistence.entity.Obra;
+import com.arrupeteca.persistence.entity.Planta;
+import com.arrupeteca.persistence.entity.Salon;
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
