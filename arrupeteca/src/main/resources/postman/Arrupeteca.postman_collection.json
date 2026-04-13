@@ -22,7 +22,7 @@
             { "name": "Desactivar Autor", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/autores/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Autor", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/autores/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/admin/busqueda-maestra?esBorrado=false&idNacionalidad=1&idPais=1&idGenero=1&idObra=1&termino=nombre&anioInicio=1900&anioFin=2000" } }
           ]
         },
         {
@@ -36,7 +36,7 @@
             { "name": "Desactivar Obra", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/obras/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Obra", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/obras/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/admin/busqueda-maestra?esBorrado=false&termino=soledad&anioInicio=1960&anioFin=1970" } }
           ]
         },
         {
@@ -51,7 +51,7 @@
             { "name": "Desactivar Libro", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/libros/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Libro", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/libros/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra?esBorrado=false&idObra=1&idEditorial=1&idFormato=1&grado=PRIMERO&ciclo=PRIMERO&termino=isbn&anioInicio=1900&anioFin=2024" } }
           ]
         }
       ]
@@ -70,7 +70,7 @@
             { "name": "Desactivar Ejemplar", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/ejemplares/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Ejemplar", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/ejemplares/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra?esBorrado=false&idLibro=1&idMueble=1&estadoFisico=NUEVO&disponibilidad=DISPONIBLE&termino=BIB" } }
           ]
         },
         {
@@ -122,7 +122,7 @@
             { "name": "Desactivar Mueble", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/muebles/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Mueble", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/muebles/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/admin/busqueda-maestra?esBorrado=false&idSalon=1&idPlanta=1&idEdificio=1&termino=Estante" } }
           ]
         }
       ]
@@ -154,7 +154,7 @@
             { "name": "Desactivar Editorial", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/editoriales/:id", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Activar Editorial", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/editoriales/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
             { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/admin" } },
-            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/admin/busqueda-maestra" } }
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/admin/busqueda-maestra?esBorrado=false&termino=Planeta" } }
           ]
         },
         {
