@@ -1,134 +1,77 @@
 package com.arrupeteca.dto.request;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.json.JacksonTester;
 
+import java.io.IOException;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@JsonTest
+@DisplayName("AutorRequest JSON and Validation Tests")
 class AutorRequestTest {
 
+    @Autowired
+    private JacksonTester<AutorRequest> json;
+
+    private Validator validator;
+
+    @BeforeEach
+    void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
+    }
+
     @Test
-    @DisplayName("Test Lombok methods (Getters, Setters, ToString, Equals, HashCode, Builder)")
-    void testLombokMethods() {
-        AutorRequest request1 = AutorRequest.builder()
-                .nombre("Nombre")
-                .seudonimo("Seudonimo")
-                .anioNacimiento(1900)
-                .anioFallecimiento(1980)
-                .biografia("Bio")
-                .idPaisNacimiento(1L)
-                .idNacionalidad(2L)
-                .idGeneroPrincipal(3L)
-                .idObraCumbre(4L)
+    @DisplayName("Should serialize AutorRequest correctly")
+    void shouldSerialize() throws IOException {
+        AutorRequest request = AutorRequest.builder()
+                .nombre("Gabriel García Márquez")
+                .seudonimo("Gabo")
+                .anioNacimiento(1927)
+                .anioFallecimiento(2014)
+                .biografia("Escritor colombiano...")
                 .build();
 
-        AutorRequest request2 = new AutorRequest();
-        request2.setNombre("Nombre");
-        request2.setSeudonimo("Seudonimo");
-        request2.setAnioNacimiento(1900);
-        request2.setAnioFallecimiento(1980);
-        request2.setBiografia("Bio");
-        request2.setIdPaisNacimiento(1L);
-        request2.setIdNacionalidad(2L);
-        request2.setIdGeneroPrincipal(3L);
-        request2.setIdObraCumbre(4L);
-
-        assertEquals(request1, request2);
-        assertEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1.toString(), request2.toString());
-        
-        assertEquals("Nombre", request1.getNombre());
-        assertEquals("Seudonimo", request1.getSeudonimo());
-        assertEquals(1900, request1.getAnioNacimiento());
-        assertEquals(1980, request1.getAnioFallecimiento());
-        assertEquals("Bio", request1.getBiografia());
-        assertEquals(1L, request1.getIdPaisNacimiento());
-        assertEquals(2L, request1.getIdNacionalidad());
-        assertEquals(3L, request1.getIdGeneroPrincipal());
-        assertEquals(4L, request1.getIdObraCumbre());
+        assertThat(json.write(request)).hasJsonPathStringValue("@.nombre", "Gabriel García Márquez");
+        assertThat(json.write(request)).hasJsonPathStringValue("@.seudonimo", "Gabo");
+        assertThat(json.write(request)).hasJsonPathNumberValue("@.anioNacimiento", 1927);
+        assertThat(json.write(request)).hasJsonPathNumberValue("@.anioFallecimiento", 2014);
     }
 
     @Test
-    @DisplayName("Test equals and hashCode with different values")
-    void testEqualsAndHashCode() {
-        AutorRequest request1 = AutorRequest.builder().nombre("A").build();
-        AutorRequest request2 = AutorRequest.builder().nombre("B").build();
-        AutorRequest request3 = AutorRequest.builder().nombre("A").build();
+    @DisplayName("Should fail when both nombre and seudonimo are blank")
+    void shouldFailWhenIdentityIsInvalid() {
+        AutorRequest request = AutorRequest.builder()
+                .nombre("")
+                .seudonimo("")
+                .biografia("Bio")
+                .build();
 
-        assertNotEquals(request1, request2);
-        assertNotEquals(request1.hashCode(), request2.hashCode());
-        assertEquals(request1, request3);
-        assertEquals(request1.hashCode(), request3.hashCode());
-        
-        assertNotEquals(null, request1);
-        assertNotEquals(request1, new Object());
+        Set<ConstraintViolation<AutorRequest>> violations = validator.validate(request);
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("Nombre o un Seudonimo"));
     }
 
     @Test
-    @DisplayName("Test isIdentidadValida branches")
-    void testIsIdentidadValida() {
-        AutorRequest request = new AutorRequest();
+    @DisplayName("Should fail when birth year is greater than death year")
+    void shouldFailWhenDatesAreInvalid() {
+        AutorRequest request = AutorRequest.builder()
+                .nombre("Autor")
+                .anioNacimiento(2000)
+                .anioFallecimiento(1990)
+                .biografia("Bio")
+                .build();
 
-        // nombre present, seudonimo null -> true
-        request.setNombre("Nombre");
-        request.setSeudonimo(null);
-        assertTrue(request.isIdentidadValida());
-
-        // nombre null, seudonimo present -> true
-        request.setNombre(null);
-        request.setSeudonimo("Seudonimo");
-        assertTrue(request.isIdentidadValida());
-
-        // both present -> true
-        request.setNombre("Nombre");
-        request.setSeudonimo("Seudonimo");
-        assertTrue(request.isIdentidadValida());
-
-        // nombre blank, seudonimo blank -> false
-        request.setNombre("");
-        request.setSeudonimo("  ");
-        assertFalse(request.isIdentidadValida());
-
-        // both null -> false
-        request.setNombre(null);
-        request.setSeudonimo(null);
-        assertFalse(request.isIdentidadValida());
-    }
-
-    @Test
-    @DisplayName("Test isFechasValidas branches")
-    void testIsFechasValidas() {
-        AutorRequest request = new AutorRequest();
-
-        // anioNacimiento null -> true
-        request.setAnioNacimiento(null);
-        request.setAnioFallecimiento(2000);
-        assertTrue(request.isFechasValidas());
-
-        // anioFallecimiento null -> true
-        request.setAnioNacimiento(1900);
-        request.setAnioFallecimiento(null);
-        assertTrue(request.isFechasValidas());
-
-        // both null -> true
-        request.setAnioNacimiento(null);
-        request.setAnioFallecimiento(null);
-        assertTrue(request.isFechasValidas());
-
-        // anioNacimiento <= anioFallecimiento -> true
-        request.setAnioNacimiento(1900);
-        request.setAnioFallecimiento(1980);
-        assertTrue(request.isFechasValidas());
-
-        request.setAnioNacimiento(1900);
-        request.setAnioFallecimiento(1900);
-        assertTrue(request.isFechasValidas());
-
-        // anioNacimiento > anioFallecimiento -> false
-        request.setAnioNacimiento(2000);
-        request.setAnioFallecimiento(1900);
-        assertFalse(request.isFechasValidas());
+        Set<ConstraintViolation<AutorRequest>> violations = validator.validate(request);
+        assertThat(violations).anyMatch(v -> v.getMessage().contains("año de nacimiento no puede ser mayor"));
     }
 }

@@ -67,7 +67,7 @@ public class Obra extends Auditable {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String resumen;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 

@@ -29,7 +29,7 @@ Toda la salida del agente DEBE ser concisa y orientada a resultados. Este princi
 ## Technology Stack (Stack Tecnológico)
 
 - **Language/Runtime (Lenguaje)**: Java 21
-- **Frameworks**: Spring Boot 4.0.2
+- **Frameworks**: Spring Boot 3.4.2
 - **Storage (Almacenamiento)**: MySQL 8.x
 - **Infrastructure (Infraestructura)**: Local (Gradle)
 
@@ -70,4 +70,4 @@ Toda la salida del agente DEBE ser concisa y orientada a resultados. Este princi
 - **Persistence (Persistencia)**: El agente NO debe mover, renombrar o eliminar archivos dentro de `governance/` ni alterar la estructura de `governance/specs/` sin una directiva explícita del usuario.
 - **Configuration (Configuración)**: El archivo `.github/sddp-config.md` en la raíz actúa como el único puente de configuración permitido hacia la carpeta `governance/`.
 
-**Version**: 1.1.0 | **Last Amended (Última Enmienda)**: 2026-04-06
+**Version**: 1.1.1 | **Last Amended (Última Enmienda)**: 2026-04-13

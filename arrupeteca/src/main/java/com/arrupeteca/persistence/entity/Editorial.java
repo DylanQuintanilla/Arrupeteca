@@ -74,7 +74,7 @@ public class Editorial {
     @Column(name = "persona_contacto", nullable = false, length = 100)
     private String personaContacto;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 }

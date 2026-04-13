@@ -58,7 +58,7 @@ public class Mueble {
     @Column(length = 50, nullable = false)
     private String nombre;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 

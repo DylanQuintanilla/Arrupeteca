@@ -54,7 +54,7 @@ public class EjemplarLibro extends Auditable {
     @Column(nullable = true)
     private String comentario;
 
-    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 

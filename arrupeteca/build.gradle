@@ -51,6 +51,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
 	// --- 5. PRUEBAS (TESTING) ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -75,13 +76,6 @@ jacocoTestCoverageVerification {
 	violationRules {
 		rule {
 			element = 'CLASS'
-			excludes = [
-					'com.arrupeteca.mapper.*',
-					'com.arrupeteca.ArrupetecaApplication',
-					'com.arrupeteca.persistence.entity.*',
-					'com.arrupeteca.dto.*',
-					'com.arrupeteca.config.*'
-			]
 			limit {
 				minimum = 1.0
 			}
@@ -104,9 +98,11 @@ dependencyCheck {
 	}
 }
 
-compileJava {
+tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += [
 			'-Amapstruct.defaultComponentModel=spring',
-			'-Amapstruct.unmappedTargetPolicy=IGNORE'
+			'-Amapstruct.unmappedTargetPolicy=IGNORE',
+			'-Amapstruct.addGeneratedAnnotation=true',
+			'-Amapstruct.generatedAnnotation=jakarta.annotation.Generated'
 	]
 }
