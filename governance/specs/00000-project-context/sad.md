@@ -64,3 +64,11 @@ Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 4
 ## 6. Development and Quality Policy (Política de Desarrollo y Calidad)
 - **TDD Mandatory**: Cobertura del 100% mediante JUnit 5 y Mockito.
 - **Clean Code**: Eliminar anotaciones redundantes como `@Repository`.
+
+## Project Context Baseline Updates (Actualizaciones de la Línea Base del Contexto del Proyecto)
+
+### 2026-04-12 | Estrategia de Pruebas de Mappers y DTOs
+- **MapStruct Testing**: Se adopta el estándar de probar los mappers generados por MapStruct mediante pruebas unitarias de JUnit 5 sin cargar el contexto de Spring, validando el mapeo bidireccional y el manejo de nulos. Se recomienda usar inyección manual para mappers con dependencias.
+- **DTO Serialization & Validation**: Se estandariza el uso de `@JsonTest` de Spring Boot junto con `@Import(ValidationAutoConfiguration.class)` para validar la serialización de Jackson y las restricciones de Bean Validation en todas las clases `Request`.
+- **JaCoCo Exclusion**: Se establece la política de excluir código generado automáticamente (como los mappers de MapStruct) del reporte de cobertura mediante la configuración del procesador de MapStruct (`addGeneratedAnnotation=true`) para mantener el foco en la lógica escrita a mano.
+

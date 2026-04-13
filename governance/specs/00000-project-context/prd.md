@@ -57,3 +57,10 @@ Como alumno, quiero buscar libros en el catálogo de la biblioteca, identificar 
 - 100% de los libros físicos registrados con una ubicación exacta.
 - Cobertura de pruebas del 100% para la lógica de negocio.
 - Cero pérdida de datos accidentales gracias al borrado lógico.
+
+## Project Context Baseline Updates (Actualizaciones de la Línea Base del Contexto del Proyecto)
+
+### 2026-04-12 | Cobertura de Pruebas Integral
+- **Estabilidad de Datos**: Se establece el requisito de cobertura del 100% no solo para la lógica de negocio, sino para todas las estructuras de datos (DTOs y Mappers) para garantizar la integridad de los contratos de la API y las transformaciones de datos.
+- **Validación de Contratos**: Todas las solicitudes de entrada (Requests) deben ser validadas mediante pruebas de serialización y validación de restricciones (Bean Validation) para prevenir cambios accidentales en la interfaz pública y asegurar la integridad de los datos de entrada.
+
