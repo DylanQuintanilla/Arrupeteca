@@ -1,12 +1,12 @@
 package com.arrupeteca.persistence.entity;
 
+import java.util.Set;
+
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeEach;
-
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,7 +30,9 @@ public abstract class BaseEntityTest {
 
     protected <T> void assertHasViolation(T entity, String propertyPath, String message) {
         Set<ConstraintViolation<T>> violations = validator.validate(entity);
-        if (violations.isEmpty() || violations.stream().noneMatch(v -> v.getPropertyPath().toString().equals(propertyPath) && v.getMessage().equals(message))) {
+        if (violations.isEmpty() || violations.stream()
+                .noneMatch(v -> v.getPropertyPath().toString().equals(propertyPath)
+                        && v.getMessage().equals(message))) {
             System.out.println("Violations found: ");
             violations.forEach(v -> System.out.println("  " + v.getPropertyPath() + ": " + v.getMessage()));
         }
@@ -44,4 +46,5 @@ public abstract class BaseEntityTest {
         Set<ConstraintViolation<T>> violations = validator.validate(entity);
         assertThat(violations).hasSize(count);
     }
+
 }

@@ -1,5 +1,8 @@
 package com.arrupeteca.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.arrupeteca.dto.request.EditorialRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EditorialMapper;
@@ -14,13 +17,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -121,11 +120,11 @@ class EditorialServiceImplTest extends BaseServiceTest {
         when(editorialRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
         when(editorialRepository.existsByCorreoIgnoreCase("nueva@test.com")).thenReturn(false);
         when(editorialMapper.toEntity(any())).thenReturn(new Editorial());
-        
+
         Editorial saved = new Editorial();
         saved.setId(1L);
         when(editorialRepository.save(any())).thenReturn(saved);
-        
+
         EditorialResumen resumen = mock(EditorialResumen.class);
         when(editorialRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
 
@@ -178,7 +177,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
         when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(editorialRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
         when(editorialRepository.existsByCorreoIgnoreCase("actualizada@test.com")).thenReturn(false);
-        
+
         EditorialResumen resumen = mock(EditorialResumen.class);
         when(editorialRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
 
@@ -240,7 +239,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
         existing.setCorreo("editorial@test.com");
 
         when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
-        
+
         EditorialResumen resumen = mock(EditorialResumen.class);
         when(editorialRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
 
@@ -288,5 +287,5 @@ class EditorialServiceImplTest extends BaseServiceTest {
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Editorial con ID: 1");
     }
-}
 
+}

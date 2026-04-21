@@ -1,5 +1,10 @@
 package com.arrupeteca.service.impl;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
 import com.arrupeteca.dto.request.ObraAutorRequest;
 import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
@@ -23,30 +28,32 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
 class ObraServiceImplTest extends BaseServiceTest {
-    @Mock private ObraRepository repository;
-    @Mock private GeneroRepository generoRepository;
-    @Mock private CategoriaRepository categoriaRepository;
-    @Mock private AutorRepository autorRepository;
-    @Mock private TipoAutoriaRepository tipoAutoriaRepository;
-    @Mock private ObraMapper mapper;
-    @InjectMocks private ObraServiceImpl service;
+
+    @Mock
+    private ObraRepository repository;
+    @Mock
+    private GeneroRepository generoRepository;
+    @Mock
+    private CategoriaRepository categoriaRepository;
+    @Mock
+    private AutorRepository autorRepository;
+    @Mock
+    private TipoAutoriaRepository tipoAutoriaRepository;
+    @Mock
+    private ObraMapper mapper;
+    @InjectMocks
+    private ObraServiceImpl service;
 
     @Test
     @DisplayName("Should return paginated active obras")
@@ -124,7 +131,7 @@ class ObraServiceImplTest extends BaseServiceTest {
         request.setTitulo("Obra 1");
         request.setIdGeneros(Set.of(1L));
         request.setIdCategorias(Set.of(1L));
-        
+
         ObraAutorRequest autorReq = new ObraAutorRequest();
         autorReq.setIdAutor(1L);
         autorReq.setIdTipoAutoria(1L);
@@ -369,5 +376,5 @@ class ObraServiceImplTest extends BaseServiceTest {
         verify(repository, never()).activar(any());
         verify(repository, never()).desactivar(any());
     }
-}
 
+}

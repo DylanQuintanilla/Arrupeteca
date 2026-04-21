@@ -1,5 +1,8 @@
 package com.arrupeteca.service.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
@@ -16,9 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -161,7 +161,8 @@ public class AutorServiceImpl implements AutorService {
             paisRepository.findById(request.getIdPaisNacimiento())
                     .ifPresentOrElse(
                             autor::setPaisNacimiento,
-                            () -> errores.add("El País de nacimiento indicado (ID: " + request.getIdPaisNacimiento() + ") no existe.")
+                            () -> errores.add("El País de nacimiento indicado (ID: "
+                                    + request.getIdPaisNacimiento() + ") no existe.")
                     );
         } else {
             autor.setPaisNacimiento(null);
@@ -171,7 +172,8 @@ public class AutorServiceImpl implements AutorService {
             nacionalidadRepository.findById(request.getIdNacionalidad())
                     .ifPresentOrElse(
                             autor::setNacionalidad,
-                            () -> errores.add("La Nacionalidad indicada (ID: " + request.getIdNacionalidad() + ") no existe.")
+                            () -> errores.add("La Nacionalidad indicada (ID: "
+                                    + request.getIdNacionalidad() + ") no existe.")
                     );
         } else {
             autor.setNacionalidad(null);
@@ -181,7 +183,8 @@ public class AutorServiceImpl implements AutorService {
             generoRepository.findById(request.getIdGeneroPrincipal())
                     .ifPresentOrElse(
                             autor::setGeneroPrincipal,
-                            () -> errores.add("El Género principal indicado (ID: " + request.getIdGeneroPrincipal() + ") no existe.")
+                            () -> errores.add("El Género principal indicado (ID: "
+                                    + request.getIdGeneroPrincipal() + ") no existe.")
                     );
         } else {
             autor.setGeneroPrincipal(null);
@@ -191,7 +194,8 @@ public class AutorServiceImpl implements AutorService {
             obraRepository.findById(request.getIdObraCumbre())
                     .ifPresentOrElse(
                             autor::setObraCumbre,
-                            () -> errores.add("La Obra Cumbre indicada (ID: " + request.getIdObraCumbre() + ") no existe.")
+                            () -> errores.add("La Obra Cumbre indicada (ID: "
+                                    + request.getIdObraCumbre() + ") no existe.")
                     );
         } else {
             autor.setObraCumbre(null);

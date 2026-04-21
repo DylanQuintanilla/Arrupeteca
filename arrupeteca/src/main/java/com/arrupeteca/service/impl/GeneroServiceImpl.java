@@ -30,7 +30,8 @@ public class GeneroServiceImpl implements GeneroService {
     @Transactional(readOnly = true)
     public GeneroResumen obtenerPorIdActivo(Long id) {
         return generoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override

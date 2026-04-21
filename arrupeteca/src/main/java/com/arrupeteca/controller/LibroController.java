@@ -69,8 +69,9 @@ public class LibroController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<LibroResumen>> actualizar(@PathVariable Long id,
-                                                                @Valid @RequestBody LibroRequest request) {
+    public ResponseEntity<ApiResponse<LibroResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody LibroRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Libro actualizado correctamente", libroService.actualizar(id, request)));
     }
 

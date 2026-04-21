@@ -1,7 +1,8 @@
 package com.arrupeteca.exception;
 
-import lombok.Getter;
 import java.util.List;
+
+import lombok.Getter;
 
 @Getter
 public class ValidacionNegocioException extends RuntimeException {
@@ -17,4 +18,5 @@ public class ValidacionNegocioException extends RuntimeException {
         super(mensaje);
         this.errores = List.of(mensaje);
     }
+
 }

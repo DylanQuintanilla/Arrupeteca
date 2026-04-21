@@ -1,7 +1,8 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.SalonRequest;
-import com.arrupeteca.persistence.projection.SalonResumen;
 import com.arrupeteca.service.SalonService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -46,7 +45,7 @@ class SalonControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/salones/{id} - Should return salon when active")
     void obtenerPorId() throws Exception {
         when(salonService.obtenerPorIdActivo(1L))
-                .thenReturn(null); // Assuming projection can be null or mock it properly
+                .thenReturn(null);
 
         mockMvc.perform(get("/api/v1/salones/1"))
                 .andExpect(status().isOk())

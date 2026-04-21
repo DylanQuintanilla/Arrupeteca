@@ -1,7 +1,9 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+import java.util.Set;
+
 import com.arrupeteca.dto.request.LibroRequest;
-import com.arrupeteca.persistence.projection.LibroResumen;
 import com.arrupeteca.service.LibroService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,10 +12,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,8 +55,9 @@ public class PaisController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PaisResumen>> actualizar(@PathVariable Long id,
-                                                               @Valid @RequestBody PaisRequest request) {
+    public ResponseEntity<ApiResponse<PaisResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody PaisRequest request) {
         PaisResumen actualizado = paisService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("País actualizado correctamente", actualizado));
     }

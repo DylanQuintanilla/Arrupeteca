@@ -1,5 +1,8 @@
 package com.arrupeteca.service.impl;
 
+import java.util.HashSet;
+import java.util.List;
+
 import com.arrupeteca.dto.request.LibroRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.LibroMapper;
@@ -19,9 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -109,8 +109,8 @@ public class LibroServiceImpl implements LibroService {
         Libro libroExistente = libroRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
 
-        if (!libroExistente.getIsbn().equalsIgnoreCase(request.getIsbn()) &&
-                libroRepository.existsByIsbn(request.getIsbn())) {
+        if (!libroExistente.getIsbn().equalsIgnoreCase(request.getIsbn())
+                && libroRepository.existsByIsbn(request.getIsbn())) {
             throw new ValidacionNegocioException("El ISBN " + request.getIsbn() + " ya está en uso por otro libro.");
         }
 

@@ -84,7 +84,9 @@ public class EditorialController {
     public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable
     ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable))
+        );
     }
 
     @GetMapping("/admin/busqueda-maestra")

@@ -30,7 +30,8 @@ public class FormatoServiceImpl implements FormatoService {
     @Transactional(readOnly = true)
     public FormatoResumen obtenerPorIdActivo(Long id) {
         return formatoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Formato con ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Formato con ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override

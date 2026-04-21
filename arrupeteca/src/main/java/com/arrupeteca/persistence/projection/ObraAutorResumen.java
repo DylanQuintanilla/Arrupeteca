@@ -19,4 +19,5 @@ public interface ObraAutorResumen {
 
     @Value("#{target.tipoAutoria?.nombre ?: 'Sin Rol'}")
     String getTipoAutoriaNombre();
+
 }

@@ -1,5 +1,8 @@
 package com.arrupeteca.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EjemplarLibroMapper;
@@ -8,10 +11,10 @@ import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
-import com.arrupeteca.persistence.projection.EjemplarLibroResumen;   
+import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
 import com.arrupeteca.persistence.repository.EjemplarLibroRepository;
-import com.arrupeteca.persistence.repository.LibroRepository;        
-import com.arrupeteca.persistence.repository.MuebleRepository;       
+import com.arrupeteca.persistence.repository.LibroRepository;
+import com.arrupeteca.persistence.repository.MuebleRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,25 +23,28 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
 class EjemplarLibroServiceImplTest extends BaseServiceTest {
-    @Mock private EjemplarLibroRepository repository;
-    @Mock private EjemplarLibroMapper mapper;
-    @Mock private LibroRepository libroRepository;
-    @Mock private MuebleRepository muebleRepository;
-    @InjectMocks private EjemplarLibroServiceImpl service;
+
+    @Mock
+    private EjemplarLibroRepository repository;
+    @Mock
+    private EjemplarLibroMapper mapper;
+    @Mock
+    private LibroRepository libroRepository;
+    @Mock
+    private MuebleRepository muebleRepository;
+    @InjectMocks
+    private EjemplarLibroServiceImpl service;
 
     @Test
     @DisplayName("Should return paginated active ejemplares")
@@ -105,10 +111,12 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(Pageable.class)))
                 .thenReturn(page);
 
-        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, "BUEN_ESTADO", "DISPONIBLE", "term", Pageable.unpaged()))
+        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, "BUEN_ESTADO", "DISPONIBLE",
+                "term", Pageable.unpaged()))
                 .isEqualTo(page);
-        
-        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(EstadoFisico.BUEN_ESTADO), eq(Disponibilidad.DISPONIBLE), eq("term"), any(Pageable.class));
+
+        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(EstadoFisico.BUEN_ESTADO),
+                eq(Disponibilidad.DISPONIBLE), eq("term"), any(Pageable.class));
     }
 
     @Test
@@ -120,8 +128,9 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
 
         assertThat(service.busquedaMaestraAdmin(null, null, null, null, null, null, Pageable.unpaged()))
                 .isEqualTo(page);
-        
-        verify(repository).busquedaMaestraAdmin(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), any(Pageable.class));
+
+        verify(repository).busquedaMaestraAdmin(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null),
+                any(Pageable.class));
     }
 
     @Test
@@ -228,5 +237,5 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         verify(repository, never()).activar(any());
         verify(repository, never()).desactivar(any());
     }
-}
 
+}

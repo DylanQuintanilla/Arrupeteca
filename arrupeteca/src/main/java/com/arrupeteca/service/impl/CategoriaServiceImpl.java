@@ -30,7 +30,8 @@ public class CategoriaServiceImpl implements CategoriaService {
     @Transactional(readOnly = true)
     public CategoriaResumen obtenerPorIdActivo(Long id) {
         return categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría con ID: " + id + ", o no está activa"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría con ID: "
+                        + id + ", o no está activa"));
     }
 
     @Override

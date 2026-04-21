@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,8 +55,9 @@ public class GeneroController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<GeneroResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody GeneroRequest request) {
+    public ResponseEntity<ApiResponse<GeneroResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody GeneroRequest request) {
         GeneroResumen actualizado = generoService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Género actualizado correctamente", actualizado));
     }
@@ -82,6 +82,8 @@ public class GeneroController {
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<GeneroResumen>>> obtenerTodosAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de géneros", generoService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de géneros", generoService.obtenerTodos(pageable))
+        );
     }
 }

@@ -30,7 +30,8 @@ public class EditorialServiceImpl implements EditorialService {
     @Transactional(readOnly = true)
     public EditorialResumen obtenerPorIdActivo(Long id) {
         return editorialRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una Editorial con ID: " + id + ", o no está activa"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una Editorial con ID: "
+                        + id + ", o no está activa"));
     }
 
     @Override
@@ -59,7 +60,8 @@ public class EditorialServiceImpl implements EditorialService {
             throw new ValidacionNegocioException("El nombre: " + request.getNombre() + " ya ha sido utilizado");
         }
         if (editorialRepository.existsByCorreoIgnoreCase(request.getCorreo())) {
-            throw new ValidacionNegocioException("El correo: " + request.getCorreo() + " ya está registrado en otra editorial");
+            throw new ValidacionNegocioException("El correo: " + request.getCorreo()
+                    + " ya está registrado en otra editorial");
         }
         Editorial editorialMapeada = editorialMapper.toEntity(request);
         Editorial editorialGuardada = editorialRepository.save(editorialMapeada);

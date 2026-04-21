@@ -1,17 +1,20 @@
 package com.arrupeteca.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.arrupeteca.dto.request.LibroRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.LibroMapper;
 import com.arrupeteca.persistence.entity.Libro;
+import com.arrupeteca.persistence.enums.Ciclo;
+import com.arrupeteca.persistence.enums.Grado;
 import com.arrupeteca.persistence.projection.LibroResumen;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.persistence.repository.FormatoRepository;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
-import com.arrupeteca.persistence.enums.Grado;
-import com.arrupeteca.persistence.enums.Ciclo;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -20,28 +23,32 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
 class LibroServiceImplTest extends BaseServiceTest {
-    @Mock private LibroRepository repository;
-    @Mock private LibroMapper mapper;
-    @Mock private ObraRepository obraRepository;
-    @Mock private EditorialRepository editorialRepository;
-    @Mock private FormatoRepository formatoRepository;
-    @Mock private IdiomaRepository idiomaRepository;
-    @InjectMocks private LibroServiceImpl service;
+
+    @Mock
+    private LibroRepository repository;
+    @Mock
+    private LibroMapper mapper;
+    @Mock
+    private ObraRepository obraRepository;
+    @Mock
+    private EditorialRepository editorialRepository;
+    @Mock
+    private FormatoRepository formatoRepository;
+    @Mock
+    private IdiomaRepository idiomaRepository;
+    @InjectMocks
+    private LibroServiceImpl service;
 
     @Test
     @DisplayName("Should return paginated active libros")
@@ -123,26 +130,33 @@ class LibroServiceImplTest extends BaseServiceTest {
     @DisplayName("Should return busqueda maestra admin results")
     void shouldReturnBusquedaMaestraAdmin() {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)))
                 .thenReturn(page);
 
-        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, 1L, "BACHI_TEC_SOFTWARE", "TERCER", "term", 2020, 2024, Pageable.unpaged()))
+        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, 1L, "BACHI_TEC_SOFTWARE",
+                "TERCER", "term", 2020, 2024, Pageable.unpaged()))
                 .isEqualTo(page);
-        
-        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), eq(Grado.BACHI_TEC_SOFTWARE), eq(Ciclo.TERCER), eq("term"), eq(2020), eq(2024), any(Pageable.class));
+
+        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L),
+                eq(Grado.BACHI_TEC_SOFTWARE), eq(Ciclo.TERCER), eq("term"), eq(2020),
+                eq(2024), any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should return busqueda maestra admin results with null params")
     void shouldReturnBusquedaMaestraAdminWithNulls() {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(),
+                any(Pageable.class)))
                 .thenReturn(page);
 
-        assertThat(service.busquedaMaestraAdmin(null, null, null, null, null, null, null, null, null, Pageable.unpaged()))
+        assertThat(service.busquedaMaestraAdmin(null, null, null, null, null, null, null, null, null,
+                Pageable.unpaged()))
                 .isEqualTo(page);
-        
-        verify(repository).busquedaMaestraAdmin(eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), eq(null), any(Pageable.class));
+
+        verify(repository).busquedaMaestraAdmin(eq(null), eq(null), eq(null), eq(null),
+                eq(null), eq(null), eq(null), eq(null), eq(null), any(Pageable.class));
     }
 
     @Test
@@ -156,10 +170,14 @@ class LibroServiceImplTest extends BaseServiceTest {
         request.setIdIdiomas(java.util.Set.of(1L));
 
         when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
-        when(editorialRepository.findById(1L)).thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Editorial.class)));
-        when(formatoRepository.findById(1L)).thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Formato.class)));
-        when(idiomaRepository.findAllById(any())).thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
+        when(obraRepository.findById(1L))
+                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
+        when(editorialRepository.findById(1L))
+                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Editorial.class)));
+        when(formatoRepository.findById(1L))
+                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Formato.class)));
+        when(idiomaRepository.findAllById(any()))
+                .thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
 
         Libro entity = new Libro();
         entity.setId(1L);
@@ -241,7 +259,8 @@ class LibroServiceImplTest extends BaseServiceTest {
         request.setIdIdiomas(java.util.Set.of(1L, 2L));
 
         when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(idiomaRepository.findAllById(any())).thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
+        when(idiomaRepository.findAllById(any()))
+                .thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
         when(mapper.toEntity(any())).thenReturn(new Libro());
 
         assertThatThrownBy(() -> service.crear(request))
@@ -262,7 +281,8 @@ class LibroServiceImplTest extends BaseServiceTest {
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.existsByIsbn("0987654321")).thenReturn(false);
-        when(obraRepository.findById(2L)).thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
+        when(obraRepository.findById(2L))
+                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
 
         LibroResumen resumen = mock(LibroResumen.class);
         when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
@@ -324,5 +344,5 @@ class LibroServiceImplTest extends BaseServiceTest {
         verify(repository, never()).activar(any());
         verify(repository, never()).desactivar(any());
     }
-}
 
+}

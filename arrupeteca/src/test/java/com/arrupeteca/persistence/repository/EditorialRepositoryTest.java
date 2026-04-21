@@ -31,10 +31,13 @@ class EditorialRepositoryTest extends BaseRepositoryTest {
     @Test
     @DisplayName("Should perform master search")
     void shouldPerformMasterSearch() {
-        editorialRepository.save(Editorial.builder().nombre("Planeta").correo("p@p.com").personaContacto("C").telefono("1234-5678").borradoLogico(false).build());
-        editorialRepository.save(Editorial.builder().nombre("Oveja").correo("o@o.com").personaContacto("C").telefono("1234-5678").borradoLogico(true).build());
+        editorialRepository.save(Editorial.builder().nombre("Planeta").correo("p@p.com")
+                .personaContacto("C").telefono("1234-5678").borradoLogico(false).build());
+        editorialRepository.save(Editorial.builder().nombre("Oveja").correo("o@o.com")
+                .personaContacto("C").telefono("1234-5678").borradoLogico(true).build());
 
         Page<EditorialResumen> page = editorialRepository.busquedaMaestraAdmin(false, "Plan", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
+
 }

@@ -30,7 +30,8 @@ public class IdiomaServiceImpl implements IdiomaService {
     @Transactional(readOnly = true)
     public IdiomaResumen obtenerPorIdActivo(Long id) {
         return idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Idioma con ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Idioma con ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override

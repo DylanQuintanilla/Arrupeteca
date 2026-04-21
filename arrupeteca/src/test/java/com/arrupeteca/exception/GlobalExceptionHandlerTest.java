@@ -1,5 +1,8 @@
 package com.arrupeteca.exception;
 
+import java.util.List;
+import java.util.Map;
+
 import com.arrupeteca.dto.response.ApiResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,9 +13,6 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
-import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -64,7 +64,8 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertFalse(response.getBody().isExito());
-        assertEquals("Ocurrió un error interno en el servidor. Por favor, contacte al administrador.", response.getBody().getMensaje());
+        assertEquals("Ocurrió un error interno en el servidor. Por favor, contacte al administrador.",
+                response.getBody().getMensaje());
     }
 
     @Test
@@ -92,7 +93,8 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertFalse(response.getBody().isExito());
-        assertEquals("Error de integridad de datos (duplicidad o restricción violada).", response.getBody().getMensaje());
+        assertEquals("Error de integridad de datos (duplicidad o restricción violada).",
+                response.getBody().getMensaje());
     }
 
     @Test
@@ -103,7 +105,8 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertFalse(response.getBody().isExito());
-        assertEquals("Error de integridad de datos (duplicidad o restricción violada).", response.getBody().getMensaje());
+        assertEquals("Error de integridad de datos (duplicidad o restricción violada).",
+                response.getBody().getMensaje());
     }
 
     @Test
@@ -116,7 +119,8 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
         assertFalse(response.getBody().isExito());
-        assertEquals("Error de integridad de datos (duplicidad o restricción violada).", response.getBody().getMensaje());
+        assertEquals("Error de integridad de datos (duplicidad o restricción violada).",
+                response.getBody().getMensaje());
     }
 
     @Test
@@ -151,6 +155,7 @@ class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isExito());
-        assertEquals("Error al procesar el cuerpo de la petición. Formato inválido.", response.getBody().getMensaje());
+        assertEquals("Error al procesar el cuerpo de la petición. Formato inválido.",
+                response.getBody().getMensaje());
     }
 }

@@ -64,8 +64,9 @@ public class PlantaController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PlantaResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody PlantaRequest request) {
+    public ResponseEntity<ApiResponse<PlantaResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody PlantaRequest request) {
         PlantaResumen actualizado = plantaService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Planta actualizada correctamente", actualizado));
     }

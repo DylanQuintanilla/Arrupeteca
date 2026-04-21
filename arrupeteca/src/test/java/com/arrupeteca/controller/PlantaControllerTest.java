@@ -1,7 +1,8 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.PlantaRequest;
-import com.arrupeteca.persistence.projection.PlantaResumen;
 import com.arrupeteca.service.PlantaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;

@@ -60,9 +60,12 @@ public class EjemplarLibroController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EjemplarLibroResumen>> actualizar(@PathVariable Long id,
-                                                                        @Valid @RequestBody EjemplarLibroRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Ejemplar actualizado correctamente", ejemplarLibroService.actualizar(id, request)));
+    public ResponseEntity<ApiResponse<EjemplarLibroResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody EjemplarLibroRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.exito("Ejemplar actualizado correctamente", ejemplarLibroService.actualizar(id, request))
+        );
     }
 
     @DeleteMapping("/{id}")
@@ -74,7 +77,7 @@ public class EjemplarLibroController {
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         ejemplarLibroService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Ejemplar activado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Ejemplar activada correctamente"));
     }
 
     @GetMapping("/admin")

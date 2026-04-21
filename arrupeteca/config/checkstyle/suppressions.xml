@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<!DOCTYPE suppressions PUBLIC
+    "-//Checkstyle//DTD SuppressionFilter Configuration 1.2//EN"
+    "https://checkstyle.org/dtds/suppressions_1_2.dtd">
+
+<suppressions>
+    <!-- Suprimir chequeos en clases con @Data, @Builder, etc. de Lombok -->
+    <suppress checks="MissingJavadocMethod" files=".*\.java"/>
+    <suppress checks="DesignForExtension" files=".*\.java"/>
+    
+    <!-- Si usas @Slf4j, suprime la variable log -->
+    <suppress checks="MemberName" files=".*\.java" lines="1"/>
+</suppressions>

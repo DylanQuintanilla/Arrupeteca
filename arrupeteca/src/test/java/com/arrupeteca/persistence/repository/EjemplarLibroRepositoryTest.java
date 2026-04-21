@@ -1,5 +1,7 @@
 package com.arrupeteca.persistence.repository;
 
+import java.util.Set;
+
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Edificio;
 import com.arrupeteca.persistence.entity.Editorial;
@@ -20,8 +22,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -71,13 +71,19 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     private EjemplarLibro createValidEjemplar(String comentario) {
         Genero genero = generoRepository.save(Genero.builder().nombre("Genero " + comentario).build());
         Categoria categoria = categoriaRepository.save(Categoria.builder().nombre("Categoria " + comentario).build());
-        Obra obra = obraRepository.save(Obra.builder().titulo("Obra " + comentario).resumen("Resumen").generos(Set.of(genero)).categorias(Set.of(categoria)).build());
-        Editorial editorial = editorialRepository.save(Editorial.builder().nombre("Ed " + comentario).correo(comentario + "@e.com").personaContacto("C").telefono("1234-5678").build());
+
+        Obra obra = obraRepository.save(Obra.builder().titulo("Obra " + comentario).resumen("Resumen")
+                .generos(Set.of(genero)).categorias(Set.of(categoria)).build());
+
+        Editorial editorial = editorialRepository.save(Editorial.builder().nombre("Ed " + comentario)
+                .correo(comentario + "@e.com").personaContacto("C").telefono("1234-5678").build());
+
         Formato formato = formatoRepository.save(Formato.builder().nombre("Formato " + comentario).build());
         Idioma idioma = idiomaRepository.save(Idioma.builder().nombre("Idioma " + comentario).build());
 
         Libro libro = libroRepository.save(Libro.builder()
-                .isbn("9780306406157").anioPublicacion(2020).obra(obra).editorial(editorial).formato(formato).idiomas(Set.of(idioma)).build());
+                .isbn("9780306406157").anioPublicacion(2020).obra(obra).editorial(editorial)
+                .formato(formato).idiomas(Set.of(idioma)).build());
 
         Edificio ed = edificioRepository.save(Edificio.builder().nombre("Ed " + comentario).build());
         Planta p = plantaRepository.save(Planta.builder().nombre("P " + comentario).edificio(ed).build());
@@ -92,4 +98,5 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
                 .disponibilidad(Disponibilidad.DISPONIBLE)
                 .build();
     }
+
 }

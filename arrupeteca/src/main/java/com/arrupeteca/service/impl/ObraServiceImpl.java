@@ -1,7 +1,11 @@
 package com.arrupeteca.service.impl;
 
-import com.arrupeteca.dto.request.ObraRequest;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import com.arrupeteca.dto.request.ObraAutorRequest;
+import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.ObraMapper;
 import com.arrupeteca.persistence.entity.Autor;
@@ -22,10 +26,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -73,7 +73,8 @@ public class ObraServiceImpl implements ObraService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ObraResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin, Pageable pageable) {
+    public Page<ObraResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino,
+                                                  Integer anioInicio, Integer anioFin, Pageable pageable) {
         return obraRepository.busquedaMaestraAdmin(esBorrado, termino, anioInicio, anioFin, pageable);
     }
 
@@ -100,8 +101,8 @@ public class ObraServiceImpl implements ObraService {
         Obra existente = obraRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra con ID: " + id));
 
-        if (!existente.getTitulo().equalsIgnoreCase(request.getTitulo()) &&
-                obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
+        if (!existente.getTitulo().equalsIgnoreCase(request.getTitulo())
+                && obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
             throw new ValidacionNegocioException("Ya existe una obra con el título: " + request.getTitulo());
         }
 
@@ -168,10 +169,12 @@ public class ObraServiceImpl implements ObraService {
         if (autoresRequest != null && !autoresRequest.isEmpty()) {
             for (ObraAutorRequest req : autoresRequest) {
                 Autor autor = autorRepository.findById(req.getIdAutor())
-                        .orElseThrow(() -> new ValidacionNegocioException("Autor con ID " + req.getIdAutor() + " no encontrado"));
+                        .orElseThrow(() -> new ValidacionNegocioException("Autor con ID "
+                                + req.getIdAutor() + " no encontrado"));
 
                 TipoAutoria tipo = tipoAutoriaRepository.findById(req.getIdTipoAutoria())
-                        .orElseThrow(() -> new ValidacionNegocioException("Tipo de Autoría con ID " + req.getIdTipoAutoria() + " no encontrado"));
+                        .orElseThrow(() -> new ValidacionNegocioException("Tipo de Autoría con ID "
+                                + req.getIdTipoAutoria() + " no encontrado"));
 
                 ObraAutor nuevoEnlace = ObraAutor.builder()
                         .autor(autor)

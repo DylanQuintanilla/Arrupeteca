@@ -1,5 +1,8 @@
 package com.arrupeteca.service.impl;
 
+import java.util.List;
+import java.util.Optional;
+
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
@@ -21,9 +24,6 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-
-import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -137,7 +137,9 @@ class AutorServiceImplTest extends BaseServiceTest {
         when(autorRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(expectedPage);
 
-        Page<AutorResumen> result = autorService.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "test", 1900, 2000, Pageable.unpaged());
+        Page<AutorResumen> result = autorService.busquedaMaestraAdmin(
+                false, 1L, 1L, 1L, 1L, "test", 1900, 2000, Pageable.unpaged()
+        );
 
         assertThat(result).isEqualTo(expectedPage);
     }
@@ -305,7 +307,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should verify duplicates with various terms")
     void shouldVerifyDuplicatesWithTerms() {
-        when(autorRepository.buscarPosiblesDuplicados("Termino", 1L)).thenReturn(List.of(mock(AutorResumen.class)));
+        when(autorRepository.buscarPosiblesDuplicados("Termino", 1L))
+                .thenReturn(List.of(mock(AutorResumen.class)));
 
         assertThat(autorService.verificarDuplicados("Termino", 1L)).isNotEmpty();
         assertThat(autorService.verificarDuplicados(null, 1L)).isEmpty();
@@ -354,5 +357,5 @@ class AutorServiceImplTest extends BaseServiceTest {
                     assertThat(vne.getErrores()).isNotEmpty();
                 });
     }
-}
 
+}

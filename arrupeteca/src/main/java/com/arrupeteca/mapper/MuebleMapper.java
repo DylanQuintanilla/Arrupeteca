@@ -1,9 +1,7 @@
 package com.arrupeteca.mapper;
 
 import com.arrupeteca.dto.request.MuebleRequest;
-import com.arrupeteca.dto.request.SalonRequest;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.entity.Salon;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
 import org.mapstruct.ReportingPolicy;

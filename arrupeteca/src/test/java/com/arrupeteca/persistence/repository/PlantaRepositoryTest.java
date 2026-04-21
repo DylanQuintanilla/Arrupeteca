@@ -9,8 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PlantaRepositoryTest extends BaseRepositoryTest {
@@ -38,4 +36,5 @@ class PlantaRepositoryTest extends BaseRepositoryTest {
         Page<PlantaResumen> page = plantaRepository.qBuscarPorEdificioIdYActivo(ed.getId(), PageRequest.of(0, 10));
         assertThat(page.getContent()).isNotEmpty();
     }
+
 }

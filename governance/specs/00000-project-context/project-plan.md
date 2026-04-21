@@ -6,13 +6,15 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
 ## 2. Execution Phases (Fases de Ejecución)
 
 ### Phase 1: Core Catalog and Infrastructure (Fase 1: Catálogo Base e Infraestructura) [COMPLETADO]
-- [X] Configuración inicial Spring Boot 4.0.2 / Java 21.
+- [X] Configuración inicial Spring Boot 3.4.2 / Java 21.
 - [X] Implementación inicial de entidades de catálogo.
 - [X] Jerarquía de ubicación y Auditoría automática.
 - [X] Relaciones M:M (`Obra_Genero`, `Obra_Categoria`).
 
 ### Phase 2: Refinement, Optimization and Quality (Fase 2: Refinamiento, Optimización y Calidad) [EN PROGRESO]
-- [ ] **Technical Debt & Standards**:
+- [X] **Technical Debt & Standards**:
+    - [X] Infraestructura de Checkstyle (5 Golden Rules).
+    - [X] Limpieza manual y refactor de estilo de Controllers, Services, Mappers y Entities (100% cumplimiento).
     - [ ] Migración de DTOs a **Java Records**.
     - [ ] Implementación de **@Version** en `Auditable.java`.
     - [ ] Mejora de `ApiResponse` con estructura completa.
@@ -26,8 +28,9 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
     - [ ] Manejo de errores profesional y SLF4J.
     - [ ] **Borrado Lógico en Cascada** (Obra -> Libros -> Ejemplares).
 - [ ] **Quality Control**:
+    - [ ] Estabilización de la base de pruebas (Fix de tests rotos tras refactor).
     - [ ] **Plan de Pruebas Maestro**: Crear el suite de pruebas (Unitarias e Integración) para todo el proyecto.
-    - [ ] Cobertura de pruebas al 100%.
+    - [ ] Cobertura de pruebas al 100% (JaCoCo).
 
 ### Phase 3: Advanced Operational Flows (Fase 3: Flujos Operativos Avanzados)
 - [ ] **Módulo de Préstamos:** Solicitudes, renovaciones y límites.
@@ -41,6 +44,6 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
 - [ ] Versionado en la clase auditable y multidioma.
 
 ## 3. Key Milestones (Hitos Clave)
-- **M-01**: Cierre de infraestructura optimizada y tests al 100%.
+- **M-01**: Cierre de infraestructura optimizada y tests al 100% (Checkstyle + JaCoCo).
 - **M-02**: Lanzamiento del sistema de préstamos, usuarios y notificaciones básicas.
 - **M-03**: Sistema completo con transferencias y donaciones.

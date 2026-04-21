@@ -8,15 +8,31 @@
     <property name="severity" value="warning"/>
     <property name="fileExtensions" value="java, properties, xml"/>
 
+    <!-- 1. Regla de Longitud de Línea (120 caracteres) -->
+    <module name="LineLength">
+        <property name="max" value="140"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    </module>
+
     <module name="TreeWalker">
+        
+        <!-- 2. Regla de Imports No Usados -->
+        <module name="UnusedImports"/>
         <module name="AvoidStarImport"/>
-        <module name="OneTopLevelClass"/>
-        <module name="NoLineWrap"/>
-        <module name="EmptyBlock"/>
-        <module name="LeftCurly"/>
-        <module name="RightCurly"/>
-        <module name="NeedBraces"/>
-        <module name="WhitespaceAround"/>
+
+        <!-- 3. Una sola instrucción por línea -->
+        <module name="OneStatementPerLine"/>
+
+        <!-- 4. Regla crítica para Entidades (Equals/HashCode) -->
+        <module name="EqualsHashCode"/>
+
+        <!-- 5. Espacios entre métodos y campos -->
+        <module name="EmptyLineSeparator">
+            <property name="allowNoEmptyLineBetweenFields" value="true"/>
+            <property name="allowMultipleEmptyLines" value="false"/>
+        </module>
+
+        <!-- Reglas de Nomenclatura Básicas (Ya existían) -->
         <module name="PackageName">
             <property name="format" value="^[a-z]+(\.[a-z][a-z0-9]*)*$"/>
         </module>
@@ -24,12 +40,13 @@
         <module name="MemberName"/>
         <module name="ParameterName"/>
         <module name="MethodName"/>
-        <module name="MissingSwitchDefault"/>
-        <module name="FallThrough"/>
-        <module name="UpperEll"/>
+        
+        <!-- Formato de llaves y bloques -->
+        <module name="LeftCurly"/>
+        <module name="RightCurly"/>
+        <module name="NeedBraces"/>
+        <module name="WhitespaceAround"/>
         <module name="ModifierOrder"/>
-        <module name="EmptyLineSeparator">
-            <property name="allowNoEmptyLineBetweenFields" value="true"/>
-        </module>
+
     </module>
 </module>

@@ -64,8 +64,9 @@ public class SalonController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<SalonResumen>> actualizar(@PathVariable Long id,
-                                                                @Valid @RequestBody SalonRequest request) {
+    public ResponseEntity<ApiResponse<SalonResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody SalonRequest request) {
         SalonResumen actualizado = salonService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Salón actualizado correctamente", actualizado));
     }

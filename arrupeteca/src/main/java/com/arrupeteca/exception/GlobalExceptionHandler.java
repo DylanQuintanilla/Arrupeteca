@@ -1,5 +1,9 @@
 package com.arrupeteca.exception;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.arrupeteca.dto.response.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -11,16 +15,19 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final Map<String, String> CONSTRAINTS_MAP = new HashMap<>();
+
+    static {
+        // Autores
+        CONSTRAINTS_MAP.put("uk_autor_seudonimo", "El seudónimo ya está en uso.");
+    }
+
     /**
-     * 1. MANEJO DE NUESTRAS EXCEPCIONES MANUALES (Reglas de negocio)
+     * 1. MANEJO DE NUESTRAS EXCEPCIONES MANUALES (Reglas de negocio).
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ApiResponse<Void>> handleRuntimeException(RuntimeException ex) {
@@ -33,10 +40,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 2. MANEJO DE ERRORES DE VALIDACIÓN (Los @NotNull, @Size, @NotBlank de tus DTOs)
+     * 2. MANEJO DE ERRORES DE VALIDACIÓN (Los @NotNull, @Size, @NotBlank de tus DTOs).
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationExceptions(
+            MethodArgumentNotValidException ex) {
         Map<String, String> erroresDeCampos = new HashMap<>();
 
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
@@ -51,7 +59,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 3. MANEJO DE ERRORES INESPERADOS (Caídas del sistema, NullPointers, etc.)
+     * 3. MANEJO DE ERRORES INESPERADOS (Caídas del sistema, NullPointers, etc.).
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception ex) {
@@ -60,11 +68,12 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR) // Código 500
-                .body(ApiResponse.error("Ocurrió un error interno en el servidor. Por favor, contacte al administrador."));
+                .body(ApiResponse.error("Ocurrió un error interno en el servidor. "
+                        + "Por favor, contacte al administrador."));
     }
 
     /**
-     * 4. MANEJO DE VIOLACIÓN DE INTEGRIDAD DE DATOS (Duplicados, Llaves foráneas)
+     * 4. MANEJO DE VIOLACIÓN DE INTEGRIDAD DE DATOS (Duplicados, Llaves foráneas).
      */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiResponse<Void>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {
@@ -81,7 +90,8 @@ public class GlobalExceptionHandler {
             }
         }
 
-        log.warn("Violación de integridad en BD. Mensaje devuelto al cliente: '{}' | Causa real en BD: {}", mensajeCliente, mensajeRoot);
+        log.warn("Violación de integridad en BD. Mensaje devuelto al cliente: '{}' | Causa real en BD: {}",
+                mensajeCliente, mensajeRoot);
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
@@ -89,7 +99,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 5. MANEJO DE ERRORES DE NEGOCIO ACUMULADOS
+     * 5. MANEJO DE ERRORES DE NEGOCIO ACUMULADOS.
      */
     @ExceptionHandler(ValidacionNegocioException.class)
     public ResponseEntity<ApiResponse<List<String>>> handleValidacionNegocio(ValidacionNegocioException ex) {
@@ -98,11 +108,12 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.error("No se pudo procesar la solicitud debido a errores en los datos.", ex.getErrores()));
+                .body(ApiResponse.error("No se pudo procesar la solicitud debido a errores en los datos.",
+                        ex.getErrores()));
     }
 
     /**
-     * 6. MANEJO DE ERRORES DE LECTURA DE JSON (Formatos inválidos)
+     * 6. MANEJO DE ERRORES DE LECTURA DE JSON (Formatos inválidos).
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
@@ -114,10 +125,4 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Error al procesar el cuerpo de la petición. Formato inválido."));
     }
 
-    private static final Map<String, String> CONSTRAINTS_MAP = new HashMap<>();
-
-    static {
-        // Autores
-        CONSTRAINTS_MAP.put("uk_autor_seudonimo", "El seudónimo ya está en uso.");
-    }
 }

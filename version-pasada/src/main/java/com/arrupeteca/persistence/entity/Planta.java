@@ -1,0 +1,45 @@
+package com.arrupeteca.persistence.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
+@Getter
+@Setter
+@ToString
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Entity
+@Table(name = "planta", uniqueConstraints = {
+            @UniqueConstraint(
+                    columnNames = {"nombre", "id_edificio"}
+            )
+        })
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+public class Planta {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_planta")
+    @EqualsAndHashCode.Include
+    private Long id;
+
+    @NotBlank(message = "El nombre de la planta no puede estar vacío")
+    @Size(max = 30, message = "El nombre no puede exceder 30 caracteres")
+    @Column(length = 30, nullable = false)
+    private String nombre;
+
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Builder.Default
+    private boolean borradoLogico = false;
+
+    @NotNull
+    @ToString.Exclude
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_edificio", nullable = false)
+    private Edificio edificio;
+
+}

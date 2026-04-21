@@ -1,7 +1,8 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.MuebleRequest;
-import com.arrupeteca.persistence.projection.MuebleResumen;
 import com.arrupeteca.service.MuebleService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -135,7 +134,8 @@ class MuebleControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/muebles/admin/busqueda-maestra - Should return master search results")
     void busquedaMaestra() throws Exception {
-        when(muebleService.busquedaMaestraAdmin(anyBoolean(), anyLong(), anyLong(), anyLong(), anyString(), any(Pageable.class)))
+        when(muebleService.busquedaMaestraAdmin(anyBoolean(), anyLong(), anyLong(), anyLong(), anyString(),
+                any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of()));
 
         mockMvc.perform(get("/api/v1/muebles/admin/busqueda-maestra")

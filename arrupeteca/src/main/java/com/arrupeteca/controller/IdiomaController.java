@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,8 +55,9 @@ public class IdiomaController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<IdiomaResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody IdiomaRequest request) {
+    public ResponseEntity<ApiResponse<IdiomaResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody IdiomaRequest request) {
         IdiomaResumen actualizado = idiomaService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Idioma actualizado correctamente", actualizado));
     }
@@ -82,6 +82,8 @@ public class IdiomaController {
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<IdiomaResumen>>> obtenerTodosAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de idiomas", idiomaService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de idiomas", idiomaService.obtenerTodos(pageable))
+        );
     }
 }

@@ -30,7 +30,8 @@ class EditorialTest extends BaseEntityTest {
 
         assertHasViolation(editorial, "nombre", "El nombre de la editorial no puede estar vacia");
         assertHasViolation(editorial, "correo", "El correo de la editorial no puede estar vacia");
-        assertHasViolation(editorial, "personaContacto", "El nombre de la persona de contacto no puede estar vacia");
+        assertHasViolation(editorial, "personaContacto",
+                "El nombre de la persona de contacto no puede estar vacia");
     }
 
     @Test
@@ -57,9 +58,12 @@ class EditorialTest extends BaseEntityTest {
                 .build();
 
         assertHasViolation(editorial, "nombre", "El nombre de la editorial no debe exceder los 100 caracteres");
-        assertHasViolation(editorial, "direccion", "La direccion de la editorial no debe exceder los 150 caracteres");
+        assertHasViolation(editorial, "direccion",
+                "La direccion de la editorial no debe exceder los 150 caracteres");
         editorial.setCorreo("a".repeat(101) + "@test.com");
         assertHasViolation(editorial, "correo", "El correo de la editorial no debe exceder los 100 caracteres");
-        assertHasViolation(editorial, "personaContacto", "El nombre de la persona de contacto no debe exceder los 100 caracteres");
+        assertHasViolation(editorial, "personaContacto",
+                "El nombre de la persona de contacto no debe exceder los 100 caracteres");
     }
+
 }

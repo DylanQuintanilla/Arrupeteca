@@ -52,7 +52,8 @@ public class PlantaServiceImpl implements PlantaService {
     @Transactional
     public PlantaResumen crear(PlantaRequest request) {
         if (plantaRepository.qExistePorNombreYEdificioId(request.getNombre(), request.getIdEdificio())) {
-            throw new ValidacionNegocioException("Ya existe la planta '" + request.getNombre() + "' en el edificio indicado.");
+            throw new ValidacionNegocioException("Ya existe la planta '"
+                    + request.getNombre() + "' en el edificio indicado.");
         }
 
         Planta plantaCreada = plantaMapper.toEntity(request);
@@ -69,11 +70,13 @@ public class PlantaServiceImpl implements PlantaService {
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró planta con ID: " + id));
 
         boolean cambioNombre = !plantaEncontrada.getNombre().equalsIgnoreCase(request.getNombre());
-        boolean cambioEdificio = plantaEncontrada.getEdificio() == null || !plantaEncontrada.getEdificio().getId().equals(request.getIdEdificio());
+        boolean cambioEdificio = plantaEncontrada.getEdificio() == null
+                || !plantaEncontrada.getEdificio().getId().equals(request.getIdEdificio());
 
-        if ((cambioNombre || cambioEdificio) &&
-                plantaRepository.qExistePorNombreYEdificioId(request.getNombre(), request.getIdEdificio())) {
-            throw new ValidacionNegocioException("Ya existe una planta con el nombre '" + request.getNombre() + "' en este edificio.");
+        if ((cambioNombre || cambioEdificio)
+                && plantaRepository.qExistePorNombreYEdificioId(request.getNombre(), request.getIdEdificio())) {
+            throw new ValidacionNegocioException("Ya existe una planta con el nombre '"
+                    + request.getNombre() + "' en este edificio.");
         }
 
         plantaMapper.updateEntity(request, plantaEncontrada);
@@ -110,7 +113,8 @@ public class PlantaServiceImpl implements PlantaService {
     private void asignarRelaciones(Planta planta, PlantaRequest request) {
         if (request.getIdEdificio() != null) {
             planta.setEdificio(edificioRepository.findById(request.getIdEdificio())
-                    .orElseThrow(() -> new ValidacionNegocioException("No existe un edificio con ID: " + request.getIdEdificio())));
+                    .orElseThrow(() -> new ValidacionNegocioException("No existe un edificio con ID: "
+                            + request.getIdEdificio())));
         }
     }
 }

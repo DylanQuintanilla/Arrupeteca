@@ -30,7 +30,8 @@ public class NacionalidadServiceImpl implements NacionalidadService {
     @Transactional(readOnly = true)
     public NacionalidadResumen obtenerPorIdActivo(Long id) {
         return nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe, o no está activa"));
+                .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID "
+                        + id + " no existe, o no está activa"));
     }
 
     @Override
@@ -65,8 +66,8 @@ public class NacionalidadServiceImpl implements NacionalidadService {
         Nacionalidad nacionalidadExistente = nacionalidadRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe"));
 
-        if (!nacionalidadExistente.getNombre().equalsIgnoreCase(request.getNombre()) &&
-                nacionalidadRepository.existsByNombreIgnoreCase(request.getNombre())) {
+        if (!nacionalidadExistente.getNombre().equalsIgnoreCase(request.getNombre())
+                && nacionalidadRepository.existsByNombreIgnoreCase(request.getNombre())) {
             throw new ValidacionNegocioException("Ya existe una nacionalidad con el nombre: " + request.getNombre());
         }
 

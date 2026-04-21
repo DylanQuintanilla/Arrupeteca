@@ -1,5 +1,7 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.persistence.projection.AutorResumen;
@@ -22,8 +24,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/autores")
@@ -74,7 +74,9 @@ public class AutorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<AutorResumen>> actualizar(@PathVariable Long id, @Valid @RequestBody AutorRequest request) {
+    public ResponseEntity<ApiResponse<AutorResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody AutorRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Autor actualizado", autorService.actualizar(id, request)));
     }
 

@@ -1,5 +1,7 @@
 package com.arrupeteca.persistence.repository;
 
+import java.util.Set;
+
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.Formato;
@@ -13,8 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -54,8 +54,13 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     private Libro createValidLibro(String isbn) {
         Genero genero = generoRepository.save(Genero.builder().nombre("Genero Test " + isbn).build());
         Categoria categoria = categoriaRepository.save(Categoria.builder().nombre("Categoria Test " + isbn).build());
-        Obra obra = obraRepository.save(Obra.builder().titulo("Obra Test " + isbn).resumen("Resumen").generos(Set.of(genero)).categorias(Set.of(categoria)).build());
-        Editorial editorial = editorialRepository.save(Editorial.builder().nombre("Ed Test " + isbn).correo(isbn + "@e.com").personaContacto("C").telefono("1234-5678").build());
+
+        Obra obra = obraRepository.save(Obra.builder().titulo("Obra Test " + isbn).resumen("Resumen")
+                .generos(Set.of(genero)).categorias(Set.of(categoria)).build());
+
+        Editorial editorial = editorialRepository.save(Editorial.builder().nombre("Ed Test " + isbn)
+                .correo(isbn + "@e.com").personaContacto("C").telefono("1234-5678").build());
+
         Formato formato = formatoRepository.save(Formato.builder().nombre("Formato Test " + isbn).build());
         Idioma idioma = idiomaRepository.save(Idioma.builder().nombre("Idioma Test " + isbn).build());
 
@@ -68,4 +73,5 @@ class LibroRepositoryTest extends BaseRepositoryTest {
                 .idiomas(Set.of(idioma))
                 .build();
     }
+
 }

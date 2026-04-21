@@ -1,8 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.dto.request.PlantaRequest;
 import com.arrupeteca.dto.request.SalonRequest;
-import com.arrupeteca.persistence.entity.Planta;
 import com.arrupeteca.persistence.entity.Salon;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;

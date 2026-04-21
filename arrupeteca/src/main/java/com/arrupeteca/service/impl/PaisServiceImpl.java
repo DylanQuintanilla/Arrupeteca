@@ -30,7 +30,8 @@ public class PaisServiceImpl implements PaisService {
     @Transactional(readOnly = true)
     public PaisResumen obtenerPorIdActivo(Long id) {
         return paisRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No existe un país con ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un país con ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override

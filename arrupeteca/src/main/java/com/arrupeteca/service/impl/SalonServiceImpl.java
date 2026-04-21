@@ -52,7 +52,8 @@ public class SalonServiceImpl implements SalonService {
     @Transactional
     public SalonResumen crear(SalonRequest request) {
         if (salonRepository.qExistePorNombreYPlantaId(request.getNombre(), request.getIdPlanta())) {
-            throw new ValidacionNegocioException("Ya existe el salón '" + request.getNombre() + "' en la planta indicada.");
+            throw new ValidacionNegocioException("Ya existe el salón '"
+                    + request.getNombre() + "' en la planta indicada.");
         }
 
         Salon salonCreado = salonMapper.toEntity(request);
@@ -69,11 +70,13 @@ public class SalonServiceImpl implements SalonService {
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró salón con ID: " + id));
 
         boolean cambioNombre = !salonEncontrado.getNombre().equalsIgnoreCase(request.getNombre());
-        boolean cambioPlanta = salonEncontrado.getPlanta() == null || !salonEncontrado.getPlanta().getId().equals(request.getIdPlanta());
+        boolean cambioPlanta = salonEncontrado.getPlanta() == null
+                || !salonEncontrado.getPlanta().getId().equals(request.getIdPlanta());
 
-        if ((cambioNombre || cambioPlanta) &&
-                salonRepository.qExistePorNombreYPlantaId(request.getNombre(), request.getIdPlanta())) {
-            throw new ValidacionNegocioException("Ya existe un salón con el nombre '" + request.getNombre() + "' en esta planta.");
+        if ((cambioNombre || cambioPlanta)
+                && salonRepository.qExistePorNombreYPlantaId(request.getNombre(), request.getIdPlanta())) {
+            throw new ValidacionNegocioException("Ya existe un salón con el nombre '"
+                    + request.getNombre() + "' en esta planta.");
         }
 
         salonMapper.updateEntity(request, salonEncontrado);
@@ -110,7 +113,8 @@ public class SalonServiceImpl implements SalonService {
     private void asignarRelaciones(Salon salon, SalonRequest request) {
         if (request.getIdPlanta() != null) {
             salon.setPlanta(plantaRepository.findById(request.getIdPlanta())
-                    .orElseThrow(() -> new ValidacionNegocioException("No existe una planta con ID: " + request.getIdPlanta())));
+                    .orElseThrow(() -> new ValidacionNegocioException("No existe una planta con ID: "
+                            + request.getIdPlanta())));
         }
     }
 }

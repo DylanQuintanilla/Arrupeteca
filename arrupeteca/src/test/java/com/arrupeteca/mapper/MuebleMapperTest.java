@@ -2,7 +2,6 @@ package com.arrupeteca.mapper;
 
 import com.arrupeteca.dto.request.MuebleRequest;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.entity.Salon;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mapstruct.factory.Mappers;

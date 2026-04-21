@@ -60,8 +60,9 @@ public class MuebleController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<MuebleResumen>> actualizar(@PathVariable Long id,
-                                                                 @Valid @RequestBody MuebleRequest request) {
+    public ResponseEntity<ApiResponse<MuebleResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody MuebleRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Mueble actualizado correctamente", muebleService.actualizar(id, request)));
     }
 

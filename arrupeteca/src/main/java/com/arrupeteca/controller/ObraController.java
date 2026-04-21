@@ -60,8 +60,9 @@ public class ObraController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ObraResumen>> actualizar(@PathVariable Long id,
-                                                               @Valid @RequestBody ObraRequest request) {
+    public ResponseEntity<ApiResponse<ObraResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody ObraRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Obra actualizada correctamente", obraService.actualizar(id, request)));
     }
 

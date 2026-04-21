@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,8 +55,9 @@ public class FormatoController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<FormatoResumen>> actualizar(@PathVariable Long id,
-                                                                  @Valid @RequestBody FormatoRequest request) {
+    public ResponseEntity<ApiResponse<FormatoResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody FormatoRequest request) {
         FormatoResumen actualizado = formatoService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Formato actualizado correctamente", actualizado));
     }
@@ -82,6 +82,8 @@ public class FormatoController {
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<FormatoResumen>>> obtenerTodosAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable))
+        );
     }
 }

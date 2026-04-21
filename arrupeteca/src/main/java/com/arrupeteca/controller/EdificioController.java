@@ -81,6 +81,8 @@ public class EdificioController {
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<EdificioResumen>>> obtenerTodosAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos(pageable))
+        );
     }
 }

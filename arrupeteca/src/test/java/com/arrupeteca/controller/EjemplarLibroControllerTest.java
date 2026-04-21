@@ -1,7 +1,8 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
-import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
 import com.arrupeteca.service.EjemplarLibroService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,8 +11,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-
-import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -117,7 +116,7 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
         mockMvc.perform(patch("/api/v1/ejemplares/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ejemplar activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Ejemplar activada correctamente"));
     }
 
     @Test

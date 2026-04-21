@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -56,8 +55,9 @@ public class NacionalidadController {
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<NacionalidadResumen>> actualizar(@PathVariable Long id,
-                                                                       @Valid @RequestBody NacionalidadRequest request) {
+    public ResponseEntity<ApiResponse<NacionalidadResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody NacionalidadRequest request) {
         NacionalidadResumen actualizado = nacionalidadService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Nacionalidad actualizada correctamente", actualizado));
     }
@@ -78,10 +78,12 @@ public class NacionalidadController {
 
     // ADMIN
 
-    // GET: Ver TODAS (incluso borradas)
+    // GET: Ver TODAS (incluso borrados)
     @GetMapping("/admin")
     public ResponseEntity<ApiResponse<Page<NacionalidadResumen>>> obtenerTodasAdmin(
             @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de nacionalidades", nacionalidadService.obtenerTodas(pageable)));
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de nacionalidades", nacionalidadService.obtenerTodas(pageable))
+        );
     }
 }

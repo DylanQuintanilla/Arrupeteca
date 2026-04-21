@@ -30,7 +30,8 @@ public class EdificioServiceImpl implements EdificioService {
     @Transactional(readOnly = true)
     public EdificioResumen obtenerPorIdActivo(Long id) {
         return edificioRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un edificio con ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un edificio con ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override

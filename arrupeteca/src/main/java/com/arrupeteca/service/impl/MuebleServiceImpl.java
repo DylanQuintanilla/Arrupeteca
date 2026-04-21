@@ -66,7 +66,8 @@ public class MuebleServiceImpl implements MuebleService {
     @Transactional
     public MuebleResumen crear(MuebleRequest request) {
         if (muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
-            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '" + request.getNombre() + "' en ese salón.");
+            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '"
+                    + request.getNombre() + "' en ese salón.");
         }
 
         Mueble nuevo = muebleMapper.toEntity(request);
@@ -82,9 +83,10 @@ public class MuebleServiceImpl implements MuebleService {
         Mueble existente = muebleRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Mueble con ID: " + id));
 
-        if (!existente.getNombre().equalsIgnoreCase(request.getNombre()) &&
-                muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
-            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '" + request.getNombre() + "' en ese salón.");
+        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())
+                && muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
+            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '"
+                    + request.getNombre() + "' en ese salón.");
         }
 
         muebleMapper.updateEntity(request, existente);

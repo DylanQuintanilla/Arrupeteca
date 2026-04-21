@@ -1,20 +1,25 @@
 # System Architecture Document (SAD) - Arrupeteca (Documento de Arquitectura del Sistema)
 
 ## 1. Executive Summary (Resumen Ejecutivo)
-Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 4.0.2 y Java 21. El sistema utiliza una arquitectura por capas para gestionar el catálogo intelectual, el inventario físico y flujos operativos con altos estándares de calidad y optimización de datos.
+Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 3.4.2 y Java 21. El sistema utiliza una arquitectura por capas para gestionar el catálogo intelectual, el inventario físico y flujos operativos con altos estándares de calidad y optimización de datos.
 
 ## 2. Architectural Goals and Constraints (Objetivos y Restricciones Arquitectónicas)
 - **Maintainability (Mantenibilidad)**: Uso de **Java Records** para DTOs y mapeo con MapStruct.
 - **Data Integrity (Integridad de Datos)**: Borrado lógico en cascada y bloqueo optimista mediante `@Version`.
+- **Entity Integrity (Integridad de Entidades)**: Uso obligatorio de `@EqualsAndHashCode(onlyExplicitlyIncluded = true)` incluyendo únicamente el campo `id` para evitar errores de recursión y problemas de circularidad en Hibernate/JPA.
 - **Optimization (Optimización)**: Gestión eficiente de relaciones N+1 mediante Batch Fetching y consultas optimizadas con `@EntityGraph`.
 - **Reliability (Fiabilidad)**: Manejo de errores centralizado con SLF4J logging y excepciones de negocio personalizadas.
+- **Quality Standards (Estándares de Calidad)**: Cumplimiento estricto de reglas de estilo Checkstyle y cobertura de pruebas del 100% (JaCoCo).
 
 ## 3. Technology Stack (Stack Tecnológico)
 - **Language (Lenguaje)**: Java 21 (Records para DTOs como estándar).
-- **Framework**: Spring Boot 4.0.2.
+- **Framework**: Spring Boot 3.4.2.
 - **Persistence (Persistencia)**: Spring Data JPA / Hibernate con **HikariCP** y **Batch Fetching (size=100)**.
 - **Database (Base de Datos)**: MySQL 8.x.
 - **Build Tool (Herramienta de Construcción)**: Gradle.
+- **Quality & Style (Calidad y Estilo)**: 
+    - **Checkstyle**: Validación de reglas de estilo (5 Golden Rules).
+    - **JaCoCo**: Verificación de cobertura de pruebas (Target: 100%).
 - **Mapping (Mapeo)**: MapStruct (Transformación Entity <-> Record).
 - **Boilerplate Reduction**: Lombok (Principalmente para Entidades JPA).
 - **Validation (Validación)**: Jakarta Bean Validation (Hibernate Validator).
@@ -39,7 +44,14 @@ Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 4
 
 ## 5. Key Technical Standards (Estándares Técnicos Clave)
 
-### 5.1 API Response Structure (Estructura de Respuesta de API)
+### 5.1 Style Standards (5 Golden Rules - Checkstyle)
+1. **Line Length**: Máximo 140 caracteres.
+2. **Import Order**: `java.*`, `jakarta.*`, librerías de terceros, y finalmente `com.arrupeteca.*`.
+3. **No Tabs**: Uso obligatorio de 4 espacios (UTF-8).
+4. **Empty Line Separator**: Una línea en blanco entre miembros de clase (campos, métodos, clases internas).
+5. **One Statement Per Line**: Una sola instrucción por línea.
+
+### 5.2 API Response Structure (Estructura de Respuesta de API)
 ```json
 {
   "timestamp": "ISO-8601-Date",
@@ -51,18 +63,19 @@ Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 4
 }
 ```
 
-### 5.2 Error Handling and Logging (Manejo de Errores y Logs)
+### 5.3 Error Handling and Logging (Manejo de Errores y Logs)
 - **GlobalExceptionHandler**: Captura excepciones de negocio y errores graves (500).
-- **Business Exceptions**: Uso de `ReglaNegocioException`.
+- **Business Exceptions**: Uso de `ValidacionNegocioException`.
 - **Logging**: Registro de errores graves con StackTrace mediante `@Slf4j`.
 
-### 5.3 Data Persistence Strategy (Estrategia de Persistencia)
+### 5.4 Data Persistence Strategy (Estrategia de Persistencia)
 - **Soft Delete in Cascade**: Propagación del borrado lógico de Obra a sus Libros y Ejemplares.
 - **Optimistic Locking**: Campo `@Version Integer version` en `Auditable.java`.
 - **Query Optimization**: Uso de `@EntityGraph` para relaciones ToOne y Batch Fetching para colecciones.
 
 ## 6. Development and Quality Policy (Política de Desarrollo y Calidad)
 - **TDD Mandatory**: Cobertura del 100% mediante JUnit 5 y Mockito.
+- **Checkstyle Enforcement**: El build fallará (severidad warning/error) si hay violaciones de estilo.
 - **Clean Code**: Eliminar anotaciones redundantes como `@Repository`.
 
 ## Project Context Baseline Updates (Actualizaciones de la Línea Base del Contexto del Proyecto)

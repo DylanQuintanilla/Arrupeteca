@@ -1,5 +1,7 @@
 package com.arrupeteca.controller;
 
+import java.util.List;
+
 import com.arrupeteca.dto.request.EditorialRequest;
 import com.arrupeteca.persistence.projection.EditorialResumen;
 import com.arrupeteca.service.EditorialService;
@@ -12,10 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.List;
-
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -47,7 +46,8 @@ class EditorialControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/editoriales/{id} - Should return editorial by ID")
     void shouldReturnById() throws Exception {
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Editorial Test", "Calle 123", "12345678", "test@editorial.com", false);
+        EditorialResumen resumen = new TestEditorialResumen(1L, "Editorial Test", "Calle 123", "12345678",
+                "test@editorial.com", false);
         when(editorialService.obtenerPorIdActivo(1L)).thenReturn(resumen);
 
         mockMvc.perform(get("/api/v1/editoriales/1"))
@@ -66,7 +66,8 @@ class EditorialControllerTest extends BaseControllerTest {
         request.setTelefono("1234-5678");
         request.setPersonaContacto("Contacto");
 
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Nueva", "Direccion", "1234-5678", "nueva@test.com", false);
+        EditorialResumen resumen = new TestEditorialResumen(1L, "Nueva", "Direccion", "1234-5678",
+                "nueva@test.com", false);
         when(editorialService.crear(any())).thenReturn(resumen);
 
         mockMvc.perform(post("/api/v1/editoriales")
@@ -87,7 +88,8 @@ class EditorialControllerTest extends BaseControllerTest {
         request.setTelefono("1234-5678");
         request.setPersonaContacto("Contacto");
 
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Actualizada", "Direccion", "1234-5678", "test@test.com", false);
+        EditorialResumen resumen = new TestEditorialResumen(1L, "Actualizada", "Direccion", "1234-5678",
+                "test@test.com", false);
         when(editorialService.actualizar(any(Long.class), any(EditorialRequest.class))).thenReturn(resumen);
 
         mockMvc.perform(put("/api/v1/editoriales/1")

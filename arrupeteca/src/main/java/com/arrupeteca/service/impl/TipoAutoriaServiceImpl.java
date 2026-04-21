@@ -30,7 +30,8 @@ public class TipoAutoriaServiceImpl implements TipoAutoriaService {
     @Transactional(readOnly = true)
     public TipoAutoriaResumen obtenerPorIdActivo(Long id) {
         return tipoAutoriaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de autoría con ID: " + id + ", o no está activo"));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de autoría con ID: "
+                        + id + ", o no está activo"));
     }
 
     @Override
