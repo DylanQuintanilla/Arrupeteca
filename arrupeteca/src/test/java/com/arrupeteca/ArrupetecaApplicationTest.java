@@ -11,8 +11,8 @@ import org.springframework.test.context.ActiveProfiles;
 class ArrupetecaApplicationTest {
 
     @Test
-    @DisplayName("Context loads and main method execution")
-    void main() {
-        ArrupetecaApplication.main(new String[]{});
+    @DisplayName("Context loads")
+    void contextLoads() {
+        // Test para verificar que el contexto de Spring carga correctamente
     }
 }

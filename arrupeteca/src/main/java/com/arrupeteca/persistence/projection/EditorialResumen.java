@@ -10,6 +10,8 @@ public interface EditorialResumen {
 
     String getTelefono();
 
+    String getPersonaContacto();
+
     String getCorreo();
 
     boolean getBorradoLogico();

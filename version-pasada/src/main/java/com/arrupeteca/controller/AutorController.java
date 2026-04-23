@@ -72,7 +72,9 @@ public class AutorController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<AutorResumen>> actualizar(@PathVariable Long id, @Valid @RequestBody AutorRequest request) {
+    public ResponseEntity<ApiResponse<AutorResumen>> actualizar(
+            @PathVariable Long id,
+            @Valid @RequestBody AutorRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Autor actualizado", autorService.actualizar(id, request)));
     }
 

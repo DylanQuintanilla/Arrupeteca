@@ -31,7 +31,7 @@ import lombok.ToString;
 @AllArgsConstructor
 @Entity
 @Builder
-@Table(name = "ejemplar_libro")
+@Table(name = "ejemplar_libro")//AGREGAR EL FK DE DONACION MAS ADELANTE
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class EjemplarLibro extends Auditable {
 

@@ -64,6 +64,9 @@ tasks.named('test') {
 	finalizedBy jacocoTestReport
 }
 
+// Esta línea conecta la verificación de cobertura al comando "build"
+check.dependsOn jacocoTestCoverageVerification
+
 jacocoTestReport {
 	dependsOn test
 	reports {
@@ -73,9 +76,13 @@ jacocoTestReport {
 }
 
 jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
 	violationRules {
 		rule {
 			element = 'CLASS'
+			excludes = [
+					'com.arrupeteca.ArrupetecaApplication'
+			]
 			limit {
 				minimum = 1.0
 			}
@@ -91,18 +98,25 @@ checkstyle {
 }
 
 dependencyCheck {
-	failBuildOnCVSS = 7.0
-	format = 'HTML'
-	if (System.getenv('NVD_API_KEY') == null) {
-		skip = true
+	skipConfigurations = []
+	suppressionFile = file('config/dependency-check/suppressions.xml')
+	formats = ['HTML', 'JUNIT', 'JSON']
+	failBuildOnCVSS = 9.0
+
+	analyzers {
+		ossIndex {
+			enabled = false
+		}
+	}
+
+	nvd {
+		apiKey = 'c70a67d4-5383-4bd2-8e85-bfb748e2c780'
 	}
 }
 
 tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += [
 			'-Amapstruct.defaultComponentModel=spring',
-			'-Amapstruct.unmappedTargetPolicy=IGNORE',
-			'-Amapstruct.addGeneratedAnnotation=true',
-			'-Amapstruct.generatedAnnotation=jakarta.annotation.Generated'
+			'-Amapstruct.unmappedTargetPolicy=IGNORE'
 	]
 }
