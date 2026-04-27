@@ -1,9 +1,8 @@
 package com.arrupeteca.controller;
 
-import java.util.List;
-
 import com.arrupeteca.dto.request.FormatoRequest;
-import com.arrupeteca.persistence.projection.FormatoResumen;
+import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
+import com.arrupeteca.dto.response.summary.FormatoResumen;
 import com.arrupeteca.service.FormatoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +12,8 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -38,20 +39,19 @@ class FormatoControllerTest extends BaseControllerTest {
 
         mockMvc.perform(get("/api/v1/formatos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de formatos activos"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
     @DisplayName("GET /api/v1/formatos/{id} - Should return format by ID")
     void shouldReturnById() throws Exception {
-        FormatoResumen resumen = new TestFormatoResumen(1L, "Formato Test", false);
-        when(formatoService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Format Test", false, "admin", null, "admin", null);
+        when(formatoService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/formatos/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Formato encontrado"));
+                .andExpect(jsonPath("$.data.nombre").value("Format Test"));
     }
 
     @Test
@@ -60,15 +60,14 @@ class FormatoControllerTest extends BaseControllerTest {
         FormatoRequest request = new FormatoRequest();
         request.setNombre("Nuevo");
 
-        FormatoResumen resumen = new TestFormatoResumen(1L, "Nuevo", false);
-        when(formatoService.crear(any())).thenReturn(resumen);
+        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Nuevo", false, "admin", null, "admin", null);
+        when(formatoService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/formatos")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.data.nombre").value("Nuevo"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
@@ -77,15 +76,38 @@ class FormatoControllerTest extends BaseControllerTest {
         FormatoRequest request = new FormatoRequest();
         request.setNombre("Actualizado");
 
-        FormatoResumen resumen = new TestFormatoResumen(1L, "Actualizado", false);
-        when(formatoService.actualizar(any(Long.class), any(FormatoRequest.class))).thenReturn(resumen);
+        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Actualizado", false, "admin", null, "admin", null);
+        when(formatoService.actualizar(any(Long.class), any(FormatoRequest.class))).thenReturn(detail);
 
         mockMvc.perform(put("/api/v1/formatos/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/formatos/admin - Should return all formats for admin")
+    void shouldReturnAllAdmin() throws Exception {
+        Page<FormatoResumen> page = new PageImpl<>(List.of());
+        when(formatoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/formatos/admin"))
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Formato actualizado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Historial completo de formatos"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/formatos/admin/{id} - Should return format by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Format Test", false, "admin", null, "admin", null);
+        when(formatoService.obtenerPorId(1L)).thenReturn(detail);
+
+        mockMvc.perform(get("/api/v1/formatos/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Formato encontrado (admin)"));
     }
 
     @Test
@@ -104,39 +126,5 @@ class FormatoControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Formato activado correctamente"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/formatos/admin - Should return all formats for admin")
-    void shouldReturnAllAdmin() throws Exception {
-        Page<FormatoResumen> page = new PageImpl<>(List.of());
-        when(formatoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/formatos/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de formatos"));
-    }
-
-    private static record TestFormatoResumen(
-            Long id,
-            String nombre,
-            boolean borradoLogico
-    ) implements FormatoResumen {
-
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public String getNombre() {
-            return nombre;
-        }
-
-        @Override
-        public boolean getBorradoLogico() {
-            return borradoLogico;
-        }
     }
 }

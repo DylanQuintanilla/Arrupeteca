@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Categoria;
-import com.arrupeteca.persistence.projection.CategoriaResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,7 @@ class CategoriaRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         Categoria saved = categoriaRepository.save(categoria);
-        Optional<CategoriaResumen> found = categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId());
+        Optional<Categoria> found = categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId());
 
         assertThat(found).isPresent();
         assertThat(found.get().getNombre()).isEqualTo("Novela");
@@ -39,10 +38,10 @@ class CategoriaRepositoryTest extends BaseRepositoryTest {
         categoriaRepository.save(Categoria.builder().nombre("Cat 2").borradoLogico(false).build());
         categoriaRepository.save(Categoria.builder().nombre("Cat 3").borradoLogico(true).build());
 
-        Page<CategoriaResumen> page = categoriaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Categoria> page = categoriaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
 
         assertThat(page.getTotalElements()).isEqualTo(2);
-        assertThat(page.getContent()).extracting(CategoriaResumen::getNombre)
+        assertThat(page.getContent()).extracting(Categoria::getNombre)
                 .containsExactlyInAnyOrder("Cat 1", "Cat 2");
     }
 

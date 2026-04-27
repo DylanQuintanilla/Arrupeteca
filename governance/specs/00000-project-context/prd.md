@@ -64,3 +64,6 @@ Como alumno, quiero buscar libros en el catálogo de la biblioteca, identificar 
 - **Estabilidad de Datos**: Se establece el requisito de cobertura del 100% no solo para la lógica de negocio, sino para todas las estructuras de datos (DTOs y Mappers) para garantizar la integridad de los contratos de la API y las transformaciones de datos.
 - **Validación de Contratos**: Todas las solicitudes de entrada (Requests) deben ser validadas mediante pruebas de serialización y validación de restricciones (Bean Validation) para prevenir cambios accidentales en la interfaz pública y asegurar la integridad de los datos de entrada.
 
+### 2026-04-24 | Optimización de Experiencia de Usuario (Resumen vs Detalle)
+- **Eficiencia en Consultas**: Para mejorar la experiencia del usuario (R-NF-01), se adopta el estándar de "Resumen vs Detalle". Las vistas de lista cargan solo la información esencial de forma instantánea, mientras que la información completa y sus relaciones complejas se reservan para la vista de detalle individual. Esto reduce drásticamente el peso de las respuestas JSON y el tiempo de carga en dispositivos con conexiones lentas.
+

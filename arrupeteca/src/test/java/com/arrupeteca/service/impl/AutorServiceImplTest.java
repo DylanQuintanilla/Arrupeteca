@@ -4,14 +4,11 @@ import java.util.List;
 import java.util.Optional;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
+import com.arrupeteca.dto.response.summary.AutorResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
 import com.arrupeteca.persistence.entity.Autor;
-import com.arrupeteca.persistence.entity.Genero;
-import com.arrupeteca.persistence.entity.Nacionalidad;
-import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.entity.Pais;
-import com.arrupeteca.persistence.projection.AutorResumen;
 import com.arrupeteca.persistence.repository.AutorRepository;
 import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
@@ -58,23 +55,29 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all active paginated")
     void shouldReturnAllActive() {
-        Page<AutorResumen> expectedPage = new PageImpl<>(List.of(mock(AutorResumen.class)));
+        Autor autor = new Autor();
+        Page<Autor> expectedPage = new PageImpl<>(List.of(autor));
+        AutorResumen resumen = mock(AutorResumen.class);
+
         when(autorRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(autorMapper.toResumen(autor)).thenReturn(resumen);
 
         Page<AutorResumen> result = autorService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
     @DisplayName("Should return by ID and active")
     void shouldReturnByIdAndActive() {
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+        Autor autor = new Autor();
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(autor));
+        when(autorMapper.toDetalleResponse(autor)).thenReturn(detalle);
 
-        AutorResumen result = autorService.obtenerPorIdActivo(1L);
+        AutorDetalleResponse result = autorService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -90,23 +93,29 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all for admin")
     void shouldReturnAllAdmin() {
-        Page<AutorResumen> expectedPage = new PageImpl<>(List.of(mock(AutorResumen.class)));
+        Autor autor = new Autor();
+        Page<Autor> expectedPage = new PageImpl<>(List.of(autor));
+        AutorResumen resumen = mock(AutorResumen.class);
+
         when(autorRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(autorMapper.toResumen(autor)).thenReturn(resumen);
 
         Page<AutorResumen> result = autorService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
     @DisplayName("Should return by ID")
     void shouldReturnById() {
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        Autor autor = new Autor();
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(autor));
+        when(autorMapper.toDetalleResponse(autor)).thenReturn(detalle);
 
-        AutorResumen result = autorService.obtenerPorId(1L);
+        AutorDetalleResponse result = autorService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -122,18 +131,18 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should perform global advanced search")
     void shouldPerformGlobalAdvancedSearch() {
-        Page<AutorResumen> expectedPage = new PageImpl<>(List.of());
+        Page<Autor> expectedPage = new PageImpl<>(List.of());
         when(autorRepository.busquedaGlobalAvanzada(any(), any(), any(), any())).thenReturn(expectedPage);
 
-        Page<AutorResumen> result = autorService.busquedaGlobalAvanzada("test", 1900, 2000, Pageable.unpaged());
+        Page<AutorResumen> result = autorService.busquedaGlobal("test", 1900, 2000, Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Should perform master search admin")
     void shouldPerformMasterSearchAdmin() {
-        Page<AutorResumen> expectedPage = new PageImpl<>(List.of());
+        Page<Autor> expectedPage = new PageImpl<>(List.of());
         when(autorRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(expectedPage);
 
@@ -141,35 +150,32 @@ class AutorServiceImplTest extends BaseServiceTest {
                 false, 1L, 1L, 1L, 1L, "test", 1900, 2000, Pageable.unpaged()
         );
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Should find alive authors in range")
     void shouldFindAliveAuthorsInRange() {
-        Page<AutorResumen> expectedPage = new PageImpl<>(List.of());
+        Page<Autor> expectedPage = new PageImpl<>(List.of());
         when(autorRepository.buscarAutoresVivosEnRango(any(), any(), any())).thenReturn(expectedPage);
 
-        Page<AutorResumen> result = autorService.buscarAutoresVivosEnRango(1900, 2000, Pageable.unpaged());
+        Page<AutorResumen> result = autorService.buscarVivosEnRango(1900, 2000, Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result).isEmpty();
     }
 
     @Test
     @DisplayName("Should create author with default values and valid relations")
     void shouldCreateAuthor() {
         AutorRequest request = new AutorRequest();
-        // Missing name and pseudonym to test defaults
+        request.setNombre("Test");
         request.setIdPaisNacimiento(1L);
         request.setIdNacionalidad(1L);
         request.setIdGeneroPrincipal(1L);
         request.setIdObraCumbre(1L);
 
-        when(paisRepository.findById(1L)).thenReturn(Optional.of(new Pais()));
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(new Nacionalidad()));
-        when(generoRepository.findById(1L)).thenReturn(Optional.of(new Genero()));
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(new Obra()));
-
+        when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
+        
         Autor autorEntity = new Autor();
         when(autorMapper.toEntity(any())).thenReturn(autorEntity);
 
@@ -177,14 +183,12 @@ class AutorServiceImplTest extends BaseServiceTest {
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        AutorResumen result = autorService.crear(request);
+        AutorDetalleResponse result = autorService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
-        assertThat(request.getNombre()).isEqualTo("Nombre Desconocido");
-        assertThat(request.getSeudonimo()).isEqualTo("Seudonimo Desconocido");
+        assertThat(result).isEqualTo(detalle);
         verify(autorRepository).save(any());
     }
 
@@ -193,8 +197,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldCreateAuthorWithNullRelations() {
         AutorRequest request = new AutorRequest();
         request.setNombre("Test");
-        request.setSeudonimo("Test");
-        // IDs are null by default
+
+        when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
 
         Autor autorEntity = new Autor();
         when(autorMapper.toEntity(any())).thenReturn(autorEntity);
@@ -203,44 +207,12 @@ class AutorServiceImplTest extends BaseServiceTest {
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        AutorResumen result = autorService.crear(request);
+        AutorDetalleResponse result = autorService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
-        assertThat(autorEntity.getPaisNacimiento()).isNull();
-        assertThat(autorEntity.getNacionalidad()).isNull();
-        assertThat(autorEntity.getGeneroPrincipal()).isNull();
-        assertThat(autorEntity.getObraCumbre()).isNull();
-    }
-
-    @Test
-    @DisplayName("Should throw exception when relations do not exist")
-    void shouldThrowWhenRelationsDoNotExist() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Autor");
-        request.setSeudonimo("Seudonimo");
-        request.setIdPaisNacimiento(1L);
-        request.setIdNacionalidad(1L);
-        request.setIdGeneroPrincipal(1L);
-        request.setIdObraCumbre(1L);
-
-        when(paisRepository.findById(1L)).thenReturn(Optional.empty());
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.empty());
-        when(generoRepository.findById(1L)).thenReturn(Optional.empty());
-        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
-
-        when(autorMapper.toEntity(any())).thenReturn(new Autor());
-
-        assertThatThrownBy(() -> autorService.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .satisfies(ex -> {
-                    ValidacionNegocioException vne = (ValidacionNegocioException) ex;
-                    assertThat(vne.getMessage()).isEqualTo("Se encontraron múltiples errores de validación");
-                    assertThat(vne.getErrores()).hasSize(4);
-                    assertThat(vne.getErrores().get(0)).contains("no existe");
-                });
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -248,18 +220,23 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldUpdateAuthor() {
         AutorRequest request = new AutorRequest();
         request.setNombre("Nuevo Nombre");
-        request.setSeudonimo("Nuevo Seudonimo");
 
         Autor existing = new Autor();
         existing.setId(1L);
+        existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(autorRepository.existsByNombreIgnoreCase("Nuevo Nombre")).thenReturn(false);
+        
+        Autor saved = new Autor();
+        saved.setId(1L);
+        when(autorRepository.save(any())).thenReturn(saved);
 
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        AutorResumen result = autorService.actualizar(1L, request);
+        AutorDetalleResponse result = autorService.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
         verify(autorMapper).updateEntity(request, existing);
         verify(autorRepository).save(existing);
     }
@@ -281,7 +258,7 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         autorService.cambiarEstado(1L, false);
 
-        verify(autorRepository).desactivarAutor(1L);
+        verify(autorRepository).desactivar(1L);
     }
 
     @Test
@@ -291,7 +268,7 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         autorService.cambiarEstado(1L, true);
 
-        verify(autorRepository).activarAutor(1L);
+        verify(autorRepository).activar(1L);
     }
 
     @Test
@@ -305,57 +282,66 @@ class AutorServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should verify duplicates with various terms")
-    void shouldVerifyDuplicatesWithTerms() {
-        when(autorRepository.buscarPosiblesDuplicados("Termino", 1L))
-                .thenReturn(List.of(mock(AutorResumen.class)));
-
-        assertThat(autorService.verificarDuplicados("Termino", 1L)).isNotEmpty();
-        assertThat(autorService.verificarDuplicados(null, 1L)).isEmpty();
-        assertThat(autorService.verificarDuplicados("   ", 1L)).isEmpty();
-        assertThat(autorService.verificarDuplicados("Seudonimo Desconocido", 1L)).isEmpty();
-        assertThat(autorService.verificarDuplicados("Nombre Desconocido", 1L)).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should update author with blank name and pseudonym using defaults")
-    void shouldUpdateAuthorWithBlanks() {
+    @DisplayName("Should update author with same name")
+    void shouldUpdateAuthorSameName() {
         AutorRequest request = new AutorRequest();
-        request.setNombre(""); // Blank
-        request.setSeudonimo(null); // Null
+        request.setNombre("Mismo");
 
         Autor existing = new Autor();
         existing.setId(1L);
+        existing.setNombre("Mismo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+        
+        Autor saved = new Autor();
+        saved.setId(1L);
+        when(autorRepository.save(any())).thenReturn(saved);
 
-        AutorResumen resumen = mock(AutorResumen.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
+        when(autorMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        AutorResumen result = autorService.actualizar(1L, request);
+        AutorDetalleResponse result = autorService.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(resumen);
-        assertThat(request.getNombre()).isEqualTo("Nombre Desconocido");
-        assertThat(request.getSeudonimo()).isEqualTo("Seudonimo Desconocido");
-        verify(autorRepository).save(existing);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
-    @DisplayName("Should throw exception when relations do not exist on update")
-    void shouldThrowWhenRelationsDoNotExistOnUpdate() {
+    @DisplayName("Should throw when updating author with name that already exists")
+    void shouldThrowWhenUpdateNameExists() {
         AutorRequest request = new AutorRequest();
-        request.setIdPaisNacimiento(1L);
+        request.setNombre("Existente");
 
         Autor existing = new Autor();
         existing.setId(1L);
+        existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(paisRepository.findById(1L)).thenReturn(Optional.empty());
+        when(autorRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
 
         assertThatThrownBy(() -> autorService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .satisfies(ex -> {
-                    ValidacionNegocioException vne = (ValidacionNegocioException) ex;
-                    assertThat(vne.getErrores()).isNotEmpty();
-                });
+                .hasMessageContaining("Ya existe otro autor con el nombre: Existente");
     }
 
+    @Test
+    @DisplayName("Should throw exception if author name exists during creation")
+    void crearNombreExists() {
+        AutorRequest request = new AutorRequest();
+        request.setNombre("Test");
+        when(autorRepository.existsByNombreIgnoreCase("Test")).thenReturn(true);
+
+        assertThatThrownBy(() -> autorService.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe un autor con el nombre: Test");
+    }
+
+    @Test
+    @DisplayName("Should verify duplicates with trimming")
+    void shouldVerifyDuplicatesWithTrimming() {
+        Autor autor = new Autor();
+        when(autorRepository.buscarPosiblesDuplicados("Termino", 1L))
+                .thenReturn(List.of(autor));
+        when(autorMapper.toResumen(autor)).thenReturn(mock(AutorResumen.class));
+
+        assertThat(autorService.buscarDuplicados("  Termino  ", 1L)).isNotEmpty();
+        verify(autorRepository).buscarPosiblesDuplicados("Termino", 1L);
+    }
 }

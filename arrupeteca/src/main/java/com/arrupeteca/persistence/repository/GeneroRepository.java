@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Genero;
-import com.arrupeteca.persistence.projection.GeneroResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,13 +14,13 @@ import java.util.Optional;
 @Repository
 public interface GeneroRepository extends JpaRepository<Genero, Long> {
 
-    Page<GeneroResumen> findByBorradoLogicoFalse(Pageable pageable);
+    Page<Genero> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<GeneroResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Genero> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    Page<GeneroResumen> findAllProjectedBy(Pageable pageable);
+    Page<Genero> findAllProjectedBy(Pageable pageable);
 
-    Optional<GeneroResumen> findProjectedById(Long id);
+    Optional<Genero> findProjectedById(Long id);
 
     @Modifying
     @Query("UPDATE Genero g SET g.borradoLogico = true WHERE g.id = :id")
@@ -34,5 +33,4 @@ public interface GeneroRepository extends JpaRepository<Genero, Long> {
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
-
 }

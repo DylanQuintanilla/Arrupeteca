@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.MuebleRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.MuebleResumen;
+import com.arrupeteca.dto.response.detail.MuebleDetalleResponse;
+import com.arrupeteca.dto.response.summary.MuebleResumen;
 import com.arrupeteca.service.MuebleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -32,37 +32,48 @@ public class MuebleController {
     private final MuebleService muebleService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<MuebleResumen> pagina = muebleService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos", pagina));
+    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos", muebleService.obtenerTodosActivos(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<MuebleResumen>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<MuebleDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Mueble encontrado", muebleService.obtenerPorIdActivo(id)));
     }
 
-    @GetMapping("/busqueda")
+    @GetMapping("/global")
     public ResponseEntity<ApiResponse<Page<MuebleResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<MuebleResumen> pagina = muebleService.busquedaGlobal(palabra, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
+            @RequestParam String palabra, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", muebleService.busquedaGlobal(palabra, pageable)));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de muebles", muebleService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<MuebleDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Mueble encontrado (admin)", muebleService.obtenerPorId(id)));
+    }
+
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> busquedaMaestraAdmin(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) Long idSalon,
+            @RequestParam(required = false) String termino,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
+                muebleService.busquedaMaestraAdmin(esBorrado, idSalon, termino, pageable)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<MuebleResumen>> crear(@Valid @RequestBody MuebleRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Mueble creado exitosamente", muebleService.crear(request)));
+    public ResponseEntity<ApiResponse<MuebleDetalleResponse>> crear(@Valid @RequestBody MuebleRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Mueble creado exitosamente", muebleService.crear(request)), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<MuebleResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody MuebleRequest request) {
+    public ResponseEntity<ApiResponse<MuebleDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody MuebleRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Mueble actualizado correctamente", muebleService.actualizar(id, request)));
     }
 
@@ -76,27 +87,5 @@ public class MuebleController {
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         muebleService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Mueble activado correctamente"));
-    }
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de muebles",
-                muebleService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<MuebleResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idSalon,
-            @RequestParam(required = false) Long idPlanta,
-            @RequestParam(required = false) Long idEdificio,
-            @RequestParam(required = false) String termino,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<MuebleResumen> pagina = muebleService.busquedaMaestraAdmin(
-                esBorrado, idSalon, idPlanta, idEdificio, termino, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

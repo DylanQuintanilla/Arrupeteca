@@ -1,16 +1,14 @@
 package com.arrupeteca.controller;
 
-import java.util.List;
-
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.AutorResumen;
+import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
+import com.arrupeteca.dto.response.summary.AutorResumen;
 import com.arrupeteca.service.AutorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -25,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/autores")
 @RequiredArgsConstructor
@@ -34,50 +34,73 @@ public class AutorController {
     private final AutorService autorService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<AutorResumen> pagina = autorService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", pagina));
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", autorService.obtenerTodosActivos(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<AutorResumen>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Autor encontrado", autorService.obtenerPorIdActivo(id)));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.obtenerPorId(id)));
     }
 
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
+            @RequestParam String palabra,
             @RequestParam(required = false) Integer inicio,
             @RequestParam(required = false) Integer fin,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", autorService.busquedaGlobal(palabra, inicio, fin, pageable)));
+    }
 
-        Page<AutorResumen> pagina = autorService.busquedaGlobalAvanzada(palabra, inicio, fin, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaMaestraAdmin(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) Long idNacionalidad,
+            @RequestParam(required = false) Long idPais,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idObra,
+            @RequestParam(required = false) String termino,
+            @RequestParam(required = false) Integer anioInicio,
+            @RequestParam(required = false) Integer anioFin,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
+                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
+                        termino, anioInicio, anioFin, pageable)));
     }
 
     @GetMapping("/vivos-rango")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> autoresVivos(
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> buscarVivos(
             @RequestParam Integer inicio,
             @RequestParam Integer fin,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", autorService.buscarVivosEnRango(inicio, fin, pageable)));
+    }
 
-        Page<AutorResumen> pagina = autorService.buscarAutoresVivosEnRango(inicio, fin, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", pagina));
+    @GetMapping("/verificar-duplicados")
+    public ResponseEntity<ApiResponse<List<AutorResumen>>> buscarDuplicados(
+            @RequestParam String termino,
+            @RequestParam(required = false) Long idExcluir) {
+        return ResponseEntity.ok(ApiResponse.exito("Verificación completada", autorService.buscarDuplicados(termino, idExcluir)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<AutorResumen>> crear(@Valid @RequestBody AutorRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Autor creado", autorService.crear(request)));
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> crear(@Valid @RequestBody AutorRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<AutorResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody AutorRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Autor actualizado", autorService.actualizar(id, request)));
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody AutorRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Autor actualizado correctamente", autorService.actualizar(id, request)));
     }
 
     @DeleteMapping("/{id}")
@@ -90,45 +113,5 @@ public class AutorController {
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         autorService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Autor activado"));
-    }
-
-    // --- ADMIN ---
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idNacionalidad,
-            @RequestParam(required = false) Long idPais,
-            @RequestParam(required = false) Long idGenero,
-            @RequestParam(required = false) Long idObra,
-            @RequestParam(required = false) String termino,
-            @RequestParam(required = false) Integer anioInicio,
-            @RequestParam(required = false) Integer anioFin,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-
-        Page<AutorResumen> pagina = autorService.busquedaMaestraAdmin(
-                esBorrado, idNacionalidad, idPais, idGenero, idObra, termino, anioInicio, anioFin, pageable);
-
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
-    }
-
-    @GetMapping("/verificar-duplicados")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> verificarDuplicados(
-            @RequestParam String termino,
-            @RequestParam(required = false) Long idExcluir
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.exito(
-                        "Verificación completada",
-                        autorService.verificarDuplicados(termino, idExcluir)
-                )
-        );
     }
 }

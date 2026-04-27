@@ -1,19 +1,23 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.IdiomaRequest;
+import com.arrupeteca.dto.response.detail.IdiomaDetalleResponse;
+import com.arrupeteca.dto.response.summary.IdiomaResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.IdiomaMapper;
 import com.arrupeteca.persistence.entity.Idioma;
-import com.arrupeteca.persistence.projection.IdiomaResumen;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,10 +25,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class IdiomaServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class IdiomaServiceImplTest {
 
     @Mock
     private IdiomaRepository idiomaRepository;
@@ -36,63 +42,76 @@ class IdiomaServiceImplTest extends BaseServiceTest {
     private IdiomaServiceImpl idiomaService;
 
     @Test
-    @DisplayName("Should return all active paginated")
-    void shouldReturnAllActive() {
-        Page<IdiomaResumen> expectedPage = new PageImpl<>(List.of(mock(IdiomaResumen.class)));
-        when(idiomaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Idioma entity = Idioma.builder().id(1L).nombre("Español").build();
+        Page<Idioma> page = new PageImpl<>(List.of(entity));
+        IdiomaResumen resumen = new IdiomaResumen(1L, "Español", false);
+
+        when(idiomaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(idiomaMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<IdiomaResumen> result = idiomaService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
-        verify(idiomaRepository).findByBorradoLogicoFalse(any(Pageable.class));
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should return by ID and active")
-    void shouldReturnByIdAndActive() {
-        IdiomaResumen resumen = mock(IdiomaResumen.class);
-        when(idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+    @DisplayName("obtenerPorIdActivo - Should return DetalleResponse")
+    void obtenerPorIdActivo() {
+        Idioma entity = Idioma.builder().id(1L).nombre("Español").build();
+        IdiomaDetalleResponse detail = new IdiomaDetalleResponse(
+                1L, "Español", false, "admin", null, "admin", null, Collections.emptySet());
 
-        IdiomaResumen result = idiomaService.obtenerPorIdActivo(1L);
+        when(idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(idiomaMapper.toDetalleResponse(entity)).thenReturn(detail);
 
-        assertThat(result).isEqualTo(resumen);
+        IdiomaDetalleResponse result = idiomaService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when not found or inactive")
-    void shouldThrowWhenNotFoundOrInactive() {
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
         when(idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> idiomaService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Idioma con ID: 1, o no está activo");
+                .hasMessageContaining("No se encontró un Idioma activo con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all for admin")
-    void shouldReturnAllAdmin() {
-        Page<IdiomaResumen> expectedPage = new PageImpl<>(List.of(mock(IdiomaResumen.class)));
-        when(idiomaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+    @DisplayName("obtenerTodos - Should return page of Resumen")
+    void obtenerTodos() {
+        Idioma entity = Idioma.builder().id(1L).nombre("Español").build();
+        Page<Idioma> page = new PageImpl<>(List.of(entity));
+        IdiomaResumen resumen = new IdiomaResumen(1L, "Español", false);
+        
+        when(idiomaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
+        when(idiomaMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<IdiomaResumen> result = idiomaService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return by ID")
-    void shouldReturnById() {
-        IdiomaResumen resumen = mock(IdiomaResumen.class);
-        when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+    @DisplayName("obtenerPorId - Should return DetalleResponse")
+    void obtenerPorId() {
+        Idioma entity = Idioma.builder().id(1L).nombre("Español").build();
+        IdiomaDetalleResponse detail = mock(IdiomaDetalleResponse.class);
+        when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(idiomaMapper.toDetalleResponse(entity)).thenReturn(detail);
 
-        IdiomaResumen result = idiomaService.obtenerPorId(1L);
+        IdiomaDetalleResponse result = idiomaService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when not found")
-    void shouldThrowWhenNotFound() {
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
         when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> idiomaService.obtenerPorId(1L))
@@ -101,138 +120,120 @@ class IdiomaServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should create when name is unique")
-    void shouldCreate() {
+    @DisplayName("crear - Should create and return DetalleResponse")
+    void crearSuccess() {
         IdiomaRequest request = new IdiomaRequest();
         request.setNombre("Nuevo");
+        Idioma entity = new Idioma();
+        Idioma saved = Idioma.builder().id(1L).nombre("Nuevo").build();
+        IdiomaDetalleResponse detail = mock(IdiomaDetalleResponse.class);
 
         when(idiomaRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
-        when(idiomaMapper.toEntity(any())).thenReturn(new Idioma());
-        Idioma saved = new Idioma();
-        saved.setId(1L);
-        when(idiomaRepository.save(any())).thenReturn(saved);
-        
-        IdiomaResumen resumen = mock(IdiomaResumen.class);
-        when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(idiomaMapper.toEntity(request)).thenReturn(entity);
+        when(idiomaRepository.save(entity)).thenReturn(saved);
+        when(idiomaMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        IdiomaResumen result = idiomaService.crear(request);
+        IdiomaDetalleResponse result = idiomaService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
-        verify(idiomaRepository).save(any());
+        assertThat(result).isEqualTo(detail);
+        verify(idiomaRepository).save(entity);
     }
 
     @Test
-    @DisplayName("Should throw exception when creating with duplicate name")
-    void shouldThrowWhenDuplicateName() {
+    @DisplayName("crear - Should throw when name duplicate")
+    void crearDuplicate() {
         IdiomaRequest request = new IdiomaRequest();
-        request.setNombre("Duplicado");
-
-        when(idiomaRepository.existsByNombreIgnoreCase("Duplicado")).thenReturn(true);
+        request.setNombre("Existe");
+        when(idiomaRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
 
         assertThatThrownBy(() -> idiomaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("ya ha sido utilizado");
+                .hasMessageContaining("Ya existe un idioma con el nombre: Existe");
     }
 
     @Test
-    @DisplayName("Should update when name is unique or same")
-    void shouldUpdate() {
+    @DisplayName("actualizar - Should update and return DetalleResponse")
+    void actualizar() {
         IdiomaRequest request = new IdiomaRequest();
         request.setNombre("Actualizado");
-
-        Idioma existing = new Idioma();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
+        Idioma existing = Idioma.builder().id(1L).nombre("Español").build();
+        IdiomaDetalleResponse detail = mock(IdiomaDetalleResponse.class);
 
         when(idiomaRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(idiomaRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
-        
-        IdiomaResumen resumen = mock(IdiomaResumen.class);
-        when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(idiomaRepository.save(existing)).thenReturn(existing);
+        when(idiomaMapper.toDetalleResponse(existing)).thenReturn(detail);
 
-        IdiomaResumen result = idiomaService.actualizar(1L, request);
+        IdiomaDetalleResponse result = idiomaService.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detail);
         verify(idiomaMapper).updateEntity(request, existing);
-        verify(idiomaRepository).save(existing);
     }
 
     @Test
-    @DisplayName("Should throw exception when updating and new name exists")
-    void shouldThrowWhenUpdatingToExistingName() {
+    @DisplayName("actualizar - Should update with same name")
+    void actualizarSameName() {
         IdiomaRequest request = new IdiomaRequest();
-        request.setNombre("Existente");
-
-        Idioma existing = new Idioma();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
+        request.setNombre("Español");
+        Idioma existing = Idioma.builder().id(1L).nombre("Español").build();
+        IdiomaDetalleResponse detail = mock(IdiomaDetalleResponse.class);
 
         when(idiomaRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(idiomaRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
+        when(idiomaRepository.save(existing)).thenReturn(existing);
+        when(idiomaMapper.toDetalleResponse(existing)).thenReturn(detail);
+
+        idiomaService.actualizar(1L, request);
+
+        verify(idiomaRepository, never()).existsByNombreIgnoreCase(any());
+    }
+
+    @Test
+    @DisplayName("actualizar - Should throw when new name duplicate")
+    void actualizarDuplicate() {
+        IdiomaRequest request = new IdiomaRequest();
+        request.setNombre("Ocupado");
+        Idioma existing = Idioma.builder().id(1L).nombre("Español").build();
+
+        when(idiomaRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(idiomaRepository.existsByNombreIgnoreCase("Ocupado")).thenReturn(true);
 
         assertThatThrownBy(() -> idiomaService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un Idioma con el nombre: Existente");
+                .hasMessageContaining("Ya existe otro idioma con el nombre: Ocupado");
     }
 
     @Test
-    @DisplayName("Should update when name is same (ignore case)")
-    void shouldUpdateWhenNameSame() {
-        IdiomaRequest request = new IdiomaRequest();
-        request.setNombre("IDIOMA");
-
-        Idioma existing = new Idioma();
-        existing.setId(1L);
-        existing.setNombre("idioma");
-
-        when(idiomaRepository.findById(1L)).thenReturn(Optional.of(existing));
-        
-        IdiomaResumen resumen = mock(IdiomaResumen.class);
-        when(idiomaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        IdiomaResumen result = idiomaService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(resumen);
-    }
-
-    @Test
-    @DisplayName("Should throw when updating non-existent")
-    void shouldThrowWhenUpdatingNonExistent() {
+    @DisplayName("actualizar - Should throw when not found")
+    void actualizarNotFound() {
         when(idiomaRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> idiomaService.actualizar(1L, new IdiomaRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Idioma con ID: 1");
+                .hasMessageContaining("No se encontró un Idioma con ID: 1");
     }
 
     @Test
-    @DisplayName("Should deactivate")
-    void shouldDeactivate() {
+    @DisplayName("cambiarEstado - Should activate")
+    void activate() {
         when(idiomaRepository.existsById(1L)).thenReturn(true);
-
-        idiomaService.cambiarEstado(1L, false);
-
-        verify(idiomaRepository).desactivar(1L);
-    }
-
-    @Test
-    @DisplayName("Should activate")
-    void shouldActivate() {
-        when(idiomaRepository.existsById(1L)).thenReturn(true);
-
         idiomaService.cambiarEstado(1L, true);
-
         verify(idiomaRepository).activar(1L);
     }
 
     @Test
-    @DisplayName("Should throw when changing state of non-existent")
-    void shouldThrowWhenChangingStateNonExistent() {
-        when(idiomaRepository.existsById(1L)).thenReturn(false);
+    @DisplayName("cambiarEstado - Should deactivate")
+    void deactivate() {
+        when(idiomaRepository.existsById(1L)).thenReturn(true);
+        idiomaService.cambiarEstado(1L, false);
+        verify(idiomaRepository).desactivar(1L);
+    }
 
+    @Test
+    @DisplayName("cambiarEstado - Should throw when not found")
+    void statusNotFound() {
+        when(idiomaRepository.existsById(1L)).thenReturn(false);
         assertThatThrownBy(() -> idiomaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Idioma con ID: 1");
+                .hasMessageContaining("No se encontró un Idioma con ID: 1");
     }
 }
-

@@ -1,17 +1,17 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
-import com.arrupeteca.persistence.projection.NacionalidadResumen;
+import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface NacionalidadService {
 
-    Page<NacionalidadResumen> obtenerTodasActivas(Pageable pageable);
+    Page<NacionalidadResumen> obtenerTodosActivos(Pageable pageable);
 
     NacionalidadResumen obtenerPorIdActivo(Long id);
 
-    Page<NacionalidadResumen> obtenerTodas(Pageable pageable);
+    Page<NacionalidadResumen> obtenerTodos(Pageable pageable);
 
     NacionalidadResumen obtenerPorId(Long id);
 

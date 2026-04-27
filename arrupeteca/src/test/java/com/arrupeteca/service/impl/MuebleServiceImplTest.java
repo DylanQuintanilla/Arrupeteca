@@ -1,17 +1,18 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.MuebleRequest;
+import com.arrupeteca.dto.response.detail.MuebleDetalleResponse;
+import com.arrupeteca.dto.response.summary.MuebleResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.MuebleMapper;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.entity.Salon;
-import com.arrupeteca.persistence.projection.MuebleResumen;
 import com.arrupeteca.persistence.repository.MuebleRepository;
-import com.arrupeteca.persistence.repository.SalonRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,216 +23,235 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
-class MuebleServiceImplTest extends BaseServiceTest {
-    @Mock private MuebleRepository repository;
-    @Mock private MuebleMapper mapper;
-    @Mock private SalonRepository salonRepository;
-    @InjectMocks private MuebleServiceImpl service;
+@ExtendWith(MockitoExtension.class)
+class MuebleServiceImplTest {
+
+    @Mock
+    private MuebleRepository muebleRepository;
+
+    @Mock
+    private MuebleMapper muebleMapper;
+
+    @InjectMocks
+    private MuebleServiceImpl muebleService;
 
     @Test
-    @DisplayName("Should return paginated active muebles")
-    void shouldReturnPaginatedActive() {
-        Page<MuebleResumen> page = new PageImpl<>(List.of());
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodosActivos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        Page<Mueble> page = new PageImpl<>(List.of(entity));
+        MuebleResumen resumen = new MuebleResumen(1L, "Mueble 1", false, "Salon A");
+
+        when(muebleRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(muebleMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<MuebleResumen> result = muebleService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("Should return mueble by id when active")
-    void shouldReturnByIdActivo() {
-        MuebleResumen resumen = mock(MuebleResumen.class);
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorIdActivo(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerPorIdActivo - Should return detail when exists and active")
+    void obtenerPorIdActivoSuccess() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        MuebleDetalleResponse detail = new MuebleDetalleResponse(1L, "Mueble 1", false, null, null, null, null, null);
+
+        when(muebleRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(muebleMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        MuebleDetalleResponse result = muebleService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when active mueble not found")
-    void shouldThrowWhenActiveNotFound() {
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
+        when(muebleRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> muebleService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Mueble activo con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all muebles")
-    void shouldReturnAll() {
-        Page<MuebleResumen> page = new PageImpl<>(List.of());
-        when(repository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("busquedaGlobal - Should return matching muebles")
+    void busquedaGlobal() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        Page<Mueble> page = new PageImpl<>(List.of(entity));
+        MuebleResumen resumen = new MuebleResumen(1L, "Mueble 1", false, "Salon A");
+
+        when(muebleRepository.busquedaGlobal(eq("palabra"), any(Pageable.class))).thenReturn(page);
+        when(muebleMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<MuebleResumen> result = muebleService.busquedaGlobal("palabra", Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return mueble by id")
-    void shouldReturnById() {
-        MuebleResumen resumen = mock(MuebleResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorId(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerTodos - Should return all muebles")
+    void obtenerTodos() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        Page<Mueble> page = new PageImpl<>(List.of(entity));
+        MuebleResumen resumen = new MuebleResumen(1L, "Mueble 1", false, "Salon A");
+
+        when(muebleRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
+        when(muebleMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<MuebleResumen> result = muebleService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should throw exception when mueble not found by id")
-    void shouldThrowWhenNotFoundById() {
-        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorId(1L))
+    @DisplayName("obtenerPorId - Should return detail")
+    void obtenerPorIdSuccess() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        MuebleDetalleResponse detail = new MuebleDetalleResponse(1L, "Mueble 1", false, null, null, null, null, null);
+
+        when(muebleRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(muebleMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        MuebleDetalleResponse result = muebleService.obtenerPorId(1L);
+
+        assertThat(result).isEqualTo(detail);
+    }
+
+    @Test
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(muebleRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> muebleService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Mueble con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return search results")
-    void shouldReturnSearch() {
-        Page<MuebleResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaGlobal(anyString(), any(Pageable.class))).thenReturn(page);
-        assertThat(service.busquedaGlobal("test", Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("busquedaMaestraAdmin - Should return matching muebles for admin")
+    void busquedaMaestraAdmin() {
+        Mueble entity = Mueble.builder().id(1L).nombre("Mueble 1").build();
+        Page<Mueble> page = new PageImpl<>(List.of(entity));
+        MuebleResumen resumen = new MuebleResumen(1L, "Mueble 1", false, "Salon A");
+
+        when(muebleRepository.busquedaMaestraAdmin(eq(false), eq(1L), eq("term"), any(Pageable.class))).thenReturn(page);
+        when(muebleMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<MuebleResumen> result = muebleService.busquedaMaestraAdmin(false, 1L, "term", Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return busqueda maestra admin results")
-    void shouldReturnBusquedaMaestraAdmin() {
-        Page<MuebleResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(Pageable.class)))
-                .thenReturn(page);
-
-        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, 1L, "term", Pageable.unpaged()))
-                .isEqualTo(page);
-        
-        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), eq("term"), any(Pageable.class));
-    }
-
-    @Test
-    @DisplayName("Should create mueble")
-    void shouldCreate() {
+    @DisplayName("crear - Should create mueble")
+    void crearSuccess() {
         MuebleRequest request = new MuebleRequest();
-        request.setNombre("Mueble 1");
+        request.setNombre("Nuevo");
         request.setIdSalon(1L);
-
-        when(repository.existePorNombreYSalonId(anyString(), anyLong())).thenReturn(false);
-        when(salonRepository.findById(1L)).thenReturn(Optional.of(new Salon()));
 
         Mueble entity = new Mueble();
-        entity.setId(1L);
-        when(mapper.toEntity(any())).thenReturn(entity);
-        when(repository.save(any())).thenReturn(entity);
+        Mueble saved = Mueble.builder().id(1L).nombre("Nuevo").build();
+        MuebleDetalleResponse detail = new MuebleDetalleResponse(1L, "Nuevo", false, null, null, null, null, null);
 
-        MuebleResumen resumen = mock(MuebleResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(muebleRepository.existePorNombreYSalonId("Nuevo", 1L)).thenReturn(false);
+        when(muebleMapper.toEntity(request)).thenReturn(entity);
+        when(muebleRepository.save(entity)).thenReturn(saved);
+        when(muebleMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        assertThat(service.crear(request)).isEqualTo(resumen);
-        verify(repository).save(entity);
+        MuebleDetalleResponse result = muebleService.crear(request);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when name exists in salon on create")
-    void shouldThrowWhenNameExistsOnCreate() {
+    @DisplayName("crear - Should throw exception when duplicate name in salon")
+    void crearDuplicate() {
         MuebleRequest request = new MuebleRequest();
-        request.setNombre("Mueble 1");
+        request.setNombre("Existente");
         request.setIdSalon(1L);
-        when(repository.existePorNombreYSalonId("Mueble 1", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.crear(request))
+        when(muebleRepository.existePorNombreYSalonId("Existente", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> muebleService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un mueble con el nombre 'Mueble 1' en ese salón");
+                .hasMessageContaining("Ya existe un mueble con ese nombre en el salón seleccionado");
     }
 
     @Test
-    @DisplayName("Should throw exception when salon not found on create")
-    void shouldThrowWhenSalonNotFoundOnCreate() {
+    @DisplayName("actualizar - Should update mueble")
+    void actualizarSuccess() {
+        Long id = 1L;
         MuebleRequest request = new MuebleRequest();
-        request.setNombre("Mueble 1");
-        request.setIdSalon(1L);
-        when(repository.existePorNombreYSalonId("Mueble 1", 1L)).thenReturn(false);
-        when(salonRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Mueble());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("El Salón indicado no existe");
-    }
-
-    @Test
-    @DisplayName("Should update mueble")
-    void shouldUpdate() {
-        MuebleRequest request = new MuebleRequest();
-        request.setNombre("Mueble 2");
+        request.setNombre("Actualizado");
         request.setIdSalon(1L);
 
-        Mueble existing = new Mueble();
-        existing.setId(1L);
-        existing.setNombre("Mueble 1");
+        Mueble existing = Mueble.builder().id(id).nombre("Antiguo").build();
+        MuebleDetalleResponse detail = new MuebleDetalleResponse(id, "Actualizado", false, null, null, null, null, null);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existePorNombreYSalonId("Mueble 2", 1L)).thenReturn(false);
-        when(salonRepository.findById(1L)).thenReturn(Optional.of(new Salon()));
+        when(muebleRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(muebleRepository.existePorNombreYSalonId("Actualizado", 1L)).thenReturn(false);
+        when(muebleRepository.save(existing)).thenReturn(existing);
+        when(muebleMapper.toDetalleResponse(existing)).thenReturn(detail);
 
-        MuebleResumen resumen = mock(MuebleResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        MuebleDetalleResponse result = muebleService.actualizar(id, request);
 
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository).save(existing);
+        assertThat(result).isEqualTo(detail);
+        verify(muebleMapper).updateEntity(request, existing);
     }
 
     @Test
-    @DisplayName("Should throw exception when mueble not found on update")
-    void shouldThrowWhenNotFoundOnUpdate() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.actualizar(1L, new MuebleRequest()))
+    @DisplayName("actualizar - Should throw exception when not found")
+    void actualizarNotFound() {
+        when(muebleRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> muebleService.actualizar(1L, new MuebleRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Mueble con ID: 1");
     }
 
     @Test
-    @DisplayName("Should throw exception when name already exists in salon on update")
-    void shouldThrowWhenNameExistsOnUpdate() {
+    @DisplayName("actualizar - Should throw exception when duplicate name in salon")
+    void actualizarDuplicate() {
+        Long id = 1L;
         MuebleRequest request = new MuebleRequest();
-        request.setNombre("Mueble 2");
+        request.setNombre("Existente");
         request.setIdSalon(1L);
 
-        Mueble existing = new Mueble();
-        existing.setId(1L);
-        existing.setNombre("Mueble 1");
+        Mueble existing = Mueble.builder().id(id).nombre("Antiguo").build();
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existePorNombreYSalonId("Mueble 2", 1L)).thenReturn(true);
+        when(muebleRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(muebleRepository.existePorNombreYSalonId("Existente", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.actualizar(1L, request))
+        assertThatThrownBy(() -> muebleService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un mueble con el nombre 'Mueble 2' en ese salón");
+                .hasMessageContaining("Ya existe otro mueble con ese nombre en el salón seleccionado");
     }
 
     @Test
-    @DisplayName("Should activate mueble")
-    void shouldActivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, true);
-        verify(repository).activar(1L);
+    @DisplayName("cambiarEstado - Should change state")
+    void cambiarEstado() {
+        when(muebleRepository.existsById(1L)).thenReturn(true);
+
+        muebleService.cambiarEstado(1L, true);
+        verify(muebleRepository).activar(1L);
+
+        muebleService.cambiarEstado(1L, false);
+        verify(muebleRepository).desactivar(1L);
     }
 
     @Test
-    @DisplayName("Should deactivate mueble")
-    void shouldDeactivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, false);
-        verify(repository).desactivar(1L);
-    }
+    @DisplayName("cambiarEstado - Should throw exception when not found")
+    void cambiarEstadoNotFound() {
+        when(muebleRepository.existsById(1L)).thenReturn(false);
 
-    @Test
-    @DisplayName("Should throw exception when mueble not found on status change")
-    void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.cambiarEstado(1L, true))
+        assertThatThrownBy(() -> muebleService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Mueble con ID: 1");
-        verify(repository, never()).activar(any());
-        verify(repository, never()).desactivar(any());
     }
 }
-

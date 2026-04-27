@@ -1,7 +1,8 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.AutorRequest;
-import com.arrupeteca.persistence.projection.AutorResumen;
+import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
+import com.arrupeteca.dto.response.summary.AutorResumen;
 import com.arrupeteca.service.AutorService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,8 +46,10 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/{id} - Should return author by ID")
     void shouldReturnById() throws Exception {
-        AutorResumen resumen = new TestAutorResumen(1L, "Autor Test", false);
-        when(autorService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        AutorDetalleResponse detalle = new AutorDetalleResponse(
+                1L, "Autor Test", null, null, null, null, false,
+                null, null, null, null, null, null, null, null);
+        when(autorService.obtenerPorIdActivo(1L)).thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/autores/1"))
                 .andExpect(status().isOk())
@@ -59,7 +62,7 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/autores/busqueda - Should perform global search")
     void shouldPerformGlobalSearch() throws Exception {
         Page<AutorResumen> page = new PageImpl<>(List.of());
-        when(autorService.busquedaGlobalAvanzada(any(), any(), any(), any())).thenReturn(page);
+        when(autorService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/busqueda")
                         .param("palabra", "test")
@@ -74,7 +77,7 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/autores/vivos-rango - Should return authors alive in range")
     void shouldReturnAliveInRange() throws Exception {
         Page<AutorResumen> page = new PageImpl<>(List.of());
-        when(autorService.buscarAutoresVivosEnRango(any(), any(), any())).thenReturn(page);
+        when(autorService.buscarVivosEnRango(any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/vivos-rango")
                         .param("inicio", "1900")
@@ -91,8 +94,10 @@ class AutorControllerTest extends BaseControllerTest {
         request.setNombre("Nuevo");
         request.setBiografia("Biografia de prueba");
 
-        AutorResumen resumen = new TestAutorResumen(1L, "Nuevo", false);
-        when(autorService.crear(any())).thenReturn(resumen);
+        AutorDetalleResponse detalle = new AutorDetalleResponse(
+                1L, "Nuevo", null, null, null, null, false,
+                null, null, null, null, null, null, null, null);
+        when(autorService.crear(any())).thenReturn(detalle);
 
         mockMvc.perform(post("/api/v1/autores")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,8 +114,10 @@ class AutorControllerTest extends BaseControllerTest {
         request.setNombre("Actualizado");
         request.setBiografia("Nueva biografia");
 
-        AutorResumen resumen = new TestAutorResumen(1L, "Actualizado", false);
-        when(autorService.actualizar(any(Long.class), any(AutorRequest.class))).thenReturn(resumen);
+        AutorDetalleResponse detalle = new AutorDetalleResponse(
+                1L, "Actualizado", null, null, null, null, false,
+                null, null, null, null, null, null, null, null);
+        when(autorService.actualizar(any(Long.class), any(AutorRequest.class))).thenReturn(detalle);
 
         mockMvc.perform(put("/api/v1/autores/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -165,72 +172,29 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/autores/admin/{id} - Should return author by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        AutorDetalleResponse detalle = new AutorDetalleResponse(
+                1L, "Autor Test", null, null, null, null, false,
+                null, null, null, null, null, null, null, null);
+        when(autorService.obtenerPorId(1L)).thenReturn(detalle);
+
+        mockMvc.perform(get("/api/v1/autores/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Autor encontrado (admin)"))
+                .andExpect(jsonPath("$.data.nombre").value("Autor Test"));
+    }
+
+    @Test
     @DisplayName("GET /api/v1/autores/verificar-duplicados - Should verify duplicates")
     void shouldVerifyDuplicates() throws Exception {
-        when(autorService.verificarDuplicados(any(), any())).thenReturn(List.of());
+        when(autorService.buscarDuplicados(any(), any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/autores/verificar-duplicados")
                         .param("termino", "test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Verificación completada"));
-    }
-
-    private static record TestAutorResumen(Long id, String nombre, boolean borradoLogico) implements AutorResumen {
-
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public String getNombre() {
-            return nombre;
-        }
-
-        @Override
-        public boolean getBorradoLogico() {
-            return borradoLogico;
-        }
-
-        @Override
-        public Integer getAnioNacimiento() {
-            return 1900;
-        }
-
-        @Override
-        public Integer getAnioFallecimiento() {
-            return 2000;
-        }
-
-        @Override
-        public String getSeudonimo() {
-            return "Alias";
-        }
-
-        @Override
-        public String getNombreNacionalidad() {
-            return "Test";
-        }
-
-        @Override
-        public String getNombrePais() {
-            return "Test";
-        }
-
-        @Override
-        public String getBiografia() {
-            return "Bio";
-        }
-
-        @Override
-        public String getNombreGeneroPrincipal() {
-            return "Genero";
-        }
-
-        @Override
-        public String getNombreObraCumbre() {
-            return "Obra";
-        }
     }
 }

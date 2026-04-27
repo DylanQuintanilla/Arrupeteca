@@ -1,7 +1,7 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
-import com.arrupeteca.persistence.projection.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

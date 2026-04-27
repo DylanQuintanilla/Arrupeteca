@@ -2,7 +2,8 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.EdificioRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.EdificioResumen;
+import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
+import com.arrupeteca.dto.response.summary.EdificioResumen;
 import com.arrupeteca.service.EdificioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -40,24 +41,24 @@ public class EdificioController {
 
     // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<EdificioResumen>> obtenerPorId(@PathVariable Long id) {
-        EdificioResumen edificio = edificioService.obtenerPorIdActivo(id);
+    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        EdificioDetalleResponse edificio = edificioService.obtenerPorIdActivo(id);
         return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado", edificio));
     }
 
     // POST: Crear nuevo
     @PostMapping
-    public ResponseEntity<ApiResponse<EdificioResumen>> crear(@Valid @RequestBody EdificioRequest request) {
-        EdificioResumen nuevo = edificioService.crear(request);
+    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> crear(@Valid @RequestBody EdificioRequest request) {
+        EdificioDetalleResponse nuevo = edificioService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.exito("Edificio creado exitosamente", nuevo));
     }
 
     // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EdificioResumen>> actualizar(@PathVariable Long id,
+    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> actualizar(@PathVariable Long id,
                                                                    @Valid @RequestBody EdificioRequest request) {
-        EdificioResumen actualizado = edificioService.actualizar(id, request);
+        EdificioDetalleResponse actualizado = edificioService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Edificio actualizado correctamente", actualizado));
     }
 

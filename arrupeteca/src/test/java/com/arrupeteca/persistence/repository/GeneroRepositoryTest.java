@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Genero;
-import com.arrupeteca.persistence.projection.GeneroResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ class GeneroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActiveWithPagination() {
         generoRepository.save(Genero.builder().nombre("G1").borradoLogico(false).build());
-        Page<GeneroResumen> page = generoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Genero> page = generoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 }

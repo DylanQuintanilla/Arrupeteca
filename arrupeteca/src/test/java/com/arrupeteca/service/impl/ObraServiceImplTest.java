@@ -1,380 +1,244 @@
 package com.arrupeteca.service.impl;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
-import com.arrupeteca.dto.request.ObraAutorRequest;
 import com.arrupeteca.dto.request.ObraRequest;
+import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
+import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.ObraMapper;
-import com.arrupeteca.persistence.entity.Autor;
-import com.arrupeteca.persistence.entity.Categoria;
-import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.entity.TipoAutoria;
-import com.arrupeteca.persistence.projection.ObraResumen;
-import com.arrupeteca.persistence.repository.AutorRepository;
-import com.arrupeteca.persistence.repository.CategoriaRepository;
-import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
-import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class ObraServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class ObraServiceImplTest {
 
     @Mock
-    private ObraRepository repository;
+    private ObraRepository obraRepository;
+
     @Mock
-    private GeneroRepository generoRepository;
-    @Mock
-    private CategoriaRepository categoriaRepository;
-    @Mock
-    private AutorRepository autorRepository;
-    @Mock
-    private TipoAutoriaRepository tipoAutoriaRepository;
-    @Mock
-    private ObraMapper mapper;
+    private ObraMapper obraMapper;
+
     @InjectMocks
-    private ObraServiceImpl service;
+    private ObraServiceImpl obraService;
 
     @Test
-    @DisplayName("Should return paginated active obras")
-    void shouldReturnPaginatedActive() {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodosActivos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Obra entity = Obra.builder().id(1L).titulo("Test").build();
+        Page<Obra> page = new PageImpl<>(List.of(entity));
+        ObraResumen resumen = new ObraResumen(1L, "Test", 2021, "Resumen", false);
+
+        when(obraRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(obraMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<ObraResumen> result = obraService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("Should return obra by id when active")
-    void shouldReturnByIdActivo() {
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorIdActivo(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerPorIdActivo - Should return DetalleResponse")
+    void obtenerPorIdActivo() {
+        Obra entity = Obra.builder().id(1L).titulo("Test").build();
+        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Test", 2021, "Resumen", false,
+                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+
+        when(obraRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        ObraDetalleResponse result = obraService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when active obra not found")
-    void shouldThrowWhenActiveNotFound() {
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
+        when(obraRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> obraService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra activa con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all obras")
-    void shouldReturnAll() {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(repository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodos(Pageable.unpaged())).isEqualTo(page);
-    }
-
-    @Test
-    @DisplayName("Should return search results")
-    void shouldReturnSearch() {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaGlobal(anyString(), any(Pageable.class))).thenReturn(page);
-        assertThat(service.busquedaGlobal("test", Pageable.unpaged())).isEqualTo(page);
-    }
-
-    @Test
-    @DisplayName("Should return obra by id")
-    void shouldReturnById() {
+    @DisplayName("busquedaGlobal - Should return page of Resumen")
+    void busquedaGlobal() {
+        Obra entity = Obra.builder().id(1L).build();
+        Page<Obra> page = new PageImpl<>(List.of(entity));
         ObraResumen resumen = mock(ObraResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorId(1L)).isEqualTo(resumen);
+        when(obraRepository.busquedaGlobal("palabra", Pageable.unpaged())).thenReturn(page);
+        when(obraMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<ObraResumen> result = obraService.busquedaGlobal("palabra", Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should throw exception when obra not found by id")
-    void shouldThrowWhenNotFoundById() {
-        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorId(1L))
+    @DisplayName("obtenerTodos - Should return all works")
+    void obtenerTodos() {
+        Obra entity = Obra.builder().id(1L).build();
+        Page<Obra> page = new PageImpl<>(List.of(entity));
+        ObraResumen resumen = mock(ObraResumen.class);
+        when(obraRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(obraMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<ObraResumen> result = obraService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
+    }
+
+    @Test
+    @DisplayName("obtenerPorId - Should return DetalleResponse")
+    void obtenerPorId() {
+        Obra entity = Obra.builder().id(1L).build();
+        ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
+        when(obraRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        ObraDetalleResponse result = obraService.obtenerPorId(1L);
+
+        assertThat(result).isEqualTo(detail);
+    }
+
+    @Test
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> obraService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return busqueda maestra admin results")
-    void shouldReturnBusquedaMaestraAdmin() {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(Pageable.class)))
-                .thenReturn(page);
-        assertThat(service.busquedaMaestraAdmin(false, "term", 2020, 2024, Pageable.unpaged()))
-                .isEqualTo(page);
-        verify(repository).busquedaMaestraAdmin(false, "term", 2020, 2024, Pageable.unpaged());
-    }
-
-    @Test
-    @DisplayName("Should create obra with relations")
-    void shouldCreateWithRelations() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdGeneros(Set.of(1L));
-        request.setIdCategorias(Set.of(1L));
-
-        ObraAutorRequest autorReq = new ObraAutorRequest();
-        autorReq.setIdAutor(1L);
-        autorReq.setIdTipoAutoria(1L);
-        request.setAutores(Set.of(autorReq));
-
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(false);
-        when(generoRepository.findAllById(Set.of(1L))).thenReturn(List.of(mock(Genero.class)));
-        when(categoriaRepository.findAllById(Set.of(1L))).thenReturn(List.of(mock(Categoria.class)));
-        when(autorRepository.findById(1L)).thenReturn(Optional.of(mock(Autor.class)));
-        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(mock(TipoAutoria.class)));
-
-        Obra entity = new Obra();
-        entity.setId(1L);
-        entity.setObraAutores(new HashSet<>());
-        when(mapper.toEntity(any())).thenReturn(entity);
-        when(repository.save(any())).thenReturn(entity);
-
+    @DisplayName("busquedaMaestraAdmin - Should return results")
+    void busquedaMaestraAdmin() {
+        Obra entity = Obra.builder().id(1L).build();
+        Page<Obra> page = new PageImpl<>(List.of(entity));
         ObraResumen resumen = mock(ObraResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(obraRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any())).thenReturn(page);
+        when(obraMapper.toResumen(entity)).thenReturn(resumen);
 
-        assertThat(service.crear(request)).isEqualTo(resumen);
-        verify(repository).save(entity);
+        Page<ObraResumen> result = obraService.busquedaMaestraAdmin(false, "term", 2000, 2021, Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should throw exception when title exists on create")
-    void shouldThrowWhenTitleExistsOnCreate() {
+    @DisplayName("crear - Should save and return DetalleResponse")
+    void crear() {
         ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(true);
+        request.setTitulo("Test");
+        Obra entity = Obra.builder().id(1L).titulo("Test").build();
+        ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
-        assertThatThrownBy(() -> service.crear(request))
+        when(obraRepository.existsByTituloIgnoreCase("Test")).thenReturn(false);
+        when(obraMapper.toEntity(request)).thenReturn(entity);
+        when(obraRepository.save(any(Obra.class))).thenReturn(entity);
+        when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        ObraDetalleResponse result = obraService.crear(request);
+
+        assertThat(result).isEqualTo(detail);
+    }
+
+    @Test
+    @DisplayName("crear - Should throw exception if title exists")
+    void crearTituloExists() {
+        ObraRequest request = new ObraRequest();
+        request.setTitulo("Test");
+        when(obraRepository.existsByTituloIgnoreCase("Test")).thenReturn(true);
+
+        assertThatThrownBy(() -> obraService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una obra con el título: Obra 1");
+                .hasMessageContaining("Ya existe una obra con el título: Test");
     }
 
     @Test
-    @DisplayName("Should throw exception when genre not found on create")
-    void shouldThrowWhenGenreNotFoundOnCreate() {
+    @DisplayName("actualizar - Should update and return DetalleResponse")
+    void actualizar() {
         ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdGeneros(Set.of(1L, 2L));
+        request.setTitulo("Nuevo");
+        Obra existing = Obra.builder().id(1L).titulo("Viejo").build();
+        Obra saved = Obra.builder().id(1L).titulo("Nuevo").build();
+        ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(false);
-        when(generoRepository.findAllById(Set.of(1L, 2L))).thenReturn(List.of(mock(Genero.class)));
-        when(mapper.toEntity(any())).thenReturn(new Obra());
+        when(obraRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(obraRepository.existsByTituloIgnoreCase("Nuevo")).thenReturn(false);
+        when(obraRepository.save(existing)).thenReturn(saved);
+        when(obraMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Uno o más Géneros indicados no existen");
+        ObraDetalleResponse result = obraService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when category not found on create")
-    void shouldThrowWhenCategoryNotFoundOnCreate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdCategorias(Set.of(1L, 2L));
-
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(false);
-        when(categoriaRepository.findAllById(Set.of(1L, 2L))).thenReturn(List.of(mock(Categoria.class)));
-        when(mapper.toEntity(any())).thenReturn(new Obra());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Una o más Categorías indicadas no existen");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when author not found on create")
-    void shouldThrowWhenAuthorNotFoundOnCreate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        ObraAutorRequest autorReq = new ObraAutorRequest();
-        autorReq.setIdAutor(1L);
-        request.setAutores(Set.of(autorReq));
-
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(false);
-        when(autorRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Obra());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Autor con ID 1 no encontrado");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when tipoAutoria not found on create")
-    void shouldThrowWhenTipoAutoriaNotFoundOnCreate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        ObraAutorRequest autorReq = new ObraAutorRequest();
-        autorReq.setIdAutor(1L);
-        autorReq.setIdTipoAutoria(1L);
-        request.setAutores(Set.of(autorReq));
-
-        when(repository.existsByTituloIgnoreCase("Obra 1")).thenReturn(false);
-        when(autorRepository.findById(1L)).thenReturn(Optional.of(mock(Autor.class)));
-        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Obra());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Tipo de Autoría con ID 1 no encontrado");
-    }
-
-    @Test
-    @DisplayName("Should update obra")
-    void shouldUpdate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 2");
-        request.setIdGeneros(new HashSet<>());
-        request.setIdCategorias(new HashSet<>());
-        request.setAutores(new HashSet<>());
-
-        Obra existing = new Obra();
-        existing.setId(1L);
-        existing.setTitulo("Obra 1");
-        existing.setObraAutores(new HashSet<>());
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByTituloIgnoreCase("Obra 2")).thenReturn(false);
-
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository, atLeastOnce()).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when genre not found on update")
-    void shouldThrowWhenGenreNotFoundOnUpdate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdGeneros(Set.of(1L));
-
-        Obra existing = new Obra();
-        existing.setId(1L);
-        existing.setTitulo("Obra 1");
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(generoRepository.findAllById(any())).thenReturn(List.of());
-
-        assertThatThrownBy(() -> service.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when category not found on update")
-    void shouldThrowWhenCategoryNotFoundOnUpdate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdCategorias(Set.of(1L));
-
-        Obra existing = new Obra();
-        existing.setId(1L);
-        existing.setTitulo("Obra 1");
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(categoriaRepository.findAllById(any())).thenReturn(List.of());
-
-        assertThatThrownBy(() -> service.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when obra not found on update")
-    void shouldThrowWhenNotFoundOnUpdate() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.actualizar(1L, new ObraRequest()))
+    @DisplayName("actualizar - Should throw when not found")
+    void actualizarNotFound() {
+        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> obraService.actualizar(1L, new ObraRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra con ID: 1");
     }
 
     @Test
-    @DisplayName("Should throw exception when title already in use on update")
-    void shouldThrowWhenTitleInUseOnUpdate() {
+    @DisplayName("actualizar - Should throw when title already exists in another work")
+    void actualizarTituloConflict() {
         ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 2");
+        request.setTitulo("Nuevo");
+        Obra existing = Obra.builder().id(1L).titulo("Viejo").build();
 
-        Obra existing = new Obra();
-        existing.setId(1L);
-        existing.setTitulo("Obra 1");
+        when(obraRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(obraRepository.existsByTituloIgnoreCase("Nuevo")).thenReturn(true);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByTituloIgnoreCase("Obra 2")).thenReturn(true);
-
-        assertThatThrownBy(() -> service.actualizar(1L, request))
+        assertThatThrownBy(() -> obraService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una obra con el título: Obra 2");
+                .hasMessageContaining("Ya existe otra obra con el título: Nuevo");
     }
 
     @Test
-    @DisplayName("Should handle null fields in existing obra during update")
-    void shouldHandleNullFieldsOnUpdate() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Obra 1");
-        request.setIdGeneros(Set.of(1L));
-        request.setIdCategorias(Set.of(1L));
-
-        Obra existing = new Obra();
-        existing.setId(1L);
-        existing.setTitulo("Obra 1");
-        existing.setGeneros(null); // Explicitly null
-        existing.setCategorias(null); // Explicitly null
-        existing.setObraAutores(new HashSet<>());
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(generoRepository.findAllById(any())).thenReturn(List.of(mock(Genero.class)));
-        when(categoriaRepository.findAllById(any())).thenReturn(List.of(mock(Categoria.class)));
-
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        assertThat(existing.getGeneros()).isNotNull();
-        assertThat(existing.getCategorias()).isNotNull();
+    @DisplayName("cambiarEstado - Should activate work")
+    void activarObra() {
+        when(obraRepository.existsById(1L)).thenReturn(true);
+        obraService.cambiarEstado(1L, true);
+        verify(obraRepository).activar(1L);
     }
 
     @Test
-    @DisplayName("Should activate obra")
-    void shouldActivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, true);
-        verify(repository).activar(1L);
+    @DisplayName("cambiarEstado - Should deactivate work")
+    void desactivarObra() {
+        when(obraRepository.existsById(1L)).thenReturn(true);
+        obraService.cambiarEstado(1L, false);
+        verify(obraRepository).desactivar(1L);
     }
 
     @Test
-    @DisplayName("Should deactivate obra")
-    void shouldDeactivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, false);
-        verify(repository).desactivar(1L);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when obra not found on status change")
-    void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.cambiarEstado(1L, true))
+    @DisplayName("cambiarEstado - Should throw when not found")
+    void cambiarEstadoNotFound() {
+        when(obraRepository.existsById(1L)).thenReturn(false);
+        assertThatThrownBy(() -> obraService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra con ID: 1");
-        verify(repository, never()).activar(any());
-        verify(repository, never()).desactivar(any());
     }
-
 }

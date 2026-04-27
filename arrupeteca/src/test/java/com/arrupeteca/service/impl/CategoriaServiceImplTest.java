@@ -1,10 +1,11 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
+import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
+import com.arrupeteca.dto.response.summary.CategoriaResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.CategoriaMapper;
 import com.arrupeteca.persistence.entity.Categoria;
-import com.arrupeteca.persistence.projection.CategoriaResumen;
 import com.arrupeteca.persistence.repository.CategoriaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,24 +39,30 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all active categories paginated")
     void shouldReturnAllActive() {
-        Page<CategoriaResumen> expectedPage = new PageImpl<>(List.of(mock(CategoriaResumen.class)));
+        Categoria entity = new Categoria();
+        Page<Categoria> expectedPage = new PageImpl<>(List.of(entity));
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+
         when(categoriaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(categoriaMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<CategoriaResumen> result = categoriaService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
         verify(categoriaRepository).findByBorradoLogicoFalse(any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should return category by ID and active")
     void shouldReturnByIdAndActive() {
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
-        when(categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+        Categoria entity = new Categoria();
+        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        when(categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(categoriaMapper.toDetalleResponse(entity)).thenReturn(detalle);
 
-        CategoriaResumen result = categoriaService.obtenerPorIdActivo(1L);
+        CategoriaDetalleResponse result = categoriaService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -65,29 +72,35 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> categoriaService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una categoría con ID: 1, o no está activa");
+                .hasMessageContaining("No se encontró una categoría activa con ID: 1");
     }
 
     @Test
     @DisplayName("Should return all categories for admin")
     void shouldReturnAllAdmin() {
-        Page<CategoriaResumen> expectedPage = new PageImpl<>(List.of(mock(CategoriaResumen.class)));
+        Categoria entity = new Categoria();
+        Page<Categoria> expectedPage = new PageImpl<>(List.of(entity));
+        CategoriaResumen resumen = mock(CategoriaResumen.class);
+
         when(categoriaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(categoriaMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<CategoriaResumen> result = categoriaService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
     @DisplayName("Should return category by ID")
     void shouldReturnById() {
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
-        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        Categoria entity = new Categoria();
+        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(categoriaMapper.toDetalleResponse(entity)).thenReturn(detalle);
 
-        CategoriaResumen result = categoriaService.obtenerPorId(1L);
+        CategoriaDetalleResponse result = categoriaService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -107,17 +120,19 @@ class CategoriaServiceImplTest extends BaseServiceTest {
         request.setNombre("Nueva");
 
         when(categoriaRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
-        when(categoriaMapper.toEntity(any())).thenReturn(new Categoria());
+        Categoria entity = new Categoria();
+        when(categoriaMapper.toEntity(any())).thenReturn(entity);
+        
         Categoria saved = new Categoria();
         saved.setId(1L);
         when(categoriaRepository.save(any())).thenReturn(saved);
         
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
-        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        CategoriaResumen result = categoriaService.crear(request);
+        CategoriaDetalleResponse result = categoriaService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
         verify(categoriaRepository).save(any());
     }
 
@@ -131,7 +146,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> categoriaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("ya ha sido utilizado");
+                .hasMessageContaining("Ya existe una categoría con el nombre: Duplicada");
     }
 
     @Test
@@ -147,12 +162,16 @@ class CategoriaServiceImplTest extends BaseServiceTest {
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoriaRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
         
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
-        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        Categoria saved = new Categoria();
+        saved.setId(1L);
+        when(categoriaRepository.save(any())).thenReturn(saved);
 
-        CategoriaResumen result = categoriaService.actualizar(1L, request);
+        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        assertThat(result).isEqualTo(resumen);
+        CategoriaDetalleResponse result = categoriaService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detalle);
         verify(categoriaMapper).updateEntity(request, existing);
         verify(categoriaRepository).save(existing);
     }
@@ -172,7 +191,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> categoriaService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una categoría con el nombre: Existente");
+                .hasMessageContaining("Ya existe otra categoría con el nombre: Existente");
     }
 
     @Test
@@ -187,12 +206,16 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
         
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
-        when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        Categoria saved = new Categoria();
+        saved.setId(1L);
+        when(categoriaRepository.save(any())).thenReturn(saved);
 
-        CategoriaResumen result = categoriaService.actualizar(1L, request);
+        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        assertThat(result).isEqualTo(resumen);
+        CategoriaDetalleResponse result = categoriaService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -202,7 +225,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> categoriaService.actualizar(1L, new CategoriaRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró categoría con ID: 1");
+                .hasMessageContaining("No se encontró una categoría con ID: 1");
     }
 
     @Test
@@ -232,7 +255,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> categoriaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró categoría con ID: 1");
+                .hasMessageContaining("No se encontró una categoría con ID: 1");
     }
 }
 

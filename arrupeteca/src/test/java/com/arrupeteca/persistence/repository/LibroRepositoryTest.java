@@ -9,7 +9,6 @@ import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Idioma;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.projection.LibroResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +46,7 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActive() {
         libroRepository.save(createValidLibro("9781107004634"));
-        Page<LibroResumen> page = libroRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Libro> page = libroRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

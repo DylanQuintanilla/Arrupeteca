@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Idioma;
-import com.arrupeteca.persistence.projection.IdiomaResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ class IdiomaRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActiveWithPagination() {
         idiomaRepository.save(Idioma.builder().nombre("I1").borradoLogico(false).build());
-        Page<IdiomaResumen> page = idiomaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Idioma> page = idiomaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 }

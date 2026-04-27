@@ -3,6 +3,7 @@ package com.arrupeteca.controller;
 import java.util.List;
 
 import com.arrupeteca.dto.request.EdificioRequest;
+import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
 import com.arrupeteca.service.EdificioService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,8 +45,9 @@ class EdificioControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/edificios/{id} - Should return building when active")
     void obtenerPorId() throws Exception {
+        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Test", false, null, null, null, null);
         when(edificioService.obtenerPorIdActivo(1L))
-                .thenReturn(null);
+                .thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/edificios/1"))
                 .andExpect(status().isOk())
@@ -59,7 +61,8 @@ class EdificioControllerTest extends BaseControllerTest {
         EdificioRequest request = new EdificioRequest();
         request.setNombre("Edificio Central");
 
-        when(edificioService.crear(any(EdificioRequest.class))).thenReturn(null);
+        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Central", false, null, null, null, null);
+        when(edificioService.crear(any(EdificioRequest.class))).thenReturn(detalle);
 
         mockMvc.perform(post("/api/v1/edificios")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +78,8 @@ class EdificioControllerTest extends BaseControllerTest {
         EdificioRequest request = new EdificioRequest();
         request.setNombre("Edificio Norte");
 
-        when(edificioService.actualizar(eq(1L), any(EdificioRequest.class))).thenReturn(null);
+        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Norte", false, null, null, null, null);
+        when(edificioService.actualizar(eq(1L), any(EdificioRequest.class))).thenReturn(detalle);
 
         mockMvc.perform(put("/api/v1/edificios/1")
                 .contentType(MediaType.APPLICATION_JSON)

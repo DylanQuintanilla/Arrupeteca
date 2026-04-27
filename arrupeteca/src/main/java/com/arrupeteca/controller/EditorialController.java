@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.EditorialRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.EditorialResumen;
+import com.arrupeteca.dto.response.detail.EditorialDetalleResponse;
+import com.arrupeteca.dto.response.summary.EditorialResumen;
 import com.arrupeteca.service.EditorialService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -31,71 +31,57 @@ public class EditorialController {
 
     private final EditorialService editorialService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<EditorialResumen> pagina = editorialService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activas", pagina));
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activas", editorialService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<EditorialResumen>> obtenerPorId(@PathVariable Long id) {
-        EditorialResumen editorial = editorialService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada", editorial));
+    public ResponseEntity<ApiResponse<EditorialDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada", editorialService.obtenerPorIdActivo(id)));
     }
 
-    // POST: Crear nuevo
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<EditorialDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada (admin)", editorialService.obtenerPorId(id)));
+    }
+
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> busquedaMaestraAdmin(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) String termino,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
+                editorialService.busquedaMaestraAdmin(esBorrado, termino, pageable)));
+    }
+
     @PostMapping
-    public ResponseEntity<ApiResponse<EditorialResumen>> crear(@Valid @RequestBody EditorialRequest request) {
-        EditorialResumen nuevo = editorialService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Editorial creada exitosamente", nuevo));
+    public ResponseEntity<ApiResponse<EditorialDetalleResponse>> crear(@Valid @RequestBody EditorialRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Editorial creada exitosamente",
+                editorialService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EditorialResumen>> actualizar(@PathVariable Long id,
-                                                                    @Valid @RequestBody EditorialRequest request) {
-        EditorialResumen actualizado = editorialService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Editorial actualizada correctamente", actualizado));
+    public ResponseEntity<ApiResponse<EditorialDetalleResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody EditorialRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Editorial actualizada correctamente",
+                editorialService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         editorialService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Editorial desactivada correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         editorialService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Editorial activada correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        return ResponseEntity.ok(
-                ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable))
-        );
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<EditorialResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) String termino,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable
-    ) {
-        Page<EditorialResumen> pagina = editorialService.busquedaMaestraAdmin(esBorrado, termino, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

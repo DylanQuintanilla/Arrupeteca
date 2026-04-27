@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Edificio;
-import com.arrupeteca.persistence.projection.EdificioResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ class EdificioRepositoryTest extends BaseRepositoryTest {
         edificioRepository.save(Edificio.builder().nombre("E1").borradoLogico(false).build());
         edificioRepository.save(Edificio.builder().nombre("E2").borradoLogico(true).build());
 
-        Page<EdificioResumen> page = edificioRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Edificio> page = edificioRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
 }

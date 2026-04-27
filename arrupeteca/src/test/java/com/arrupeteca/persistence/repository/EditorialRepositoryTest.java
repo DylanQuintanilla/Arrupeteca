@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Editorial;
-import com.arrupeteca.persistence.projection.EditorialResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +35,7 @@ class EditorialRepositoryTest extends BaseRepositoryTest {
         editorialRepository.save(Editorial.builder().nombre("Oveja").correo("o@o.com")
                 .personaContacto("C").telefono("1234-5678").borradoLogico(true).build());
 
-        Page<EditorialResumen> page = editorialRepository.busquedaMaestraAdmin(false, "Plan", PageRequest.of(0, 10));
+        Page<Editorial> page = editorialRepository.busquedaMaestraAdmin(false, "Plan", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isEqualTo(1);
     }
 

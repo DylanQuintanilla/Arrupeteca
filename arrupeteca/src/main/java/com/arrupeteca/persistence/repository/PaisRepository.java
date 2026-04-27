@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Pais;
-import com.arrupeteca.persistence.projection.PaisResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,24 +14,23 @@ import java.util.Optional;
 @Repository
 public interface PaisRepository extends JpaRepository<Pais, Long> {
 
-    Page<PaisResumen> findByBorradoLogicoFalse(Pageable pageable);
+    Page<Pais> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<PaisResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Pais> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    Page<PaisResumen> findAllProjectedBy(Pageable pageable);
+    Page<Pais> findAllProjectedBy(Pageable pageable);
 
-    Optional<PaisResumen> findProjectedById(Long id);
+    Optional<Pais> findProjectedById(Long id);
 
     @Modifying
-    @Query("UPDATE Pais g SET g.borradoLogico = true WHERE g.id = :id")
+    @Query("UPDATE Pais p SET p.borradoLogico = true WHERE p.id = :id")
     void desactivar(@Param("id") Long id);
 
     @Modifying
-    @Query("UPDATE Pais g SET g.borradoLogico = false WHERE g.id = :id")
+    @Query("UPDATE Pais p SET p.borradoLogico = false WHERE p.id = :id")
     void activar(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
-
 }

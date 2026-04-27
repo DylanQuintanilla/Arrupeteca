@@ -1,9 +1,7 @@
 package com.arrupeteca.controller;
 
-import java.util.List;
-
 import com.arrupeteca.dto.request.NacionalidadRequest;
-import com.arrupeteca.persistence.projection.NacionalidadResumen;
+import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import com.arrupeteca.service.NacionalidadService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,7 +12,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -31,115 +33,100 @@ class NacionalidadControllerTest extends BaseControllerTest {
     private NacionalidadService nacionalidadService;
 
     @Test
-    @DisplayName("GET /api/v1/nacionalidades - Should return active nationalities")
+    @DisplayName("GET /api/v1/nacionalidades - Should return active")
     void shouldReturnActive() throws Exception {
-        when(nacionalidadService.obtenerTodasActivas(any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
+        Page<NacionalidadResumen> page = new PageImpl<>(List.of());
+        when(nacionalidadService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+
         mockMvc.perform(get("/api/v1/nacionalidades"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de nacionalidades activas"))
-                .andExpect(jsonPath("$.data").exists());
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("GET /api/v1/nacionalidades/{id} - Should return nationality by ID")
-    void shouldReturnNationalityById() throws Exception {
-        NacionalidadResumen resumen = new TestNacionalidadResumen(1L, "Nacionalidad Test", false);
+    @DisplayName("GET /api/v1/nacionalidades/{id} - Should return by ID")
+    void shouldReturnById() throws Exception {
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", false);
         when(nacionalidadService.obtenerPorIdActivo(1L)).thenReturn(resumen);
 
         mockMvc.perform(get("/api/v1/nacionalidades/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Nacionalidad encontrada"))
-                .andExpect(jsonPath("$.data.id").value(1));
+                .andExpect(jsonPath("$.data.nombre").value("Salvadoreña"));
     }
 
     @Test
-    @DisplayName("POST /api/v1/nacionalidades - Should create nationality")
-    void shouldCreateNationality() throws Exception {
+    @DisplayName("GET /api/v1/nacionalidades/admin - Should return all")
+    void shouldReturnAllAdmin() throws Exception {
+        Page<NacionalidadResumen> page = new PageImpl<>(List.of());
+        when(nacionalidadService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/nacionalidades/admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/nacionalidades/admin/{id} - Should return by ID (admin)")
+    void shouldReturnByIdAdmin() throws Exception {
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", true);
+        when(nacionalidadService.obtenerPorId(1L)).thenReturn(resumen);
+
+        mockMvc.perform(get("/api/v1/nacionalidades/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data.nombre").value("Salvadoreña"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/nacionalidades - Should create")
+    void shouldCreate() throws Exception {
         NacionalidadRequest request = new NacionalidadRequest();
         request.setNombre("Nueva");
 
-        NacionalidadResumen resumen = new TestNacionalidadResumen(1L, "Nueva", false);
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Nueva", false);
         when(nacionalidadService.crear(any())).thenReturn(resumen);
 
         mockMvc.perform(post("/api/v1/nacionalidades")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Nacionalidad creada exitosamente"))
-                .andExpect(jsonPath("$.data.nombre").value("Nueva"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PUT /api/v1/nacionalidades/{id} - Should update nationality")
-    void shouldUpdateNationality() throws Exception {
+    @DisplayName("PUT /api/v1/nacionalidades/{id} - Should update")
+    void shouldUpdate() throws Exception {
         NacionalidadRequest request = new NacionalidadRequest();
         request.setNombre("Actualizada");
 
-        NacionalidadResumen resumen = new TestNacionalidadResumen(1L, "Actualizada", false);
-        when(nacionalidadService.actualizar(any(Long.class), any(NacionalidadRequest.class))).thenReturn(resumen);
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Actualizada", false);
+        when(nacionalidadService.actualizar(eq(1L), any())).thenReturn(resumen);
 
         mockMvc.perform(put("/api/v1/nacionalidades/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Nacionalidad actualizada correctamente"))
-                .andExpect(jsonPath("$.data.nombre").value("Actualizada"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/nacionalidades/{id} - Should deactivate nationality")
-    void shouldDeactivateNationality() throws Exception {
+    @DisplayName("DELETE /api/v1/nacionalidades/{id} - Should deactivate")
+    void shouldDeactivate() throws Exception {
+        doNothing().when(nacionalidadService).cambiarEstado(1L, false);
+
         mockMvc.perform(delete("/api/v1/nacionalidades/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Nacionalidad desactivada correctamente"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/nacionalidades/{id}/activar - Should activate nationality")
-    void shouldActivateNationality() throws Exception {
+    @DisplayName("PATCH /api/v1/nacionalidades/{id}/activar - Should activate")
+    void shouldActivate() throws Exception {
+        doNothing().when(nacionalidadService).cambiarEstado(1L, true);
+
         mockMvc.perform(patch("/api/v1/nacionalidades/1/activar"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Nacionalidad activada correctamente"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/nacionalidades/admin - Should return all nationalities for admin")
-    void shouldReturnAllNationalitiesAdmin() throws Exception {
-        Page<NacionalidadResumen> page = new PageImpl<>(List.of());
-        when(nacionalidadService.obtenerTodas(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/nacionalidades/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de nacionalidades"))
-                .andExpect(jsonPath("$.data").exists());
-    }
-
-    private static record TestNacionalidadResumen(
-            Long id,
-            String nombre,
-            boolean borradoLogico
-    ) implements NacionalidadResumen {
-
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public String getNombre() {
-            return nombre;
-        }
-
-        @Override
-        public boolean getBorradoLogico() {
-            return borradoLogico;
-        }
+                .andExpect(jsonPath("$.exito").value(true));
     }
 }

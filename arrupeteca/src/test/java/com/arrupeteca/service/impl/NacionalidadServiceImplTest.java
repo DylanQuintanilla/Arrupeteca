@@ -1,15 +1,17 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
+import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.NacionalidadMapper;
 import com.arrupeteca.persistence.entity.Nacionalidad;
-import com.arrupeteca.persistence.projection.NacionalidadResumen;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +22,11 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class NacionalidadServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class NacionalidadServiceImplTest {
 
     @Mock
     private NacionalidadRepository nacionalidadRepository;
@@ -36,22 +38,28 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     private NacionalidadServiceImpl nacionalidadService;
 
     @Test
-    @DisplayName("Should return all active nationalities paginated")
-    void shouldReturnAllActive() {
-        Page<NacionalidadResumen> expectedPage = new PageImpl<>(List.of(mock(NacionalidadResumen.class)));
-        when(nacionalidadRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Nacionalidad entity = Nacionalidad.builder().id(1L).nombre("Salvadoreña").build();
+        Page<Nacionalidad> page = new PageImpl<>(List.of(entity));
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", false);
 
-        Page<NacionalidadResumen> result = nacionalidadService.obtenerTodasActivas(Pageable.unpaged());
+        when(nacionalidadRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(nacionalidadMapper.toResumen(entity)).thenReturn(resumen);
 
-        assertThat(result).isEqualTo(expectedPage);
-        verify(nacionalidadRepository).findByBorradoLogicoFalse(any(Pageable.class));
+        Page<NacionalidadResumen> result = nacionalidadService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return nationality by ID and active")
-    void shouldReturnByIdAndActive() {
-        NacionalidadResumen resumen = mock(NacionalidadResumen.class);
-        when(nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+    @DisplayName("obtenerPorIdActivo - Should return resumen when exists and active")
+    void obtenerPorIdActivoSuccess() {
+        Nacionalidad entity = Nacionalidad.builder().id(1L).nombre("Salvadoreña").build();
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", false);
+
+        when(nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(nacionalidadMapper.toResumen(entity)).thenReturn(resumen);
 
         NacionalidadResumen result = nacionalidadService.obtenerPorIdActivo(1L);
 
@@ -59,31 +67,38 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when nationality not found or inactive")
-    void shouldThrowWhenNotFoundOrInactive() {
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
         when(nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> nacionalidadService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("La nacionalidad con ID 1 no existe, o no está activa");
+                .hasMessageContaining("La nacionalidad con ID 1 no existe o está inactiva");
     }
 
     @Test
-    @DisplayName("Should return all nationalities for admin")
-    void shouldReturnAllAdmin() {
-        Page<NacionalidadResumen> expectedPage = new PageImpl<>(List.of(mock(NacionalidadResumen.class)));
-        when(nacionalidadRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+    @DisplayName("obtenerTodos - Should return all")
+    void obtenerTodos() {
+        Nacionalidad entity = Nacionalidad.builder().id(1L).nombre("Salvadoreña").build();
+        Page<Nacionalidad> page = new PageImpl<>(List.of(entity));
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", false);
 
-        Page<NacionalidadResumen> result = nacionalidadService.obtenerTodas(Pageable.unpaged());
+        when(nacionalidadRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
+        when(nacionalidadMapper.toResumen(entity)).thenReturn(resumen);
 
-        assertThat(result).isEqualTo(expectedPage);
+        Page<NacionalidadResumen> result = nacionalidadService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return nationality by ID")
-    void shouldReturnById() {
-        NacionalidadResumen resumen = mock(NacionalidadResumen.class);
-        when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+    @DisplayName("obtenerPorId - Should return resumen")
+    void obtenerPorIdSuccess() {
+        Nacionalidad entity = Nacionalidad.builder().id(1L).nombre("Salvadoreña").build();
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Salvadoreña", false);
+
+        when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(nacionalidadMapper.toResumen(entity)).thenReturn(resumen);
 
         NacionalidadResumen result = nacionalidadService.obtenerPorId(1L);
 
@@ -91,8 +106,8 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw exception when nationality not found")
-    void shouldThrowWhenNotFound() {
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
         when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> nacionalidadService.obtenerPorId(1L))
@@ -101,103 +116,61 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should create nationality when name is unique")
-    void shouldCreateNationality() {
+    @DisplayName("crear - Should create")
+    void crearSuccess() {
         NacionalidadRequest request = new NacionalidadRequest();
         request.setNombre("Nueva");
 
+        Nacionalidad entity = new Nacionalidad();
+        Nacionalidad saved = Nacionalidad.builder().id(1L).nombre("Nueva").build();
+        NacionalidadResumen resumen = new NacionalidadResumen(1L, "Nueva", false);
+
         when(nacionalidadRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
-        when(nacionalidadMapper.toEntity(any())).thenReturn(new Nacionalidad());
-        Nacionalidad saved = new Nacionalidad();
-        saved.setId(1L);
-        when(nacionalidadRepository.save(any())).thenReturn(saved);
-        
-        NacionalidadResumen resumen = mock(NacionalidadResumen.class);
-        when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(nacionalidadMapper.toEntity(request)).thenReturn(entity);
+        when(nacionalidadRepository.save(entity)).thenReturn(saved);
+        when(nacionalidadMapper.toResumen(saved)).thenReturn(resumen);
 
         NacionalidadResumen result = nacionalidadService.crear(request);
 
         assertThat(result).isEqualTo(resumen);
-        verify(nacionalidadRepository).save(any());
     }
 
     @Test
-    @DisplayName("Should throw exception when creating nationality with duplicate name")
-    void shouldThrowWhenDuplicateName() {
-        NacionalidadRequest request = new NacionalidadRequest();
-        request.setNombre("Duplicada");
-
-        when(nacionalidadRepository.existsByNombreIgnoreCase("Duplicada")).thenReturn(true);
-
-        assertThatThrownBy(() -> nacionalidadService.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una nacionalidad con el nombre: Duplicada");
-    }
-
-    @Test
-    @DisplayName("Should update nationality when name is unique or same")
-    void shouldUpdateNationality() {
-        NacionalidadRequest request = new NacionalidadRequest();
-        request.setNombre("Actualizada");
-
-        Nacionalidad existing = new Nacionalidad();
-        existing.setId(1L);
-        existing.setNombre("Antigua");
-
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(nacionalidadRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
-        
-        NacionalidadResumen resumen = mock(NacionalidadResumen.class);
-        when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        NacionalidadResumen result = nacionalidadService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(resumen);
-        verify(nacionalidadMapper).updateEntity(request, existing);
-        verify(nacionalidadRepository).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when updating nationality and new name exists")
-    void shouldThrowWhenUpdatingToExistingName() {
+    @DisplayName("crear - Should throw exception when name exists")
+    void crearDuplicate() {
         NacionalidadRequest request = new NacionalidadRequest();
         request.setNombre("Existente");
 
-        Nacionalidad existing = new Nacionalidad();
-        existing.setId(1L);
-        existing.setNombre("Antigua");
-
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(nacionalidadRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
 
-        assertThatThrownBy(() -> nacionalidadService.actualizar(1L, request))
+        assertThatThrownBy(() -> nacionalidadService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("Ya existe una nacionalidad con el nombre: Existente");
     }
 
     @Test
-    @DisplayName("Should update nationality when name is same (ignore case)")
-    void shouldUpdateWhenNameSame() {
+    @DisplayName("actualizar - Should update")
+    void actualizarSuccess() {
+        Long id = 1L;
         NacionalidadRequest request = new NacionalidadRequest();
-        request.setNombre("NACIONALIDAD");
+        request.setNombre("Actualizada");
 
-        Nacionalidad existing = new Nacionalidad();
-        existing.setId(1L);
-        existing.setNombre("nacionalidad");
+        Nacionalidad existing = Nacionalidad.builder().id(id).nombre("Antigua").build();
+        NacionalidadResumen resumen = new NacionalidadResumen(id, "Actualizada", false);
 
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(existing));
-        
-        NacionalidadResumen resumen = mock(NacionalidadResumen.class);
-        when(nacionalidadRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(nacionalidadRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(nacionalidadRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
+        when(nacionalidadRepository.save(existing)).thenReturn(existing);
+        when(nacionalidadMapper.toResumen(existing)).thenReturn(resumen);
 
-        NacionalidadResumen result = nacionalidadService.actualizar(1L, request);
+        NacionalidadResumen result = nacionalidadService.actualizar(id, request);
 
         assertThat(result).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("Should throw when updating non-existent nationality")
-    void shouldThrowWhenUpdatingNonExistent() {
+    @DisplayName("actualizar - Should throw exception when not found")
+    void actualizarNotFound() {
         when(nacionalidadRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> nacionalidadService.actualizar(1L, new NacionalidadRequest()))
@@ -206,28 +179,37 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should deactivate nationality")
-    void shouldDeactivate() {
+    @DisplayName("actualizar - Should throw exception when name duplicate")
+    void actualizarDuplicate() {
+        Long id = 1L;
+        NacionalidadRequest request = new NacionalidadRequest();
+        request.setNombre("Existente");
+
+        Nacionalidad existing = Nacionalidad.builder().id(id).nombre("Antigua").build();
+
+        when(nacionalidadRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(nacionalidadRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
+
+        assertThatThrownBy(() -> nacionalidadService.actualizar(id, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe otra nacionalidad con el nombre: Existente");
+    }
+
+    @Test
+    @DisplayName("cambiarEstado - Should change state")
+    void cambiarEstado() {
         when(nacionalidadRepository.existsById(1L)).thenReturn(true);
 
-        nacionalidadService.cambiarEstado(1L, false);
+        nacionalidadService.cambiarEstado(1L, true);
+        verify(nacionalidadRepository).activar(1L);
 
+        nacionalidadService.cambiarEstado(1L, false);
         verify(nacionalidadRepository).desactivar(1L);
     }
 
     @Test
-    @DisplayName("Should activate nationality")
-    void shouldActivate() {
-        when(nacionalidadRepository.existsById(1L)).thenReturn(true);
-
-        nacionalidadService.cambiarEstado(1L, true);
-
-        verify(nacionalidadRepository).activar(1L);
-    }
-
-    @Test
-    @DisplayName("Should throw when changing state of non-existent nationality")
-    void shouldThrowWhenChangingStateNonExistent() {
+    @DisplayName("cambiarEstado - Should throw exception when not found")
+    void cambiarEstadoNotFound() {
         when(nacionalidadRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> nacionalidadService.cambiarEstado(1L, true))
@@ -235,4 +217,3 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
                 .hasMessageContaining("La nacionalidad con ID 1 no existe");
     }
 }
-

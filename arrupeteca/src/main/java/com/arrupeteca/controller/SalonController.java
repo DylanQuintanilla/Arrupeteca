@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.SalonRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.SalonResumen;
+import com.arrupeteca.dto.response.detail.SalonDetalleResponse;
+import com.arrupeteca.dto.response.summary.SalonResumen;
 import com.arrupeteca.service.SalonService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,74 +23,57 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/v1/salones")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@RequestMapping("/api/v1/salones")
 public class SalonController {
 
     private final SalonService salonService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<SalonResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<SalonResumen> pagina = salonService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de salones activos", pagina));
+    public ResponseEntity<ApiResponse<Page<SalonResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de salones activos", salonService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<SalonResumen>> obtenerPorId(@PathVariable Long id) {
-        SalonResumen salon = salonService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Salón encontrado", salon));
+    public ResponseEntity<ApiResponse<SalonDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Salón encontrado", salonService.obtenerPorIdActivo(id)));
     }
 
-    // GET: Obtener por planta
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<SalonResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de salones", salonService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<SalonDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Salón encontrado (admin)", salonService.obtenerPorId(id)));
+    }
+
     @GetMapping("/planta/{idPlanta}")
-    public ResponseEntity<ApiResponse<Page<SalonResumen>>> obtenerPorPlanta(
-            @PathVariable Long idPlanta,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<SalonResumen> pagina = salonService.obtenerPorIdPlanta(idPlanta, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Salones de la planta", pagina));
+    public ResponseEntity<ApiResponse<Page<SalonResumen>>> buscarPorPlantaId(@PathVariable Long idPlanta, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Salones de la planta", salonService.buscarPorPlantaId(idPlanta, pageable)));
     }
 
-    // POST: Crear nuevo
     @PostMapping
-    public ResponseEntity<ApiResponse<SalonResumen>> crear(@Valid @RequestBody SalonRequest request) {
-        SalonResumen nuevo = salonService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Salón creado exitosamente", nuevo));
+    public ResponseEntity<ApiResponse<SalonDetalleResponse>> crear(@Valid @RequestBody SalonRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Salón creado exitosamente", salonService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<SalonResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody SalonRequest request) {
-        SalonResumen actualizado = salonService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Salón actualizado correctamente", actualizado));
+    public ResponseEntity<ApiResponse<SalonDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody SalonRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Salón actualizado correctamente", salonService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         salonService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Salón desactivado correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         salonService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Salón activado correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<SalonResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de salones", salonService.obtenerTodos(pageable)));
     }
 }

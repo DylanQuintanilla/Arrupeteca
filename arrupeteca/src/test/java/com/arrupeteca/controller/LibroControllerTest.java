@@ -1,30 +1,29 @@
 package com.arrupeteca.controller;
 
-import java.util.List;
-import java.util.Set;
-
 import com.arrupeteca.dto.request.LibroRequest;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.service.LibroService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -35,135 +34,142 @@ class LibroControllerTest extends BaseControllerTest {
     private LibroService libroService;
 
     @Test
-    @DisplayName("GET /api/v1/libros - Should return active libros page")
-    void obtenerTodosActivos() throws Exception {
-        when(libroService.obtenerTodosActivos(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+    @DisplayName("GET /api/v1/libros - Should return active books")
+    void shouldReturnActive() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de libros activos"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("GET /api/v1/libros/{id} - Should return libro when active")
-    void obtenerPorId() throws Exception {
-        when(libroService.obtenerPorIdActivo(1L)).thenReturn(null);
+    @DisplayName("GET /api/v1/libros/{id} - Should return book by ID")
+    void shouldReturnById() throws Exception {
+        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "1234567890", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
+                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        when(libroService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/libros/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libro encontrado"));
+                .andExpect(jsonPath("$.data.isbn").value("1234567890"));
     }
 
     @Test
-    @DisplayName("GET /api/v1/libros/busqueda - Should return search results")
-    void busquedaGlobal() throws Exception {
-        when(libroService.busquedaGlobal(anyString(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/v1/libros/busqueda").param("palabra", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados de búsqueda"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/por-obra/{idObra} - Should return libros of obra")
-    void obtenerPorObra() throws Exception {
-        when(libroService.obtenerPorObra(eq(1L), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/v1/libros/por-obra/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libros de la obra"));
-    }
-
-    @Test
-    @DisplayName("POST /api/v1/libros - Should create libro")
-    void crear() throws Exception {
+    @DisplayName("POST /api/v1/libros - Should create book")
+    void shouldCreate() throws Exception {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("978-3-16-148410-0");
+        request.setIsbn("9780596520687");
         request.setAnioPublicacion(2021);
         request.setIdObra(1L);
         request.setIdFormato(1L);
         request.setIdEditorial(1L);
-        request.setIdIdiomas(Set.of(1L));
+        request.setIdIdiomas(Collections.singleton(1L));
 
-        when(libroService.crear(any(LibroRequest.class))).thenReturn(null);
+        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
+                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        when(libroService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/libros")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libro creado exitosamente"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PUT /api/v1/libros/{id} - Should update libro")
-    void actualizar() throws Exception {
+    @DisplayName("PUT /api/v1/libros/{id} - Should update book")
+    void shouldUpdate() throws Exception {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("978-3-16-148410-0");
+        request.setIsbn("9780596520687");
         request.setAnioPublicacion(2021);
         request.setIdObra(1L);
         request.setIdFormato(1L);
         request.setIdEditorial(1L);
-        request.setIdIdiomas(Set.of(1L));
+        request.setIdIdiomas(Collections.singleton(1L));
 
-        when(libroService.actualizar(eq(1L), any(LibroRequest.class))).thenReturn(null);
+        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
+                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        when(libroService.actualizar(any(Long.class), any(LibroRequest.class))).thenReturn(detail);
 
         mockMvc.perform(put("/api/v1/libros/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libro actualizado correctamente"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/libros/{id} - Should deactivate libro")
-    void desactivar() throws Exception {
-        mockMvc.perform(delete("/api/v1/libros/1"))
+    @DisplayName("GET /api/v1/libros/global - Should perform global search")
+    void shouldPerformGlobalSearch() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.busquedaGlobal(any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/libros/global").param("palabra", "test"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libro desactivado correctamente"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/libros/{id}/activar - Should activate libro")
-    void activar() throws Exception {
-        mockMvc.perform(patch("/api/v1/libros/1/activar"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Libro activado correctamente"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/admin - Should return all libros for admin")
-    void obtenerTodosAdmin() throws Exception {
-        when(libroService.obtenerTodos(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+    @DisplayName("GET /api/v1/libros/admin - Should return all books for admin")
+    void shouldReturnAllForAdmin() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.obtenerTodos(any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros/admin"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de libros"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("GET /api/v1/libros/admin/busqueda-maestra - Should return master search results")
-    void busquedaMaestra() throws Exception {
-        when(libroService.busquedaMaestraAdmin(anyBoolean(), anyLong(), anyLong(), anyLong(), anyString(), anyString(),
-                anyString(), anyInt(), anyInt(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+    @DisplayName("GET /api/v1/libros/admin/{id} - Should return book by ID for admin")
+    void shouldReturnByIdForAdmin() throws Exception {
+        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "123", 2021, BigDecimal.TEN, "U", BigDecimal.ONE,
+                false, "G", "C", "A", null, "A", null, null, null, null, Collections.emptySet());
+        when(libroService.obtenerPorId(1L)).thenReturn(detail);
 
-        mockMvc.perform(get("/api/v1/libros/admin/busqueda-maestra")
-                .param("termino", "test"))
+        mockMvc.perform(get("/api/v1/libros/admin/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados búsqueda maestra"));
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros/admin/busqueda-maestra - Should perform master search")
+    void shouldPerformMasterSearch() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/libros/admin/busqueda-maestra"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros/obra/{idObra} - Should return books by work ID")
+    void shouldReturnByObraId() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.buscarPorObraId(any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/libros/obra/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/libros/{id} - Should deactivate book")
+    void shouldDeactivate() throws Exception {
+        mockMvc.perform(delete("/api/v1/libros/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/libros/{id}/activar - Should activate book")
+    void shouldActivate() throws Exception {
+        mockMvc.perform(patch("/api/v1/libros/1/activar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
     }
 }

@@ -1,10 +1,11 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.FormatoRequest;
+import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
+import com.arrupeteca.dto.response.summary.FormatoResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.FormatoMapper;
 import com.arrupeteca.persistence.entity.Formato;
-import com.arrupeteca.persistence.projection.FormatoResumen;
 import com.arrupeteca.persistence.repository.FormatoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -38,24 +39,30 @@ class FormatoServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all active paginated")
     void shouldReturnAllActive() {
-        Page<FormatoResumen> expectedPage = new PageImpl<>(List.of(mock(FormatoResumen.class)));
+        Formato entity = new Formato();
+        Page<Formato> expectedPage = new PageImpl<>(List.of(entity));
+        FormatoResumen resumen = mock(FormatoResumen.class);
+
         when(formatoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(formatoMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<FormatoResumen> result = formatoService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
         verify(formatoRepository).findByBorradoLogicoFalse(any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should return by ID and active")
     void shouldReturnByIdAndActive() {
-        FormatoResumen resumen = mock(FormatoResumen.class);
-        when(formatoRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
+        Formato entity = new Formato();
+        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
+        when(formatoRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(formatoMapper.toDetalleResponse(entity)).thenReturn(detalle);
 
-        FormatoResumen result = formatoService.obtenerPorIdActivo(1L);
+        FormatoDetalleResponse result = formatoService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -65,29 +72,35 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Formato con ID: 1, o no está activo");
+                .hasMessageContaining("No se encontró un Formato activo con ID: 1");
     }
 
     @Test
     @DisplayName("Should return all for admin")
     void shouldReturnAllAdmin() {
-        Page<FormatoResumen> expectedPage = new PageImpl<>(List.of(mock(FormatoResumen.class)));
+        Formato entity = new Formato();
+        Page<Formato> expectedPage = new PageImpl<>(List.of(entity));
+        FormatoResumen resumen = mock(FormatoResumen.class);
+
         when(formatoRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(formatoMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<FormatoResumen> result = formatoService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result).isEqualTo(expectedPage);
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
     @DisplayName("Should return by ID")
     void shouldReturnById() {
-        FormatoResumen resumen = mock(FormatoResumen.class);
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        Formato entity = new Formato();
+        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
+        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(formatoMapper.toDetalleResponse(entity)).thenReturn(detalle);
 
-        FormatoResumen result = formatoService.obtenerPorId(1L);
+        FormatoDetalleResponse result = formatoService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -107,17 +120,19 @@ class FormatoServiceImplTest extends BaseServiceTest {
         request.setNombre("Nuevo");
 
         when(formatoRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
-        when(formatoMapper.toEntity(any())).thenReturn(new Formato());
+        Formato entity = new Formato();
+        when(formatoMapper.toEntity(any())).thenReturn(entity);
+        
         Formato saved = new Formato();
         saved.setId(1L);
         when(formatoRepository.save(any())).thenReturn(saved);
         
-        FormatoResumen resumen = mock(FormatoResumen.class);
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
+        when(formatoMapper.toDetalleResponse(saved)).thenReturn(detalle);
 
-        FormatoResumen result = formatoService.crear(request);
+        FormatoDetalleResponse result = formatoService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(detalle);
         verify(formatoRepository).save(any());
     }
 
@@ -131,7 +146,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("ya ha sido utilizado");
+                .hasMessageContaining("Ya existe un Formato con el nombre: Duplicado");
     }
 
     @Test
@@ -146,13 +161,14 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         when(formatoRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(formatoRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
-        
-        FormatoResumen resumen = mock(FormatoResumen.class);
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(formatoRepository.save(any())).thenReturn(existing);
 
-        FormatoResumen result = formatoService.actualizar(1L, request);
+        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
+        when(formatoMapper.toDetalleResponse(existing)).thenReturn(detalle);
 
-        assertThat(result).isEqualTo(resumen);
+        FormatoDetalleResponse result = formatoService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detalle);
         verify(formatoMapper).updateEntity(request, existing);
         verify(formatoRepository).save(existing);
     }
@@ -172,7 +188,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un Formato con el nombre: Existente");
+                .hasMessageContaining("Ya existe otro Formato con el nombre: Existente");
     }
 
     @Test
@@ -186,13 +202,14 @@ class FormatoServiceImplTest extends BaseServiceTest {
         existing.setNombre("formato");
 
         when(formatoRepository.findById(1L)).thenReturn(Optional.of(existing));
-        
-        FormatoResumen resumen = mock(FormatoResumen.class);
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(formatoRepository.save(any())).thenReturn(existing);
 
-        FormatoResumen result = formatoService.actualizar(1L, request);
+        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
+        when(formatoMapper.toDetalleResponse(existing)).thenReturn(detalle);
 
-        assertThat(result).isEqualTo(resumen);
+        FormatoDetalleResponse result = formatoService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detalle);
     }
 
     @Test
@@ -202,7 +219,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.actualizar(1L, new FormatoRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Formato con ID: 1");
+                .hasMessageContaining("No se encontró un Formato con ID: 1");
     }
 
     @Test
@@ -232,7 +249,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Formato con ID: 1");
+                .hasMessageContaining("No se encontró un Formato con ID: 1");
     }
 }
 

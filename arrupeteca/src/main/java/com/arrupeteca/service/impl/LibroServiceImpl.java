@@ -1,21 +1,14 @@
 package com.arrupeteca.service.impl;
 
-import java.util.HashSet;
-import java.util.List;
-
 import com.arrupeteca.dto.request.LibroRequest;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.LibroMapper;
-import com.arrupeteca.persistence.entity.Idioma;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.enums.Ciclo;
 import com.arrupeteca.persistence.enums.Grado;
-import com.arrupeteca.persistence.projection.LibroResumen;
-import com.arrupeteca.persistence.repository.EditorialRepository;
-import com.arrupeteca.persistence.repository.FormatoRepository;
-import com.arrupeteca.persistence.repository.IdiomaRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
-import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,40 +22,41 @@ public class LibroServiceImpl implements LibroService {
 
     private final LibroRepository libroRepository;
     private final LibroMapper libroMapper;
-    private final ObraRepository obraRepository;
-    private final EditorialRepository editorialRepository;
-    private final FormatoRepository formatoRepository;
-    private final IdiomaRepository idiomaRepository;
 
     @Override
     @Transactional(readOnly = true)
     public Page<LibroResumen> obtenerTodosActivos(Pageable pageable) {
-        return libroRepository.findByBorradoLogicoFalse(pageable);
+        return libroRepository.findByBorradoLogicoFalse(pageable)
+                .map(libroMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public LibroResumen obtenerPorIdActivo(Long id) {
+    public LibroDetalleResponse obtenerPorIdActivo(Long id) {
         return libroRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+                .map(libroMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<LibroResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        return libroRepository.busquedaGlobal(palabra, pageable);
+        return libroRepository.busquedaGlobal(palabra, pageable)
+                .map(libroMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<LibroResumen> obtenerTodos(Pageable pageable) {
-        return libroRepository.findAllProjectedBy(pageable);
+        return libroRepository.findAllProjectedBy(pageable)
+                .map(libroMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public LibroResumen obtenerPorId(Long id) {
-        return libroRepository.findProjectedById(id)
+    public LibroDetalleResponse obtenerPorId(Long id) {
+        return libroRepository.findById(id)
+                .map(libroMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
     }
 
@@ -70,55 +64,50 @@ public class LibroServiceImpl implements LibroService {
     @Transactional(readOnly = true)
     public Page<LibroResumen> busquedaMaestraAdmin(
             Boolean esBorrado, Long idObra, Long idEditorial, Long idFormato,
-            String gradoStr, String cicloStr, String termino, Integer anioInicio, Integer anioFin,
-            Pageable pageable) {
+            Object gradoStr, Object cicloStr, String termino,
+            Integer anioInicio, Integer anioFin, Pageable pageable) {
 
-        Grado grado = (gradoStr != null && !gradoStr.isEmpty()) ? Grado.valueOf(gradoStr) : null;
-        Ciclo ciclo = (cicloStr != null && !cicloStr.isEmpty()) ? Ciclo.valueOf(cicloStr) : null;
+        Grado grado = (gradoStr instanceof String s && !s.isEmpty())
+                ? Grado.valueOf(s) : (gradoStr instanceof Grado g ? g : null);
+
+        Ciclo ciclo = (cicloStr instanceof String s && !s.isEmpty())
+                ? Ciclo.valueOf(s) : (cicloStr instanceof Ciclo c ? c : null);
 
         return libroRepository.busquedaMaestraAdmin(esBorrado, idObra, idEditorial, idFormato,
-                grado, ciclo, termino, anioInicio, anioFin, pageable);
+                        grado, ciclo, termino, anioInicio, anioFin, pageable)
+                .map(libroMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<LibroResumen> obtenerPorObra(Long idObra, Pageable pageable) {
-        if (!obraRepository.existsById(idObra)) {
-            throw new ValidacionNegocioException("No se encontró Obra con ID: " + idObra);
-        }
-        return libroRepository.buscarPorObraId(idObra, pageable);
+    public Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable) {
+        return libroRepository.buscarPorObraId(idObra, pageable)
+                .map(libroMapper::toResumen);
     }
 
     @Override
     @Transactional
-    public LibroResumen crear(LibroRequest request) {
+    public LibroDetalleResponse crear(LibroRequest request) {
         if (libroRepository.existsByIsbn(request.getIsbn())) {
-            throw new ValidacionNegocioException("El ISBN " + request.getIsbn() + " ya está registrado.");
+            throw new ValidacionNegocioException("Ya existe un libro con el ISBN: " + request.getIsbn());
         }
-
-        Libro nuevoLibro = libroMapper.toEntity(request);
-        asignarRelaciones(nuevoLibro, request);
-
-        Libro libroGuardado = libroRepository.save(nuevoLibro);
-        return obtenerPorId(libroGuardado.getId());
+        Libro libro = libroMapper.toEntity(request);
+        return libroMapper.toDetalleResponse(libroRepository.save(libro));
     }
 
     @Override
     @Transactional
-    public LibroResumen actualizar(Long id, LibroRequest request) {
+    public LibroDetalleResponse actualizar(Long id, LibroRequest request) {
         Libro libroExistente = libroRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
 
-        if (!libroExistente.getIsbn().equalsIgnoreCase(request.getIsbn())
+        if (!libroExistente.getIsbn().equals(request.getIsbn())
                 && libroRepository.existsByIsbn(request.getIsbn())) {
-            throw new ValidacionNegocioException("El ISBN " + request.getIsbn() + " ya está en uso por otro libro.");
+            throw new ValidacionNegocioException("Ya existe otro libro con el ISBN: " + request.getIsbn());
         }
 
         libroMapper.updateEntity(request, libroExistente);
-        asignarRelaciones(libroExistente, request);
-
-        libroRepository.save(libroExistente);
-        return obtenerPorId(libroExistente.getId());
+        return libroMapper.toDetalleResponse(libroRepository.save(libroExistente));
     }
 
     @Override
@@ -131,28 +120,6 @@ public class LibroServiceImpl implements LibroService {
             libroRepository.activar(id);
         } else {
             libroRepository.desactivar(id);
-        }
-    }
-
-    private void asignarRelaciones(Libro libro, LibroRequest request) {
-        if (request.getIdObra() != null) {
-            libro.setObra(obraRepository.findById(request.getIdObra())
-                    .orElseThrow(() -> new ValidacionNegocioException("La Obra indicada no existe")));
-        }
-        if (request.getIdEditorial() != null) {
-            libro.setEditorial(editorialRepository.findById(request.getIdEditorial())
-                    .orElseThrow(() -> new ValidacionNegocioException("La Editorial indicada no existe")));
-        }
-        if (request.getIdFormato() != null) {
-            libro.setFormato(formatoRepository.findById(request.getIdFormato())
-                    .orElseThrow(() -> new ValidacionNegocioException("El Formato indicado no existe")));
-        }
-        if (request.getIdIdiomas() != null && !request.getIdIdiomas().isEmpty()) {
-            List<Idioma> idiomas = idiomaRepository.findAllById(request.getIdIdiomas());
-            if (idiomas.size() != request.getIdIdiomas().size()) {
-                throw new ValidacionNegocioException("Uno o más idiomas indicados no existen");
-            }
-            libro.setIdiomas(new HashSet<>(idiomas));
         }
     }
 }

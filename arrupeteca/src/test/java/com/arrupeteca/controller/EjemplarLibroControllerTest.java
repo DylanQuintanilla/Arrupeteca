@@ -1,22 +1,21 @@
 package com.arrupeteca.controller;
 
-import java.util.List;
-
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
+import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.service.EjemplarLibroService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,77 +32,117 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     private EjemplarLibroService ejemplarLibroService;
 
     @Test
-    @DisplayName("GET /api/v1/ejemplares - Should return active ejemplares page")
-    void obtenerTodosActivos() throws Exception {
-        when(ejemplarLibroService.obtenerTodosActivos(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
+    @DisplayName("GET /api/v1/ejemplares - Should return active ejemplares")
+    void shouldReturnActive() throws Exception {
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
+        when(ejemplarLibroService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/ejemplares"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de ejemplares activos"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("GET /api/v1/ejemplares/{id} - Should return ejemplar when active")
-    void obtenerPorId() throws Exception {
-        when(ejemplarLibroService.obtenerPorIdActivo(1L)).thenReturn(null);
+    @DisplayName("GET /api/v1/ejemplares/{id} - Should return ejemplar by ID")
+    void shouldReturnById() throws Exception {
+        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Comentario", false, "BUENO", "DISPONIBLE",
+                "admin", null, "admin", null, null, null, "Estante 1 - Salon A - Planta 1");
+        when(ejemplarLibroService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/ejemplares/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ejemplar encontrado"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/ejemplares/busqueda - Should return search results")
-    void busquedaGlobal() throws Exception {
-        when(ejemplarLibroService.busquedaGlobal(anyString(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/v1/ejemplares/busqueda").param("palabra", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados de búsqueda"));
+                .andExpect(jsonPath("$.data.comentario").value("Comentario"));
     }
 
     @Test
     @DisplayName("POST /api/v1/ejemplares - Should create ejemplar")
-    void crear() throws Exception {
+    void shouldCreate() throws Exception {
         EjemplarLibroRequest request = new EjemplarLibroRequest();
+        request.setComentario("Nuevo");
         request.setIdLibro(1L);
         request.setIdMueble(1L);
 
-        when(ejemplarLibroService.crear(any(EjemplarLibroRequest.class))).thenReturn(null);
+        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Nuevo", false, "BUENO", "DISPONIBLE",
+                "admin", null, "admin", null, null, null, "Estante 1");
+        when(ejemplarLibroService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/ejemplares")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ejemplar creado exitosamente"));
+                .andExpect(jsonPath("$.data.comentario").value("Nuevo"));
     }
 
     @Test
     @DisplayName("PUT /api/v1/ejemplares/{id} - Should update ejemplar")
-    void actualizar() throws Exception {
+    void shouldUpdate() throws Exception {
         EjemplarLibroRequest request = new EjemplarLibroRequest();
+        request.setComentario("Actualizado");
         request.setIdLibro(1L);
         request.setIdMueble(1L);
 
-        when(ejemplarLibroService.actualizar(eq(1L), any(EjemplarLibroRequest.class))).thenReturn(null);
+        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Actualizado", false, "BUENO", "DISPONIBLE",
+                "admin", null, "admin", null, null, null, "Estante 1");
+        when(ejemplarLibroService.actualizar(any(Long.class), any(EjemplarLibroRequest.class))).thenReturn(detail);
 
         mockMvc.perform(put("/api/v1/ejemplares/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ejemplar actualizado correctamente"));
+                .andExpect(jsonPath("$.data.comentario").value("Actualizado"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ejemplares/global - Should perform global search")
+    void shouldPerformGlobalSearch() throws Exception {
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
+        when(ejemplarLibroService.busquedaGlobal(any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/ejemplares/global").param("palabra", "test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ejemplares/admin - Should return all for admin")
+    void shouldReturnAllAdmin() throws Exception {
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
+        when(ejemplarLibroService.obtenerTodos(any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/ejemplares/admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ejemplares/admin/{id} - Should return by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Test", false, "BUENO", "DISPONIBLE",
+                "admin", null, "admin", null, null, null, "Ubicacion");
+        when(ejemplarLibroService.obtenerPorId(1L)).thenReturn(detail);
+
+        mockMvc.perform(get("/api/v1/ejemplares/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/ejemplares/admin/busqueda-maestra - Should perform master search")
+    void shouldPerformMasterSearch() throws Exception {
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
+        when(ejemplarLibroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/ejemplares/admin/busqueda-maestra"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/ejemplares/{id} - Should deactivate ejemplar")
-    void desactivar() throws Exception {
+    void shouldDeactivate() throws Exception {
         mockMvc.perform(delete("/api/v1/ejemplares/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
@@ -112,36 +151,10 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
 
     @Test
     @DisplayName("PATCH /api/v1/ejemplares/{id}/activar - Should activate ejemplar")
-    void activar() throws Exception {
+    void shouldActivate() throws Exception {
         mockMvc.perform(patch("/api/v1/ejemplares/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ejemplar activada correctamente"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/ejemplares/admin - Should return all ejemplares for admin")
-    void obtenerTodosAdmin() throws Exception {
-        when(ejemplarLibroService.obtenerTodos(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/v1/ejemplares/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de ejemplares"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/ejemplares/admin/busqueda-maestra - Should return master search results")
-    void busquedaMaestra() throws Exception {
-        when(ejemplarLibroService.busquedaMaestraAdmin(anyBoolean(), anyLong(), anyLong(), anyString(), anyString(),
-                anyString(), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of()));
-
-        mockMvc.perform(get("/api/v1/ejemplares/admin/busqueda-maestra")
-                .param("termino", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados búsqueda maestra"));
+                .andExpect(jsonPath("$.mensaje").value("Ejemplar activado correctamente"));
     }
 }

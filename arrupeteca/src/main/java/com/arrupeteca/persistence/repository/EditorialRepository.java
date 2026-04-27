@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Editorial;
-import com.arrupeteca.persistence.projection.EditorialResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,17 +12,15 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 
 @Repository
-public interface EditorialRepository extends JpaRepository<Editorial,Long> {
+public interface EditorialRepository extends JpaRepository<Editorial, Long> {
 
-    // --- LECTURAS USUARIO ---
-    Page<EditorialResumen> findByBorradoLogicoFalse(Pageable pageable);
+    Page<Editorial> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<EditorialResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Editorial> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    // --- LECTURAS ADMIN ---
-    Page<EditorialResumen> findAllProjectedBy(Pageable pageable);
+    Page<Editorial> findAllProjectedBy(Pageable pageable);
 
-    Optional<EditorialResumen> findProjectedById(Long id);
+    Optional<Editorial> findProjectedById(Long id);
 
     @Query(value = """
         SELECT e FROM Editorial e
@@ -51,7 +48,7 @@ public interface EditorialRepository extends JpaRepository<Editorial,Long> {
                 )
             )
     """)
-    Page<EditorialResumen> busquedaMaestraAdmin(
+    Page<Editorial> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("termino") String termino,
             Pageable pageable
@@ -70,5 +67,4 @@ public interface EditorialRepository extends JpaRepository<Editorial,Long> {
     boolean existsByNombreIgnoreCase(String nombre);
 
     boolean existsByCorreoIgnoreCase(String correo);
-
 }

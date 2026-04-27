@@ -1,12 +1,12 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.MuebleRequest;
+import com.arrupeteca.dto.response.detail.MuebleDetalleResponse;
+import com.arrupeteca.dto.response.summary.MuebleResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.MuebleMapper;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.projection.MuebleResumen;
 import com.arrupeteca.persistence.repository.MuebleRepository;
-import com.arrupeteca.persistence.repository.SalonRepository;
 import com.arrupeteca.service.MuebleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,80 +20,74 @@ public class MuebleServiceImpl implements MuebleService {
 
     private final MuebleRepository muebleRepository;
     private final MuebleMapper muebleMapper;
-    private final SalonRepository salonRepository;
 
     @Override
     @Transactional(readOnly = true)
     public Page<MuebleResumen> obtenerTodosActivos(Pageable pageable) {
-        return muebleRepository.findByBorradoLogicoFalse(pageable);
+        return muebleRepository.findByBorradoLogicoFalse(pageable)
+                .map(muebleMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MuebleResumen obtenerPorIdActivo(Long id) {
+    public MuebleDetalleResponse obtenerPorIdActivo(Long id) {
         return muebleRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+                .map(muebleMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Mueble activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<MuebleResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        return muebleRepository.busquedaGlobal(palabra, pageable);
+        return muebleRepository.busquedaGlobal(palabra, pageable)
+                .map(muebleMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<MuebleResumen> obtenerTodos(Pageable pageable) {
-        return muebleRepository.findAllProjectedBy(pageable);
+        return muebleRepository.findAllProjectedBy(pageable)
+                .map(muebleMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public MuebleResumen obtenerPorId(Long id) {
+    public MuebleDetalleResponse obtenerPorId(Long id) {
         return muebleRepository.findProjectedById(id)
+                .map(muebleMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Mueble con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<MuebleResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idSalon, Long idPlanta, Long idEdificio, String termino,
-            Pageable pageable) {
-        return muebleRepository.busquedaMaestraAdmin(esBorrado, idSalon, idPlanta, idEdificio, termino, pageable);
+    public Page<MuebleResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idSalon, String termino, Pageable pageable) {
+        return muebleRepository.busquedaMaestraAdmin(esBorrado, idSalon, termino, pageable)
+                .map(muebleMapper::toResumen);
     }
 
     @Override
     @Transactional
-    public MuebleResumen crear(MuebleRequest request) {
+    public MuebleDetalleResponse crear(MuebleRequest request) {
         if (muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
-            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '"
-                    + request.getNombre() + "' en ese salón.");
+            throw new ValidacionNegocioException("Ya existe un mueble con ese nombre en el salón seleccionado");
         }
-
-        Mueble nuevo = muebleMapper.toEntity(request);
-        asignarRelaciones(nuevo, request);
-
-        Mueble guardado = muebleRepository.save(nuevo);
-        return obtenerPorId(guardado.getId());
+        Mueble mueble = muebleMapper.toEntity(request);
+        return muebleMapper.toDetalleResponse(muebleRepository.save(mueble));
     }
 
     @Override
     @Transactional
-    public MuebleResumen actualizar(Long id, MuebleRequest request) {
-        Mueble existente = muebleRepository.findById(id)
+    public MuebleDetalleResponse actualizar(Long id, MuebleRequest request) {
+        Mueble muebleExistente = muebleRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Mueble con ID: " + id));
 
-        if (!existente.getNombre().equalsIgnoreCase(request.getNombre())
+        if (!muebleExistente.getNombre().equalsIgnoreCase(request.getNombre())
                 && muebleRepository.existePorNombreYSalonId(request.getNombre(), request.getIdSalon())) {
-            throw new ValidacionNegocioException("Ya existe un mueble con el nombre '"
-                    + request.getNombre() + "' en ese salón.");
+            throw new ValidacionNegocioException("Ya existe otro mueble con ese nombre en el salón seleccionado");
         }
 
-        muebleMapper.updateEntity(request, existente);
-        asignarRelaciones(existente, request);
-
-        muebleRepository.save(existente);
-        return obtenerPorId(existente.getId());
+        muebleMapper.updateEntity(request, muebleExistente);
+        return muebleMapper.toDetalleResponse(muebleRepository.save(muebleExistente));
     }
 
     @Override
@@ -106,13 +100,6 @@ public class MuebleServiceImpl implements MuebleService {
             muebleRepository.activar(id);
         } else {
             muebleRepository.desactivar(id);
-        }
-    }
-
-    private void asignarRelaciones(Mueble mueble, MuebleRequest request) {
-        if (request.getIdSalon() != null) {
-            mueble.setSalon(salonRepository.findById(request.getIdSalon())
-                    .orElseThrow(() -> new ValidacionNegocioException("El Salón indicado no existe")));
         }
     }
 }

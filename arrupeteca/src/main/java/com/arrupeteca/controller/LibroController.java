@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.LibroRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.LibroResumen;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.service.LibroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -32,46 +32,60 @@ public class LibroController {
     private final LibroService libroService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "isbn") Pageable pageable
-    ) {
-        Page<LibroResumen> pagina = libroService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de libros activos", pagina));
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de libros activos", libroService.obtenerTodosActivos(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<LibroResumen>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Libro encontrado", libroService.obtenerPorIdActivo(id)));
     }
 
-    @GetMapping("/busqueda")
+    @GetMapping("/global")
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @PageableDefault(size = 10, sort = "isbn") Pageable pageable
-    ) {
-        Page<LibroResumen> pagina = libroService.busquedaGlobal(palabra, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
+            @RequestParam String palabra, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", libroService.busquedaGlobal(palabra, pageable)));
     }
 
-    @GetMapping("/por-obra/{idObra}")
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerPorObra(
-            @PathVariable Long idObra,
-            @PageableDefault(size = 10, sort = "isbn") Pageable pageable
-    ) {
-        Page<LibroResumen> libros = libroService.obtenerPorObra(idObra, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Libros de la obra", libros));
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de libros", libroService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Libro encontrado (admin)", libroService.obtenerPorId(id)));
+    }
+
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaMaestraAdmin(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) Long idObra,
+            @RequestParam(required = false) Long idEditorial,
+            @RequestParam(required = false) Long idFormato,
+            @RequestParam(required = false) Object grado,
+            @RequestParam(required = false) Object ciclo,
+            @RequestParam(required = false) String termino,
+            @RequestParam(required = false) Integer anioInicio,
+            @RequestParam(required = false) Integer anioFin,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
+                libroService.busquedaMaestraAdmin(esBorrado, idObra, idEditorial, idFormato,
+                        grado, ciclo, termino, anioInicio, anioFin, pageable)));
+    }
+
+    @GetMapping("/obra/{idObra}")
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> buscarPorObraId(@PathVariable Long idObra, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Libros de la obra", libroService.buscarPorObraId(idObra, pageable)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<LibroResumen>> crear(@Valid @RequestBody LibroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Libro creado exitosamente", libroService.crear(request)));
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> crear(@Valid @RequestBody LibroRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Libro creado exitosamente", libroService.crear(request)), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<LibroResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody LibroRequest request) {
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody LibroRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Libro actualizado correctamente", libroService.actualizar(id, request)));
     }
 
@@ -85,32 +99,5 @@ public class LibroController {
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         libroService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Libro activado correctamente"));
-    }
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "isbn") Pageable pageable
-    ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de libros",
-                libroService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idObra,
-            @RequestParam(required = false) Long idEditorial,
-            @RequestParam(required = false) Long idFormato,
-            @RequestParam(required = false) String grado,
-            @RequestParam(required = false) String ciclo,
-            @RequestParam(required = false) String termino,
-            @RequestParam(required = false) Integer anioInicio,
-            @RequestParam(required = false) Integer anioFin,
-            @PageableDefault(size = 10, sort = "isbn") Pageable pageable
-    ) {
-        Page<LibroResumen> pagina = libroService.busquedaMaestraAdmin(
-                esBorrado, idObra, idEditorial, idFormato, grado, ciclo,
-                termino, anioInicio, anioFin, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Autor;
-import com.arrupeteca.persistence.projection.AutorResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ class AutorRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should search globally")
     void shouldSearchGlobal() {
         autorRepository.save(Autor.builder().nombre("Gabriel Garcia").biografia("Bio").build());
-        Page<AutorResumen> page = autorRepository.busquedaGlobalAvanzada("Gabriel", null, null, PageRequest.of(0, 10));
+        Page<Autor> page = autorRepository.busquedaGlobalAvanzada("Gabriel", null, null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 }

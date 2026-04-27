@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.PlantaRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.PlantaResumen;
+import com.arrupeteca.dto.response.detail.PlantaDetalleResponse;
+import com.arrupeteca.dto.response.summary.PlantaResumen;
 import com.arrupeteca.service.PlantaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,74 +23,57 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/api/v1/plantas")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@RequestMapping("/api/v1/plantas")
 public class PlantaController {
 
     private final PlantaService plantaService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<PlantaResumen> pagina = plantaService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de plantas activas", pagina));
+    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de plantas activas", plantaService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PlantaResumen>> obtenerPorId(@PathVariable Long id) {
-        PlantaResumen planta = plantaService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Planta encontrada", planta));
+    public ResponseEntity<ApiResponse<PlantaDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Planta encontrada", plantaService.obtenerPorIdActivo(id)));
     }
 
-    // GET: Obtener por edificio
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de plantas", plantaService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<PlantaDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Planta encontrada (admin)", plantaService.obtenerPorId(id)));
+    }
+
     @GetMapping("/edificio/{idEdificio}")
-    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> obtenerPorEdificio(
-            @PathVariable Long idEdificio,
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<PlantaResumen> pagina = plantaService.obtenerPorIdEdificio(idEdificio, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Plantas del edificio", pagina));
+    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> buscarPorEdificioId(@PathVariable Long idEdificio, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Plantas del edificio", plantaService.buscarPorEdificioId(idEdificio, pageable)));
     }
 
-    // POST: Crear nuevo
     @PostMapping
-    public ResponseEntity<ApiResponse<PlantaResumen>> crear(@Valid @RequestBody PlantaRequest request) {
-        PlantaResumen nuevo = plantaService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Planta creada exitosamente", nuevo));
+    public ResponseEntity<ApiResponse<PlantaDetalleResponse>> crear(@Valid @RequestBody PlantaRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Planta creada exitosamente", plantaService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PlantaResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody PlantaRequest request) {
-        PlantaResumen actualizado = plantaService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Planta actualizada correctamente", actualizado));
+    public ResponseEntity<ApiResponse<PlantaDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody PlantaRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Planta actualizada correctamente", plantaService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         plantaService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Planta desactivada correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         plantaService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Planta activada correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<PlantaResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de plantas", plantaService.obtenerTodos(pageable)));
     }
 }

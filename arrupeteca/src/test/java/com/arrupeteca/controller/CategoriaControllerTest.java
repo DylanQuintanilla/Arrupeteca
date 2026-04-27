@@ -1,17 +1,17 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
-import com.arrupeteca.persistence.projection.CategoriaResumen;
+import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
+import com.arrupeteca.dto.response.summary.CategoriaResumen;
 import com.arrupeteca.service.CategoriaService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
@@ -31,8 +31,6 @@ class CategoriaControllerTest extends BaseControllerTest {
     @MockitoBean
     private CategoriaService categoriaService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     @Test
     @DisplayName("GET /api/v1/categorias - Should return active categories")
     void shouldReturnActiveCategories() throws Exception {
@@ -48,8 +46,8 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias/{id} - Should return category by ID")
     void shouldReturnCategoryById() throws Exception {
-        CategoriaResumen resumen = new TestCategoriaResumen(1L, "Existente", false);
-        when(categoriaService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Existente", false, null, null, null, null, null);
+        when(categoriaService.obtenerPorIdActivo(1L)).thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/categorias/1"))
                 .andExpect(status().isOk())
@@ -64,8 +62,8 @@ class CategoriaControllerTest extends BaseControllerTest {
         CategoriaRequest request = new CategoriaRequest();
         request.setNombre("Nueva");
 
-        CategoriaResumen resumen = new TestCategoriaResumen(1L, "Nueva", false);
-        when(categoriaService.crear(any())).thenReturn(resumen);
+        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Nueva", false, null, null, null, null, null);
+        when(categoriaService.crear(any())).thenReturn(detalle);
 
         mockMvc.perform(post("/api/v1/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -81,8 +79,8 @@ class CategoriaControllerTest extends BaseControllerTest {
         CategoriaRequest request = new CategoriaRequest();
         request.setNombre("Actualizada");
 
-        CategoriaResumen resumen = new TestCategoriaResumen(1L, "Actualizada", false);
-        when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(resumen);
+        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Actualizada", false, null, null, null, null, null);
+        when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(detalle);
 
         mockMvc.perform(put("/api/v1/categorias/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -123,22 +121,16 @@ class CategoriaControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.mensaje").value("Historial completo de categorías"));
     }
 
-    // Helper implementation for Projections
-    private record TestCategoriaResumen(Long id, String nombre, boolean borradoLogico) implements CategoriaResumen {
+    @Test
+    @DisplayName("GET /api/v1/categorias/admin/{id} - Should return category by ID for admin")
+    void shouldReturnCategoryByIdAdmin() throws Exception {
+        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Existente", false, null, null, null, null, null);
+        when(categoriaService.obtenerPorId(1L)).thenReturn(detalle);
 
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public String getNombre() {
-            return nombre;
-        }
-
-        @Override
-        public boolean getBorradoLogico() {
-            return borradoLogico;
-        }
+        mockMvc.perform(get("/api/v1/categorias/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Categoría encontrada (admin)"))
+                .andExpect(jsonPath("$.data.nombre").value("Existente"));
     }
 }

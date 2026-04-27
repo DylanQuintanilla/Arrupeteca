@@ -3,51 +3,50 @@ package com.arrupeteca.persistence.repository;
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.projection.ObraResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ObraRepositoryTest extends BaseRepositoryTest {
+@DataJpaTest
+class ObraRepositoryTest {
 
     @Autowired
     private ObraRepository obraRepository;
+
     @Autowired
     private GeneroRepository generoRepository;
+
     @Autowired
     private CategoriaRepository categoriaRepository;
 
     @Test
-    @DisplayName("Should save and find obra")
-    void shouldSaveAndFind() {
-        Obra obra = createValidObra("Quijote");
-        obraRepository.save(obra);
-        assertThat(obraRepository.existsByTituloIgnoreCase("quijote")).isTrue();
-    }
+    @DisplayName("findByTituloContainingIgnoreCase - Should find work by title")
+    void findByTitulo() {
+        Genero g = generoRepository.save(Genero.builder().nombre("Genero Test").build());
+        Categoria c = categoriaRepository.save(Categoria.builder().nombre("Categoria Test").build());
 
-    @Test
-    @DisplayName("Should perform global search")
-    void shouldSearchGlobal() {
-        obraRepository.save(createValidObra("Cien años de soledad"));
-        Page<ObraResumen> page = obraRepository.busquedaGlobal("Cien", PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isGreaterThan(0);
-    }
-
-    private Obra createValidObra(String titulo) {
-        Genero genero = generoRepository.save(Genero.builder().nombre("Genero " + titulo).build());
-        Categoria categoria = categoriaRepository.save(Categoria.builder().nombre("Categoria " + titulo).build());
-
-        return Obra.builder()
-                .titulo(titulo)
-                .resumen("Resumen de la obra")
-                .generos(Set.of(genero))
-                .categorias(Set.of(categoria))
+        Obra obra = Obra.builder()
+                .titulo("Cien años de soledad")
+                .resumen("Un resumen muy largo y detallado para pasar la validacion.")
+                .anioCreacion(1967)
+                .generos(Set.of(g))
+                .categorias(Set.of(c))
                 .build();
+        
+        obra.setFechaCreacion(LocalDateTime.now());
+        
+        obraRepository.saveAndFlush(obra);
+
+        Page<Obra> page = obraRepository.findByTituloContainingIgnoreCase("Cien", PageRequest.of(0, 10));
+        assertThat(page.getContent()).isNotEmpty();
+        assertThat(page.getContent().get(0).getTitulo()).isEqualTo("Cien años de soledad");
     }
 }

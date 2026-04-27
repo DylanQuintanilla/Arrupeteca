@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Edificio;
-import com.arrupeteca.persistence.projection.EdificioResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,13 +14,13 @@ import java.util.Optional;
 @Repository
 public interface EdificioRepository extends JpaRepository<Edificio, Long> {
 
-    Page<EdificioResumen> findByBorradoLogicoFalse(Pageable pageable);
+    Page<Edificio> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<EdificioResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Edificio> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
-    Page<EdificioResumen> findAllProjectedBy(Pageable pageable);
+    Page<Edificio> findAllProjectedBy(Pageable pageable);
 
-    Optional<EdificioResumen> findProjectedById(Long id);
+    Optional<Edificio> findProjectedById(Long id);
 
     @Modifying
     @Query("UPDATE Edificio e SET e.borradoLogico = true WHERE e.id = :id")

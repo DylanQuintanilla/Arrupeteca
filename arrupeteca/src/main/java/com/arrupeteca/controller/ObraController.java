@@ -2,13 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.ObraResumen;
+import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
+import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.service.ObraService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -32,37 +32,49 @@ public class ObraController {
     private final ObraService obraService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
-    ) {
-        Page<ObraResumen> pagina = obraService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", pagina));
+    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", obraService.obtenerTodosActivos(pageable)));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ObraResumen>> obtenerPorId(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ObraDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Obra encontrada", obraService.obtenerPorIdActivo(id)));
     }
 
-    @GetMapping("/busqueda")
+    @GetMapping("/global")
     public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
-    ) {
-        Page<ObraResumen> pagina = obraService.busquedaGlobal(palabra, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", pagina));
+            @RequestParam String palabra, Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", obraService.busquedaGlobal(palabra, pageable)));
+    }
+
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de obras", obraService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<ObraDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Obra encontrada (admin)", obraService.obtenerPorId(id)));
+    }
+
+    @GetMapping("/admin/busqueda-maestra")
+    public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaMaestraAdmin(
+            @RequestParam(required = false) Boolean esBorrado,
+            @RequestParam(required = false) String termino,
+            @RequestParam(required = false) Integer anioInicio,
+            @RequestParam(required = false) Integer anioFin,
+            Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
+                obraService.busquedaMaestraAdmin(esBorrado, termino, anioInicio, anioFin, pageable)));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ObraResumen>> crear(@Valid @RequestBody ObraRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Obra creada exitosamente", obraService.crear(request)));
+    public ResponseEntity<ApiResponse<ObraDetalleResponse>> crear(@Valid @RequestBody ObraRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Obra creada exitosamente", obraService.crear(request)), HttpStatus.CREATED);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ObraResumen>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody ObraRequest request) {
+    public ResponseEntity<ApiResponse<ObraDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody ObraRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Obra actualizada correctamente", obraService.actualizar(id, request)));
     }
 
@@ -76,26 +88,5 @@ public class ObraController {
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         obraService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Obra activada correctamente"));
-    }
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
-    ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de obras",
-                obraService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) String termino,
-            @RequestParam(required = false) Integer anioInicio,
-            @RequestParam(required = false) Integer anioFin,
-            @PageableDefault(size = 10, sort = "titulo") Pageable pageable
-    ) {
-        Page<ObraResumen> pagina = obraService.busquedaMaestraAdmin(
-                esBorrado, termino, anioInicio, anioFin, pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", pagina));
     }
 }

@@ -85,3 +85,8 @@ Arrupeteca es un sistema de gestión de bibliotecas construido con Spring Boot 3
 - **DTO Serialization & Validation**: Se estandariza el uso de `@JsonTest` de Spring Boot junto con `@Import(ValidationAutoConfiguration.class)` para validar la serialización de Jackson y las restricciones de Bean Validation en todas las clases `Request`.
 - **JaCoCo Exclusion**: Se establece la política de excluir código generado automáticamente (como los mappers de MapStruct) del reporte de cobertura mediante la configuración del procesador de MapStruct (`addGeneratedAnnotation=true`) para mantener el foco en la lógica escrita a mano.
 
+### 2026-04-24 | Estándar de Respuesta Summary vs Detail y Ubicación Física
+- **Patrón Summary vs Detail**: Se establece el uso obligatorio de `[Entidad]Resumen` (Proyección o Record ligero) para listados y `[Entidad]DetalleResponse` (DTO completo) para consultas por ID. Los listados no deben incluir colecciones para optimizar el payload.
+- **Concatenación de Ubicación**: La lógica de presentación de la ubicación física (ej. 'Mueble - Salón - Planta') debe residir exclusivamente en los Mappers de MapStruct mediante métodos `default`, manteniendo las Entidades y DTOs limpios de lógica de formato.
+- **Optimización JPA Proactiva**: Los Repositorios deben usar `@EntityGraph` para cargar relaciones ManyToOne/OneToOne en listados (`Resumen`), mientras que las colecciones en vistas de detalle deben confiar en el `batch_fetch_size` configurado para evitar el problema N+1.
+

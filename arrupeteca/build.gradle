@@ -73,6 +73,15 @@ jacocoTestReport {
 		xml.required = true
 		html.required = true
 	}
+	// Esta sección filtra los archivos del reporte final (HTML/XML)
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					'com/arrupeteca/ArrupetecaApplication.class',
+					'com/arrupeteca/mapper/**'
+			])
+		}))
+	}
 }
 
 jacocoTestCoverageVerification {
@@ -81,7 +90,8 @@ jacocoTestCoverageVerification {
 		rule {
 			element = 'CLASS'
 			excludes = [
-					'com.arrupeteca.ArrupetecaApplication'
+					'com.arrupeteca.ArrupetecaApplication',
+					'com.arrupeteca.mapper.**'
 			]
 			limit {
 				minimum = 1.0

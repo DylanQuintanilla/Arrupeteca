@@ -3,7 +3,8 @@ package com.arrupeteca.controller;
 import java.util.List;
 
 import com.arrupeteca.dto.request.EditorialRequest;
-import com.arrupeteca.persistence.projection.EditorialResumen;
+import com.arrupeteca.dto.response.detail.EditorialDetalleResponse;
+import com.arrupeteca.dto.response.summary.EditorialResumen;
 import com.arrupeteca.service.EditorialService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,9 +47,9 @@ class EditorialControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/editoriales/{id} - Should return editorial by ID")
     void shouldReturnById() throws Exception {
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Editorial Test", "Calle 123", "12345678",
-                "test@editorial.com", false);
-        when(editorialService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        EditorialDetalleResponse detail = new EditorialDetalleResponse(1L, "Editorial Test", "Calle 123", "test@editorial.com", "12345678",
+                "Contacto", false, "admin", null, "admin", null);
+        when(editorialService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/editoriales/1"))
                 .andExpect(status().isOk())
@@ -66,9 +67,9 @@ class EditorialControllerTest extends BaseControllerTest {
         request.setTelefono("1234-5678");
         request.setPersonaContacto("Contacto");
 
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Nueva", "Direccion", "1234-5678",
-                "nueva@test.com", false);
-        when(editorialService.crear(any())).thenReturn(resumen);
+        EditorialDetalleResponse detail = new EditorialDetalleResponse(1L, "Nueva", "Direccion", "nueva@test.com", "1234-5678",
+                "Contacto", false, "admin", null, "admin", null);
+        when(editorialService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/editoriales")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -88,9 +89,9 @@ class EditorialControllerTest extends BaseControllerTest {
         request.setTelefono("1234-5678");
         request.setPersonaContacto("Contacto");
 
-        EditorialResumen resumen = new TestEditorialResumen(1L, "Actualizada", "Direccion", "1234-5678",
-                "test@test.com", false);
-        when(editorialService.actualizar(any(Long.class), any(EditorialRequest.class))).thenReturn(resumen);
+        EditorialDetalleResponse detail = new EditorialDetalleResponse(1L, "Actualizada", "Direccion", "test@test.com", "1234-5678",
+                "Contacto", false, "admin", null, "admin", null);
+        when(editorialService.actualizar(any(Long.class), any(EditorialRequest.class))).thenReturn(detail);
 
         mockMvc.perform(put("/api/v1/editoriales/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -147,43 +148,16 @@ class EditorialControllerTest extends BaseControllerTest {
                 .andExpect(jsonPath("$.data").exists());
     }
 
-    private record TestEditorialResumen(
-            Long id,
-            String nombre,
-            String direccion,
-            String telefono,
-            String correo,
-            boolean borradoLogico
-    ) implements EditorialResumen {
+    @Test
+    @DisplayName("GET /api/v1/editoriales/admin/{id} - Should return editorial by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        EditorialDetalleResponse detail = new EditorialDetalleResponse(1L, "Editorial Test", "Calle 123", "test@editorial.com", "12345678",
+                "Contacto", false, "admin", null, "admin", null);
+        when(editorialService.obtenerPorId(1L)).thenReturn(detail);
 
-        @Override
-        public Long getId() {
-            return id;
-        }
-
-        @Override
-        public String getNombre() {
-            return nombre;
-        }
-
-        @Override
-        public String getDireccion() {
-            return direccion;
-        }
-
-        @Override
-        public String getTelefono() {
-            return telefono;
-        }
-
-        @Override
-        public String getCorreo() {
-            return correo;
-        }
-
-        @Override
-        public boolean getBorradoLogico() {
-            return borradoLogico;
-        }
+        mockMvc.perform(get("/api/v1/editoriales/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Editorial encontrada (admin)"));
     }
 }

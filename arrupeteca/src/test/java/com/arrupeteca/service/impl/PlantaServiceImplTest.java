@@ -1,17 +1,18 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.PlantaRequest;
+import com.arrupeteca.dto.response.detail.PlantaDetalleResponse;
+import com.arrupeteca.dto.response.summary.PlantaResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.PlantaMapper;
-import com.arrupeteca.persistence.entity.Edificio;
 import com.arrupeteca.persistence.entity.Planta;
-import com.arrupeteca.persistence.projection.PlantaResumen;
-import com.arrupeteca.persistence.repository.EdificioRepository;
 import com.arrupeteca.persistence.repository.PlantaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -22,281 +23,228 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.never;
 
-class PlantaServiceImplTest extends BaseServiceTest {
-    @Mock private PlantaRepository repository;
-    @Mock private PlantaMapper mapper;
-    @Mock private EdificioRepository edificioRepository;
-    @InjectMocks private PlantaServiceImpl service;
+@ExtendWith(MockitoExtension.class)
+class PlantaServiceImplTest {
+
+    @Mock
+    private PlantaRepository plantaRepository;
+
+    @Mock
+    private PlantaMapper plantaMapper;
+
+    @InjectMocks
+    private PlantaServiceImpl plantaService;
 
     @Test
-    @DisplayName("Should return paginated active plants")
-    void shouldReturnPaginatedActive() {
-        Page<PlantaResumen> page = new PageImpl<>(List.of());
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodosActivos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Planta entity = Planta.builder().id(1L).nombre("Planta 1").build();
+        Page<Planta> page = new PageImpl<>(List.of(entity));
+        PlantaResumen resumen = new PlantaResumen(1L, "Planta 1", false, "Edificio A");
+
+        when(plantaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(plantaMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<PlantaResumen> result = plantaService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("Should return plant by id when active")
-    void shouldReturnByIdActivo() {
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorIdActivo(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerPorIdActivo - Should return detail when exists and active")
+    void obtenerPorIdActivoSuccess() {
+        Planta entity = Planta.builder().id(1L).nombre("Planta 1").build();
+        PlantaDetalleResponse detail = new PlantaDetalleResponse(1L, "Planta 1", false, null, null, null, null, null);
+
+        when(plantaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(plantaMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        PlantaDetalleResponse result = plantaService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when active plant not found")
-    void shouldThrowWhenActiveNotFound() {
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found or inactive")
+    void obtenerPorIdActivoNotFound() {
+        when(plantaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> plantaService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No existe una planta activa con el ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all plants")
-    void shouldReturnAll() {
-        Page<PlantaResumen> page = new PageImpl<>(List.of());
-        when(repository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("obtenerTodos - Should return all plants")
+    void obtenerTodos() {
+        Planta entity = Planta.builder().id(1L).nombre("Planta 1").build();
+        Page<Planta> page = new PageImpl<>(List.of(entity));
+        PlantaResumen resumen = new PlantaResumen(1L, "Planta 1", false, "Edificio A");
+
+        when(plantaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
+        when(plantaMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<PlantaResumen> result = plantaService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should return plant by id")
-    void shouldReturnById() {
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorId(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerPorId - Should return detail when exists")
+    void obtenerPorIdSuccess() {
+        Planta entity = Planta.builder().id(1L).nombre("Planta 1").build();
+        PlantaDetalleResponse detail = new PlantaDetalleResponse(1L, "Planta 1", false, null, null, null, null, null);
+
+        when(plantaRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(plantaMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        PlantaDetalleResponse result = plantaService.obtenerPorId(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when plant not found by id")
-    void shouldThrowWhenNotFoundById() {
-        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorId(1L))
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(plantaRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> plantaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No existe una planta con el ID: 1");
     }
 
     @Test
-    @DisplayName("Should return plants by building")
-    void shouldReturnByEdificio() {
-        Page<PlantaResumen> page = new PageImpl<>(List.of());
-        when(edificioRepository.existsById(1L)).thenReturn(true);
-        when(repository.qBuscarPorEdificioIdYActivo(eq(1L), any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerPorIdEdificio(1L, Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("buscarPorEdificioId - Should return plants for edificio")
+    void buscarPorEdificioId() {
+        Planta entity = Planta.builder().id(1L).nombre("Planta 1").build();
+        Page<Planta> page = new PageImpl<>(List.of(entity));
+        PlantaResumen resumen = new PlantaResumen(1L, "Planta 1", false, "Edificio A");
+
+        when(plantaRepository.findByEdificioIdAndBorradoLogicoFalse(eq(1L), any(Pageable.class))).thenReturn(page);
+        when(plantaMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<PlantaResumen> result = plantaService.buscarPorEdificioId(1L, Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
     }
 
     @Test
-    @DisplayName("Should throw exception when edificio not found in obtenerPorIdEdificio")
-    void shouldThrowWhenEdificioNotFoundInObtenerPorId() {
-        when(edificioRepository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.obtenerPorIdEdificio(1L, Pageable.unpaged()))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un edificio con ID: 1");
-    }
-
-    @Test
-    @DisplayName("Should create plant")
-    void shouldCreate() {
+    @DisplayName("crear - Should create planta")
+    void crearSuccess() {
         PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 1");
+        request.setNombre("Nuevo");
         request.setIdEdificio(1L);
-
-        when(repository.qExistePorNombreYEdificioId(anyString(), anyLong())).thenReturn(false);
-        when(edificioRepository.findById(1L)).thenReturn(Optional.of(new Edificio()));
 
         Planta entity = new Planta();
-        entity.setId(1L);
-        when(mapper.toEntity(any())).thenReturn(entity);
-        when(repository.save(any())).thenReturn(entity);
+        Planta saved = Planta.builder().id(1L).nombre("Nuevo").build();
+        PlantaDetalleResponse detail = new PlantaDetalleResponse(1L, "Nuevo", false, null, null, null, null, null);
 
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(plantaRepository.existsByNombreAndEdificioId("Nuevo", 1L)).thenReturn(false);
+        when(plantaMapper.toEntity(request)).thenReturn(entity);
+        when(plantaRepository.save(entity)).thenReturn(saved);
+        when(plantaMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        assertThat(service.crear(request)).isEqualTo(resumen);
+        PlantaDetalleResponse result = plantaService.crear(request);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when name exists in building on create")
-    void shouldThrowWhenNameExistsOnCreate() {
+    @DisplayName("crear - Should throw exception when name exists in edificio")
+    void crearDuplicate() {
         PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 1");
+        request.setNombre("Existente");
         request.setIdEdificio(1L);
-        when(repository.qExistePorNombreYEdificioId("Planta 1", 1L)).thenReturn(true);
 
-        assertThatThrownBy(() -> service.crear(request))
+        when(plantaRepository.existsByNombreAndEdificioId("Existente", 1L)).thenReturn(true);
+
+        assertThatThrownBy(() -> plantaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe la planta 'Planta 1' en el edificio indicado");
+                .hasMessageContaining("Ya existe una planta con ese nombre en el edificio seleccionado");
     }
 
     @Test
-    @DisplayName("Should throw exception when edificio not found on create")
-    void shouldThrowWhenEdificioNotFoundOnCreate() {
+    @DisplayName("actualizar - Should update planta")
+    void actualizarSuccess() {
+        Long id = 1L;
         PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 1");
+        request.setNombre("Actualizado");
         request.setIdEdificio(1L);
-        when(repository.qExistePorNombreYEdificioId("Planta 1", 1L)).thenReturn(false);
-        when(edificioRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Planta());
 
-        assertThatThrownBy(() -> service.crear(request))
+        Planta existing = Planta.builder().id(id).nombre("Antiguo").build();
+        PlantaDetalleResponse detail = new PlantaDetalleResponse(id, "Actualizado", false, null, null, null, null, null);
+
+        when(plantaRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(plantaRepository.existsByNombreAndEdificioId("Actualizado", 1L)).thenReturn(false);
+        when(plantaRepository.save(existing)).thenReturn(existing);
+        when(plantaMapper.toDetalleResponse(existing)).thenReturn(detail);
+
+        PlantaDetalleResponse result = plantaService.actualizar(id, request);
+
+        assertThat(result).isEqualTo(detail);
+        verify(plantaMapper).updateEntity(request, existing);
+    }
+
+    @Test
+    @DisplayName("actualizar - Should throw exception when planta not found")
+    void actualizarNotFound() {
+        when(plantaRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> plantaService.actualizar(1L, new PlantaRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un edificio con ID: 1");
+                .hasMessageContaining("No existe una planta con el ID: 1");
     }
 
     @Test
-    @DisplayName("Should update plant")
-    void shouldUpdate() {
+    @DisplayName("actualizar - Should throw exception when new name exists in edificio")
+    void actualizarDuplicate() {
+        Long id = 1L;
         PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 2");
+        request.setNombre("Existente");
         request.setIdEdificio(1L);
 
-        Planta existing = new Planta();
-        existing.setId(1L);
-        existing.setNombre("Planta 1");
+        Planta existing = Planta.builder().id(id).nombre("Antiguo").build();
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.qExistePorNombreYEdificioId("Planta 2", 1L)).thenReturn(false);
-        when(edificioRepository.findById(1L)).thenReturn(Optional.of(new Edificio()));
+        when(plantaRepository.findById(id)).thenReturn(Optional.of(existing));
+        when(plantaRepository.existsByNombreAndEdificioId("Existente", 1L)).thenReturn(true);
 
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should update plant when existing edificio is null")
-    void shouldUpdateWhenExistingEdificioIsNull() {
-        PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 2");
-        request.setIdEdificio(1L);
-
-        Planta existing = new Planta();
-        existing.setId(1L);
-        existing.setNombre("Planta 1");
-        existing.setEdificio(null); // Explicitly null
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.qExistePorNombreYEdificioId("Planta 2", 1L)).thenReturn(false);
-        when(edificioRepository.findById(1L)).thenReturn(Optional.of(new Edificio()));
-
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should update plant when name changes but building stays the same")
-    void shouldUpdateWhenNameChangesSameBuilding() {
-        PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 2");
-        request.setIdEdificio(1L);
-
-        Planta existing = new Planta();
-        existing.setId(1L);
-        existing.setNombre("Planta 1");
-        existing.setEdificio(new Edificio());
-        existing.getEdificio().setId(1L);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.qExistePorNombreYEdificioId("Planta 2", 1L)).thenReturn(false);
-        when(edificioRepository.findById(1L)).thenReturn(Optional.of(existing.getEdificio()));
-
-        PlantaResumen resumen = mock(PlantaResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when plant not found on update")
-    void shouldThrowWhenNotFoundOnUpdate() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.actualizar(1L, new PlantaRequest()))
+        assertThatThrownBy(() -> plantaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró planta con ID: 1");
+                .hasMessageContaining("Ya existe otra planta con ese nombre en el edificio seleccionado");
     }
 
     @Test
-    @DisplayName("Should throw exception when name already exists in building on update")
-    void shouldThrowWhenNameExistsOnUpdate() {
-        PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 2");
-        request.setIdEdificio(1L);
+    @DisplayName("cambiarEstado - Should activate planta")
+    void cambiarEstadoActivar() {
+        when(plantaRepository.existsById(1L)).thenReturn(true);
 
-        Planta existing = new Planta();
-        existing.setId(1L);
-        existing.setNombre("Planta 1");
-        existing.setEdificio(new Edificio());
-        existing.getEdificio().setId(1L);
+        plantaService.cambiarEstado(1L, true);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.qExistePorNombreYEdificioId("Planta 2", 1L)).thenReturn(true);
+        verify(plantaRepository).activar(1L);
+    }
 
-        assertThatThrownBy(() -> service.actualizar(1L, request))
+    @Test
+    @DisplayName("cambiarEstado - Should deactivate planta")
+    void cambiarEstadoDesactivar() {
+        when(plantaRepository.existsById(1L)).thenReturn(true);
+
+        plantaService.cambiarEstado(1L, false);
+
+        verify(plantaRepository).desactivar(1L);
+    }
+
+    @Test
+    @DisplayName("cambiarEstado - Should throw exception when not found")
+    void cambiarEstadoNotFound() {
+        when(plantaRepository.existsById(1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> plantaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una planta con el nombre 'Planta 2' en este edificio");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when edificio changes and name already exists in new building")
-    void shouldThrowWhenEdificioChangesNameExists() {
-        PlantaRequest request = new PlantaRequest();
-        request.setNombre("Planta 1");
-        request.setIdEdificio(2L); // Changed building
-
-        Planta existing = new Planta();
-        existing.setId(1L);
-        existing.setNombre("Planta 1"); // Same name
-        existing.setEdificio(new Edificio());
-        existing.getEdificio().setId(1L);
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.qExistePorNombreYEdificioId("Planta 1", 2L)).thenReturn(true);
-
-        assertThatThrownBy(() -> service.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class);
-    }
-
-    @Test
-    @DisplayName("Should activate plant")
-    void shouldActivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, true);
-        verify(repository).activarPlanta(1L);
-    }
-
-    @Test
-    @DisplayName("Should deactivate plant")
-    void shouldDeactivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, false);
-        verify(repository).desactivarPlanta(1L);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when plant not found on status change")
-    void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.cambiarEstado(1L, true))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró planta con ID: 1");
-        verify(repository, never()).activarPlanta(any());
-        verify(repository, never()).desactivarPlanta(any());
+                .hasMessageContaining("No existe una planta con el ID: 1");
     }
 }
-

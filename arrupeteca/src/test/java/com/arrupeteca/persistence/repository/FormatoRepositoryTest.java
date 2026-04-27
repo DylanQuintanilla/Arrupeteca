@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Formato;
-import com.arrupeteca.persistence.projection.FormatoResumen;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ class FormatoRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActiveWithPagination() {
         formatoRepository.save(Formato.builder().nombre("F1").borradoLogico(false).build());
-        Page<FormatoResumen> page = formatoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<Formato> page = formatoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 }

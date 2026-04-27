@@ -1,348 +1,327 @@
 package com.arrupeteca.service.impl;
 
-import java.util.List;
-import java.util.Optional;
-
 import com.arrupeteca.dto.request.LibroRequest;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.LibroMapper;
 import com.arrupeteca.persistence.entity.Libro;
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
-import com.arrupeteca.persistence.projection.LibroResumen;
-import com.arrupeteca.persistence.repository.EditorialRepository;
-import com.arrupeteca.persistence.repository.FormatoRepository;
-import com.arrupeteca.persistence.repository.IdiomaRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
-import com.arrupeteca.persistence.repository.ObraRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class LibroServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class LibroServiceImplTest {
 
     @Mock
-    private LibroRepository repository;
+    private LibroRepository libroRepository;
+
     @Mock
-    private LibroMapper mapper;
-    @Mock
-    private ObraRepository obraRepository;
-    @Mock
-    private EditorialRepository editorialRepository;
-    @Mock
-    private FormatoRepository formatoRepository;
-    @Mock
-    private IdiomaRepository idiomaRepository;
+    private LibroMapper libroMapper;
+
     @InjectMocks
-    private LibroServiceImpl service;
+    private LibroServiceImpl libroService;
 
     @Test
-    @DisplayName("Should return paginated active libros")
-    void shouldReturnPaginatedActive() {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodosActivos(Pageable.unpaged())).isEqualTo(page);
+    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    void obtenerTodosActivos() {
+        Libro entity = Libro.builder().id(1L).isbn("123").build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = new LibroResumen(1L, "123", 2021, BigDecimal.TEN, "url", BigDecimal.ONE, false, "G", "C", "Obra", "Ed", "F");
+
+        when(libroRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<LibroResumen> result = libroService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("Should return libro by id when active")
-    void shouldReturnByIdActivo() {
-        LibroResumen resumen = mock(LibroResumen.class);
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorIdActivo(1L)).isEqualTo(resumen);
+    @DisplayName("obtenerPorIdActivo - Should return DetalleResponse")
+    void obtenerPorIdActivo() {
+        Libro entity = Libro.builder().id(1L).isbn("123").build();
+        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "123", 2021, BigDecimal.TEN, "url", BigDecimal.ONE, false, "G", "C",
+                "admin", null, "admin", null, null, null, null, Collections.emptySet());
+
+        when(libroRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(libroMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        LibroDetalleResponse result = libroService.obtenerPorIdActivo(1L);
+
+        assertThat(result).isEqualTo(detail);
     }
 
     @Test
-    @DisplayName("Should throw exception when active libro not found")
-    void shouldThrowWhenActiveNotFound() {
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
+        when(libroRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> libroService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Libro activo con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all libros")
-    void shouldReturnAll() {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerTodos(Pageable.unpaged())).isEqualTo(page);
-    }
-
-    @Test
-    @DisplayName("Should return search results")
-    void shouldReturnSearch() {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaGlobal(anyString(), any(Pageable.class))).thenReturn(page);
-        assertThat(service.busquedaGlobal("test", Pageable.unpaged())).isEqualTo(page);
-    }
-
-    @Test
-    @DisplayName("Should return libro by id")
-    void shouldReturnById() {
+    @DisplayName("busquedaGlobal - Should return page of Resumen")
+    void busquedaGlobal() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-        assertThat(service.obtenerPorId(1L)).isEqualTo(resumen);
+        when(libroRepository.busquedaGlobal("palabra", Pageable.unpaged())).thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<LibroResumen> result = libroService.busquedaGlobal("palabra", Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should throw exception when libro not found by id")
-    void shouldThrowWhenNotFoundById() {
-        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorId(1L))
+    @DisplayName("obtenerTodos - Should return all books")
+    void obtenerTodos() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = mock(LibroResumen.class);
+        when(libroRepository.findAllProjectedBy(Pageable.unpaged())).thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<LibroResumen> result = libroService.obtenerTodos(Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
+    }
+
+    @Test
+    @DisplayName("obtenerPorId - Should return DetalleResponse")
+    void obtenerPorId() {
+        Libro entity = Libro.builder().id(1L).build();
+        LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
+        when(libroRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(libroMapper.toDetalleResponse(entity)).thenReturn(detail);
+
+        LibroDetalleResponse result = libroService.obtenerPorId(1L);
+
+        assertThat(result).isEqualTo(detail);
+    }
+
+    @Test
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(libroRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> libroService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Libro con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return libros by obra")
-    void shouldReturnByObra() {
-        when(obraRepository.existsById(1L)).thenReturn(true);
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.buscarPorObraId(eq(1L), any(Pageable.class))).thenReturn(page);
-        assertThat(service.obtenerPorObra(1L, Pageable.unpaged())).isEqualTo(page);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when obra not found in obtenerPorObra")
-    void shouldThrowWhenObraNotFoundInObra() {
-        when(obraRepository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.obtenerPorObra(1L, Pageable.unpaged()))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Obra con ID: 1");
-    }
-
-    @Test
-    @DisplayName("Should return busqueda maestra admin results")
-    void shouldReturnBusquedaMaestraAdmin() {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(),
-                any(Pageable.class)))
+    @DisplayName("busquedaMaestraAdmin - Should handle String parameters")
+    void busquedaMaestraAdminString() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = mock(LibroResumen.class);
+        
+        when(libroRepository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), 
+                eq(com.arrupeteca.persistence.enums.Grado.BACHI_GENERAL), 
+                eq(com.arrupeteca.persistence.enums.Ciclo.PRIMER), 
+                eq("term"), eq(2000), eq(2021), any(Pageable.class)))
                 .thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
 
-        assertThat(service.busquedaMaestraAdmin(false, 1L, 1L, 1L, "BACHI_TEC_SOFTWARE",
-                "TERCER", "term", 2020, 2024, Pageable.unpaged()))
-                .isEqualTo(page);
-
-        verify(repository).busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L),
-                eq(Grado.BACHI_TEC_SOFTWARE), eq(Ciclo.TERCER), eq("term"), eq(2020),
-                eq(2024), any(Pageable.class));
+        Page<LibroResumen> result = libroService.busquedaMaestraAdmin(
+                false, 1L, 1L, 1L, "BACHI_GENERAL", "PRIMER", "term", 2000, 2021, Pageable.unpaged());
+        
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should return busqueda maestra admin results with null params")
-    void shouldReturnBusquedaMaestraAdminWithNulls() {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(repository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(),
-                any(Pageable.class)))
+    @DisplayName("busquedaMaestraAdmin - Should handle Enum parameters")
+    void busquedaMaestraAdminEnum() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = mock(LibroResumen.class);
+        
+        when(libroRepository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), 
+                eq(com.arrupeteca.persistence.enums.Grado.BACHI_GENERAL), 
+                eq(com.arrupeteca.persistence.enums.Ciclo.PRIMER), 
+                eq("term"), eq(2000), eq(2021), any(Pageable.class)))
                 .thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
 
-        assertThat(service.busquedaMaestraAdmin(null, null, null, null, null, null, null, null, null,
-                Pageable.unpaged()))
-                .isEqualTo(page);
-
-        verify(repository).busquedaMaestraAdmin(eq(null), eq(null), eq(null), eq(null),
-                eq(null), eq(null), eq(null), eq(null), eq(null), any(Pageable.class));
+        Page<LibroResumen> result = libroService.busquedaMaestraAdmin(
+                false, 1L, 1L, 1L, com.arrupeteca.persistence.enums.Grado.BACHI_GENERAL, 
+                com.arrupeteca.persistence.enums.Ciclo.PRIMER, "term", 2000, 2021, Pageable.unpaged());
+        
+        assertThat(result.getContent()).containsExactly(resumen);
     }
 
     @Test
-    @DisplayName("Should create libro with all relations")
-    void shouldCreateWithRelations() {
+    @DisplayName("busquedaMaestraAdmin - Should handle null/empty parameters")
+    void busquedaMaestraAdminNull() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = mock(LibroResumen.class);
+        
+        when(libroRepository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), 
+                eq(null), eq(null), 
+                eq("term"), eq(2000), eq(2021), any(Pageable.class)))
+                .thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<LibroResumen> result = libroService.busquedaMaestraAdmin(
+                false, 1L, 1L, 1L, "", null, "term", 2000, 2021, Pageable.unpaged());
+        
+        assertThat(result.getContent()).containsExactly(resumen);
+    }
+
+    @Test
+    @DisplayName("buscarPorObraId - Should return results")
+    void buscarPorObraId() {
+        Libro entity = Libro.builder().id(1L).build();
+        Page<Libro> page = new PageImpl<>(List.of(entity));
+        LibroResumen resumen = mock(LibroResumen.class);
+        when(libroRepository.buscarPorObraId(1L, Pageable.unpaged())).thenReturn(page);
+        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+
+        Page<LibroResumen> result = libroService.buscarPorObraId(1L, Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(resumen);
+    }
+
+    @Test
+    @DisplayName("crear - Should create and return DetalleResponse")
+    void crearSuccess() {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        request.setIdObra(1L);
-        request.setIdEditorial(1L);
-        request.setIdFormato(1L);
-        request.setIdIdiomas(java.util.Set.of(1L));
-
-        when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(obraRepository.findById(1L))
-                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
-        when(editorialRepository.findById(1L))
-                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Editorial.class)));
-        when(formatoRepository.findById(1L))
-                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Formato.class)));
-        when(idiomaRepository.findAllById(any()))
-                .thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
-
+        request.setIsbn("9780596520687");
         Libro entity = new Libro();
-        entity.setId(1L);
-        when(mapper.toEntity(any())).thenReturn(entity);
-        when(repository.save(any())).thenReturn(entity);
+        Libro saved = Libro.builder().id(1L).isbn("9780596520687").build();
+        LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
 
-        LibroResumen resumen = mock(LibroResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
+        when(libroRepository.existsByIsbn("9780596520687")).thenReturn(false);
+        when(libroMapper.toEntity(request)).thenReturn(entity);
+        when(libroRepository.save(entity)).thenReturn(saved);
+        when(libroMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        assertThat(service.crear(request)).isEqualTo(resumen);
-        verify(repository).save(entity);
+        LibroDetalleResponse result = libroService.crear(request);
+
+        assertThat(result).isEqualTo(detail);
+        verify(libroRepository).save(entity);
     }
 
     @Test
-    @DisplayName("Should throw exception when ISBN already exists on create")
-    void shouldThrowWhenIsbnExistsOnCreate() {
+    @DisplayName("crear - Should throw exception if ISBN exists")
+    void crearIsbnExists() {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        when(repository.existsByIsbn("1234567890")).thenReturn(true);
+        request.setIsbn("123");
+        when(libroRepository.existsByIsbn("123")).thenReturn(true);
 
-        assertThatThrownBy(() -> service.crear(request))
+        assertThatThrownBy(() -> libroService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("El ISBN 1234567890 ya está registrado");
+                .hasMessageContaining("Ya existe un libro con el ISBN: 123");
     }
 
     @Test
-    @DisplayName("Should throw exception when Obra not found on create")
-    void shouldThrowWhenObraNotFoundOnCreate() {
+    @DisplayName("actualizar - Should update and return DetalleResponse")
+    void actualizar() {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        request.setIdObra(1L);
+        request.setIsbn("456");
+        Libro existing = Libro.builder().id(1L).isbn("123").build();
+        Libro saved = Libro.builder().id(1L).isbn("456").build();
+        LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
 
-        when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Libro());
+        when(libroRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(libroRepository.existsByIsbn("456")).thenReturn(false);
+        when(libroRepository.save(existing)).thenReturn(saved);
+        when(libroMapper.toDetalleResponse(saved)).thenReturn(detail);
 
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("La Obra indicada no existe");
+        LibroDetalleResponse result = libroService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detail);
+        verify(libroMapper).updateEntity(request, existing);
     }
 
     @Test
-    @DisplayName("Should throw exception when Editorial not found on create")
-    void shouldThrowWhenEditorialNotFoundOnCreate() {
+    @DisplayName("actualizar - Should update with same ISBN")
+    void actualizarSameIsbn() {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        request.setIdEditorial(1L);
+        request.setIsbn("123");
+        Libro existing = Libro.builder().id(1L).isbn("123").build();
+        LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
 
-        when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(editorialRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Libro());
+        when(libroRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(libroRepository.save(existing)).thenReturn(existing);
+        when(libroMapper.toDetalleResponse(existing)).thenReturn(detail);
 
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("La Editorial indicada no existe");
+        libroService.actualizar(1L, request);
+
+        verify(libroRepository, never()).existsByIsbn("123");
     }
 
     @Test
-    @DisplayName("Should throw exception when Formato not found on create")
-    void shouldThrowWhenFormatoNotFoundOnCreate() {
-        LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        request.setIdFormato(1L);
-
-        when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(formatoRepository.findById(1L)).thenReturn(Optional.empty());
-        when(mapper.toEntity(any())).thenReturn(new Libro());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("El Formato indicado no existe");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when Idiomas not found on create")
-    void shouldThrowWhenIdiomasNotFoundOnCreate() {
-        LibroRequest request = new LibroRequest();
-        request.setIsbn("1234567890");
-        request.setIdIdiomas(java.util.Set.of(1L, 2L));
-
-        when(repository.existsByIsbn("1234567890")).thenReturn(false);
-        when(idiomaRepository.findAllById(any()))
-                .thenReturn(List.of(mock(com.arrupeteca.persistence.entity.Idioma.class)));
-        when(mapper.toEntity(any())).thenReturn(new Libro());
-
-        assertThatThrownBy(() -> service.crear(request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Uno o más idiomas indicados no existen");
-    }
-
-    @Test
-    @DisplayName("Should update libro and change relations")
-    void shouldUpdateWithRelations() {
-        LibroRequest request = new LibroRequest();
-        request.setIsbn("0987654321");
-        request.setIdObra(2L);
-
-        Libro existing = new Libro();
-        existing.setId(1L);
-        existing.setIsbn("1234567890");
-
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByIsbn("0987654321")).thenReturn(false);
-        when(obraRepository.findById(2L))
-                .thenReturn(Optional.of(mock(com.arrupeteca.persistence.entity.Obra.class)));
-
-        LibroResumen resumen = mock(LibroResumen.class);
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(resumen));
-
-        assertThat(service.actualizar(1L, request)).isEqualTo(resumen);
-        verify(repository).save(existing);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when libro not found on update")
-    void shouldThrowWhenNotFoundOnUpdate() {
-        when(repository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.actualizar(1L, new LibroRequest()))
+    @DisplayName("actualizar - Should throw when not found")
+    void actualizarNotFound() {
+        when(libroRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> libroService.actualizar(1L, new LibroRequest()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Libro con ID: 1");
     }
 
     @Test
-    @DisplayName("Should throw exception when ISBN already in use by another on update")
-    void shouldThrowWhenIsbnInUseOnUpdate() {
+    @DisplayName("actualizar - Should throw when ISBN already exists in another book")
+    void actualizarIsbnConflict() {
         LibroRequest request = new LibroRequest();
-        request.setIsbn("dup-isbn");
+        request.setIsbn("456");
+        Libro existing = Libro.builder().id(1L).isbn("123").build();
 
-        Libro existing = new Libro();
-        existing.setId(1L);
-        existing.setIsbn("orig-isbn");
+        when(libroRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(libroRepository.existsByIsbn("456")).thenReturn(true);
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.existsByIsbn("dup-isbn")).thenReturn(true);
-
-        assertThatThrownBy(() -> service.actualizar(1L, request))
+        assertThatThrownBy(() -> libroService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("ya está en uso por otro libro");
+                .hasMessageContaining("Ya existe otro libro con el ISBN: 456");
     }
 
     @Test
-    @DisplayName("Should activate libro")
-    void shouldActivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, true);
-        verify(repository).activar(1L);
+    @DisplayName("cambiarEstado - Should activate book")
+    void activarLibro() {
+        when(libroRepository.existsById(1L)).thenReturn(true);
+        libroService.cambiarEstado(1L, true);
+        verify(libroRepository).activar(1L);
     }
 
     @Test
-    @DisplayName("Should deactivate libro")
-    void shouldDeactivate() {
-        when(repository.existsById(1L)).thenReturn(true);
-        service.cambiarEstado(1L, false);
-        verify(repository).desactivar(1L);
+    @DisplayName("cambiarEstado - Should deactivate book")
+    void desactivarLibro() {
+        when(libroRepository.existsById(1L)).thenReturn(true);
+        libroService.cambiarEstado(1L, false);
+        verify(libroRepository).desactivar(1L);
     }
 
     @Test
-    @DisplayName("Should throw exception when libro not found on status change")
-    void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> service.cambiarEstado(1L, true))
+    @DisplayName("cambiarEstado - Should throw when not found")
+    void cambiarEstadoNotFound() {
+        when(libroRepository.existsById(1L)).thenReturn(false);
+        assertThatThrownBy(() -> libroService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Libro con ID: 1");
-        verify(repository, never()).activar(any());
-        verify(repository, never()).desactivar(any());
     }
-
 }

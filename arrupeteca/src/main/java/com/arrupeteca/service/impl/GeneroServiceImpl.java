@@ -1,10 +1,11 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.GeneroRequest;
+import com.arrupeteca.dto.response.detail.GeneroDetalleResponse;
+import com.arrupeteca.dto.response.summary.GeneroResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.Genero;
-import com.arrupeteca.persistence.projection.GeneroResumen;
 import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.service.GeneroService;
 import lombok.RequiredArgsConstructor;
@@ -23,57 +24,56 @@ public class GeneroServiceImpl implements GeneroService {
     @Override
     @Transactional(readOnly = true)
     public Page<GeneroResumen> obtenerTodosActivos(Pageable pageable) {
-        return generoRepository.findByBorradoLogicoFalse(pageable);
+        return generoRepository.findByBorradoLogicoFalse(pageable)
+                .map(generoMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public GeneroResumen obtenerPorIdActivo(Long id) {
+    public GeneroDetalleResponse obtenerPorIdActivo(Long id) {
         return generoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: "
-                        + id + ", o no está activo"));
+                .map(generoMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<GeneroResumen> obtenerTodos(Pageable pageable) {
-        return generoRepository.findAllProjectedBy(pageable);
+        return generoRepository.findAllProjectedBy(pageable)
+                .map(generoMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public GeneroResumen obtenerPorId(Long id) {
+    public GeneroDetalleResponse obtenerPorId(Long id) {
         return generoRepository.findProjectedById(id)
+                .map(generoMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: " + id));
     }
 
     @Override
     @Transactional
-    public GeneroResumen crear(GeneroRequest request) {
+    public GeneroDetalleResponse crear(GeneroRequest request) {
         if (generoRepository.existsByNombreIgnoreCase(request.getNombre())) {
             throw new ValidacionNegocioException("Ya existe un género con el nombre: " + request.getNombre());
         }
-
-        Genero generoMapeado = generoMapper.toEntity(request);
-        Genero generoGuardado = generoRepository.save(generoMapeado);
-
-        return obtenerPorId(generoGuardado.getId());
+        Genero genero = generoMapper.toEntity(request);
+        return generoMapper.toDetalleResponse(generoRepository.save(genero));
     }
 
     @Override
     @Transactional
-    public GeneroResumen actualizar(Long id, GeneroRequest request) {
+    public GeneroDetalleResponse actualizar(Long id, GeneroRequest request) {
         Genero generoExistente = generoRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No existe un género con el ID: " + id));
 
         if (!generoExistente.getNombre().equalsIgnoreCase(request.getNombre())
                 && generoRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe un género con el nombre: " + request.getNombre());
+            throw new ValidacionNegocioException("Ya existe otro género con el nombre: " + request.getNombre());
         }
 
         generoMapper.updateEntity(request, generoExistente);
-        generoRepository.save(generoExistente);
-        return obtenerPorId(generoExistente.getId());
+        return generoMapper.toDetalleResponse(generoRepository.save(generoExistente));
     }
 
     @Override
@@ -82,7 +82,6 @@ public class GeneroServiceImpl implements GeneroService {
         if (!generoRepository.existsById(id)) {
             throw new ValidacionNegocioException("No existe un género con el ID: " + id);
         }
-
         if (estado) {
             generoRepository.activar(id);
         } else {

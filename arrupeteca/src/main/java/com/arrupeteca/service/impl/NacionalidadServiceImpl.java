@@ -1,10 +1,10 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
+import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.NacionalidadMapper;
 import com.arrupeteca.persistence.entity.Nacionalidad;
-import com.arrupeteca.persistence.projection.NacionalidadResumen;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import com.arrupeteca.service.NacionalidadService;
 import lombok.RequiredArgsConstructor;
@@ -22,28 +22,31 @@ public class NacionalidadServiceImpl implements NacionalidadService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NacionalidadResumen> obtenerTodasActivas(Pageable pageable) {
-        return nacionalidadRepository.findByBorradoLogicoFalse(pageable);
+    public Page<NacionalidadResumen> obtenerTodosActivos(Pageable pageable) {
+        return nacionalidadRepository.findByBorradoLogicoFalse(pageable)
+                .map(nacionalidadMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public NacionalidadResumen obtenerPorIdActivo(Long id) {
         return nacionalidadRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID "
-                        + id + " no existe, o no está activa"));
+                .map(nacionalidadMapper::toResumen)
+                .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe o está inactiva"));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<NacionalidadResumen> obtenerTodas(Pageable pageable) {
-        return nacionalidadRepository.findAllProjectedBy(pageable);
+    public Page<NacionalidadResumen> obtenerTodos(Pageable pageable) {
+        return nacionalidadRepository.findAllProjectedBy(pageable)
+                .map(nacionalidadMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public NacionalidadResumen obtenerPorId(Long id) {
         return nacionalidadRepository.findProjectedById(id)
+                .map(nacionalidadMapper::toResumen)
                 .orElseThrow(() -> new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe"));
     }
 
@@ -53,11 +56,8 @@ public class NacionalidadServiceImpl implements NacionalidadService {
         if (nacionalidadRepository.existsByNombreIgnoreCase(request.getNombre())) {
             throw new ValidacionNegocioException("Ya existe una nacionalidad con el nombre: " + request.getNombre());
         }
-
-        Nacionalidad nuevaNacionalidad = nacionalidadMapper.toEntity(request);
-        Nacionalidad nacionalidadGuardada = nacionalidadRepository.save(nuevaNacionalidad);
-
-        return obtenerPorId(nacionalidadGuardada.getId());
+        Nacionalidad nacionalidad = nacionalidadMapper.toEntity(request);
+        return nacionalidadMapper.toResumen(nacionalidadRepository.save(nacionalidad));
     }
 
     @Override
@@ -68,23 +68,20 @@ public class NacionalidadServiceImpl implements NacionalidadService {
 
         if (!nacionalidadExistente.getNombre().equalsIgnoreCase(request.getNombre())
                 && nacionalidadRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe una nacionalidad con el nombre: " + request.getNombre());
+            throw new ValidacionNegocioException("Ya existe otra nacionalidad con el nombre: " + request.getNombre());
         }
 
         nacionalidadMapper.updateEntity(request, nacionalidadExistente);
-        nacionalidadRepository.save(nacionalidadExistente);
-
-        return obtenerPorId(nacionalidadExistente.getId());
+        return nacionalidadMapper.toResumen(nacionalidadRepository.save(nacionalidadExistente));
     }
 
     @Override
     @Transactional
-    public void cambiarEstado(Long id, boolean activar) {
+    public void cambiarEstado(Long id, boolean estado) {
         if (!nacionalidadRepository.existsById(id)) {
             throw new ValidacionNegocioException("La nacionalidad con ID " + id + " no existe");
         }
-
-        if (activar) {
+        if (estado) {
             nacionalidadRepository.activar(id);
         } else {
             nacionalidadRepository.desactivar(id);
