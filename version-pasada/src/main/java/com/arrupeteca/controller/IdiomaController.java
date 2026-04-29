@@ -2,15 +2,25 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.IdiomaRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.IdiomaResumen;
+import com.arrupeteca.dto.response.detail.IdiomaDetalleResponse;
+import com.arrupeteca.dto.response.summary.IdiomaResumen;
 import com.arrupeteca.service.IdiomaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/idiomas")
@@ -20,55 +30,45 @@ public class IdiomaController {
 
     private final IdiomaService idiomaService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<IdiomaResumen>>> obtenerTodosActivos() {
-        List<IdiomaResumen> lista = idiomaService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de idiomas activos", lista));
+    public ResponseEntity<ApiResponse<Page<IdiomaResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de idiomas activos", idiomaService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<IdiomaResumen>> obtenerPorId(@PathVariable Long id) {
-        IdiomaResumen Idioma = idiomaService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Idioma encontrado", Idioma));
+    public ResponseEntity<ApiResponse<IdiomaDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Idioma encontrado", idiomaService.obtenerPorIdActivo(id)));
     }
 
-    // POST: Crear nuevo
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<IdiomaResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de idiomas", idiomaService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<IdiomaDetalleResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Idioma encontrado (admin)", idiomaService.obtenerPorId(id)));
+    }
+
     @PostMapping
-    public ResponseEntity<ApiResponse<IdiomaResumen>> crear(@Valid @RequestBody IdiomaRequest request) {
-        IdiomaResumen nuevo = idiomaService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Idioma creado exitosamente", nuevo));
+    public ResponseEntity<ApiResponse<IdiomaDetalleResponse>> crear(@Valid @RequestBody IdiomaRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Idioma creado exitosamente", idiomaService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<IdiomaResumen>> actualizar(@PathVariable Long id,
-                                                               @Valid @RequestBody IdiomaRequest request) {
-        IdiomaResumen actualizado = idiomaService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Idioma actualizado correctamente", actualizado));
+    public ResponseEntity<ApiResponse<IdiomaDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody IdiomaRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Idioma actualizado correctamente", idiomaService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         idiomaService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Idioma desactivado correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         idiomaService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Idioma activado correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<IdiomaResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de idiomas", idiomaService.obtenerTodos()));
     }
 }

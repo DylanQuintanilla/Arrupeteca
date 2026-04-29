@@ -1,16 +1,17 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.PaisRequest;
+import com.arrupeteca.dto.response.summary.PaisResumen;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.PaisMapper;
 import com.arrupeteca.persistence.entity.Pais;
-import com.arrupeteca.persistence.projection.PaisResumen;
 import com.arrupeteca.persistence.repository.PaisRepository;
 import com.arrupeteca.service.PaisService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -21,73 +22,69 @@ public class PaisServiceImpl implements PaisService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaisResumen> obtenerTodosActivos() {
-        return paisRepository.findByBorradoLogicoFalse();
+    public Page<PaisResumen> obtenerTodosActivos(Pageable pageable) {
+        return paisRepository.findByBorradoLogicoFalse(pageable)
+                .map(paisMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaisResumen obtenerPorIdActivo(Long id) {
         return paisRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No existe un pais con ID: "+id+", o no esta activo"));
+                .map(paisMapper::toResumen)
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un país activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<PaisResumen> obtenerTodos() {
-        return paisRepository.findAllProjectedBy();
+    public Page<PaisResumen> obtenerTodos(Pageable pageable) {
+        return paisRepository.findAllProjectedBy(pageable)
+                .map(paisMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaisResumen obtenerPorId(Long id) {
         return paisRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No existe un pais con ID: " +id));
+                .map(paisMapper::toResumen)
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un país con ID: " + id));
     }
 
     @Override
     @Transactional
-    public PaisResumen crear(PaisRequest paisRequest) {
-        if(paisRepository.existsByNombreIgnoreCase(paisRequest.getNombre())){
-            throw new RuntimeException("Ya existe un pais con el nombre: "+paisRequest.getNombre());
+    public PaisResumen crear(PaisRequest request) {
+        if (paisRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe un país con el nombre: " + request.getNombre());
         }
-
-        Pais paisNuevo = paisMapper.toEntity(paisRequest);
-        Pais paisGuardado = paisRepository.save(paisNuevo);
-        return obtenerPorId(paisGuardado.getId());
+        Pais pais = paisMapper.toEntity(request);
+        return paisMapper.toResumen(paisRepository.save(pais));
     }
 
     @Override
     @Transactional
     public PaisResumen actualizar(Long id, PaisRequest request) {
         Pais paisExistente = paisRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encuentra el pais con ID: " +id));
+                .orElseThrow(() -> new ValidacionNegocioException("No existe un país con ID: " + id));
 
         if (!paisExistente.getNombre().equalsIgnoreCase(request.getNombre())
-                && paisRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe otro pais con el nombre: "+request.getNombre());
+                && paisRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe otro país con el nombre: " + request.getNombre());
         }
 
         paisMapper.updateEntity(request, paisExistente);
-        Pais paisActualizado = paisRepository.save(paisExistente);
-
-        return obtenerPorId(paisActualizado.getId());
+        return paisMapper.toResumen(paisRepository.save(paisExistente));
     }
 
     @Override
     @Transactional
-    public void cambiarEstadoLogico(Long id, boolean estado) {
-        if (!paisRepository.existsById(id)){
-            throw new RuntimeException("No se encuentra el pais con ID: "+id);
+    public void cambiarEstado(Long id, boolean estado) {
+        if (!paisRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No existe un país con ID: " + id);
         }
-
-        if (estado){
+        if (estado) {
             paisRepository.activar(id);
-        }
-        else {
+        } else {
             paisRepository.desactivar(id);
         }
-
-
     }
 }

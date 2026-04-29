@@ -1,24 +1,24 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.EdificioRequest;
-import com.arrupeteca.persistence.projection.EdificioResumen;
-
-import java.util.List;
+import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
+import com.arrupeteca.dto.response.summary.EdificioResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EdificioService {
 
-    List<EdificioResumen> obtenerTodosActivos();
+    Page<EdificioResumen> obtenerTodosActivos(Pageable pageable);
 
-    EdificioResumen obtenerPorIdActivo(Long id);
+    EdificioDetalleResponse obtenerPorIdActivo(Long id);
 
-    List<EdificioResumen> obtenerTodos();
+    Page<EdificioResumen> obtenerTodos(Pageable pageable);
 
-    EdificioResumen obtenerPorId(Long id);
+    EdificioDetalleResponse obtenerPorId(Long id);
 
-    EdificioResumen crear(EdificioRequest request);
+    EdificioDetalleResponse crear(EdificioRequest request);
 
-    EdificioResumen actualizar(Long id, EdificioRequest request);
+    EdificioDetalleResponse actualizar(Long id, EdificioRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-
 }

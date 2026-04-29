@@ -1,6 +1,7 @@
 package com.arrupeteca.mapper;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
+import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
 import com.arrupeteca.persistence.entity.TipoAutoria;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -11,6 +12,8 @@ public interface TipoAutoriaMapper {
 
     TipoAutoria toEntity(TipoAutoriaRequest request);
 
-    void updateEntity(TipoAutoriaRequest request, @MappingTarget TipoAutoria TipoAutoria);
+    void updateEntity(TipoAutoriaRequest request, @MappingTarget TipoAutoria tipoAutoria);
+
+    TipoAutoriaResumen toResumen(TipoAutoria tipoAutoria);
 
 }

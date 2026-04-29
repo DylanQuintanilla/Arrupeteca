@@ -1,16 +1,32 @@
 package com.arrupeteca.persistence.entity;
 
-import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -34,7 +50,7 @@ public class Obra extends Auditable {
     @Column(nullable = false, length = 100)
     private String titulo;
 
-    @Column(name = "anio_creacion", nullable = true)
+    @Column(name = "anio_creacion")
     @Max(value = 9999, message = "El año no puede tener más de 4 digitos")
     private Integer anioCreacion;
 
@@ -42,7 +58,7 @@ public class Obra extends Auditable {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String resumen;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 

@@ -1,93 +1,91 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.FormatoRequest;
+import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
+import com.arrupeteca.dto.response.summary.FormatoResumen;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.FormatoMapper;
-import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.Formato;
-import com.arrupeteca.persistence.projection.FormatoResumen;
 import com.arrupeteca.persistence.repository.FormatoRepository;
-import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.service.FormatoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class FormatoServiceImpl implements FormatoService {
 
     private final FormatoRepository formatoRepository;
-    
     private final FormatoMapper formatoMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<FormatoResumen> obtenerTodosActivos() {
-
-        return formatoRepository.findByBorradoLogicoFalse();
+    public Page<FormatoResumen> obtenerTodosActivos(Pageable pageable) {
+        return formatoRepository.findByBorradoLogicoFalse(pageable)
+                .map(formatoMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public FormatoResumen obtenerPorIdActivo(Long id) {
+    public FormatoDetalleResponse obtenerPorIdActivo(Long id) {
         return formatoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Formato con ID: "+id+", o no esta activo"));
+                .map(formatoMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Formato activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<FormatoResumen> obtenerTodos() {
-        return formatoRepository.findAllProjectedBy();
+    public Page<FormatoResumen> obtenerTodos(Pageable pageable) {
+        return formatoRepository.findAllProjectedBy(pageable)
+                .map(formatoMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public FormatoResumen obtenerPorId(Long id) {
+    public FormatoDetalleResponse obtenerPorId(Long id) {
         return formatoRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Formato con ID: "+id));
-
+                .map(formatoMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Formato con ID: " + id));
     }
 
     @Override
     @Transactional
-    public FormatoResumen crear(FormatoRequest request) {
-        if(formatoRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("El nombre: "+request.getNombre()+" ya ha sido utilizado");
+    public FormatoDetalleResponse crear(FormatoRequest request) {
+        if (formatoRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe un Formato con el nombre: " + request.getNombre());
         }
-        Formato FormatoMapeada = formatoMapper.toEntity(request);
-        Formato FormatoGuarda = formatoRepository.save(FormatoMapeada);
-        return obtenerPorId(FormatoGuarda.getId());
+        Formato formato = formatoMapper.toEntity(request);
+        return formatoMapper.toDetalleResponse(formatoRepository.save(formato));
     }
 
     @Override
     @Transactional
-    public FormatoResumen actualizar(Long id, FormatoRequest request) {
+    public FormatoDetalleResponse actualizar(Long id, FormatoRequest request) {
+        Formato formatoExistente = formatoRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Formato con ID: " + id));
 
-        Formato FormatoEncontrada = formatoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro Formato con ID: "+id));
-
-        if (!FormatoEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
-                && formatoRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un Formato con el nombre: "+request.getNombre());
+        if (!formatoExistente.getNombre().equalsIgnoreCase(request.getNombre())
+                && formatoRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe otro Formato con el nombre: " + request.getNombre());
         }
 
-        formatoMapper.updateEntity(request, FormatoEncontrada);
-        Formato FormatoActualizada = formatoRepository.save(FormatoEncontrada);
-
-        return obtenerPorId(FormatoEncontrada.getId());
+        formatoMapper.updateEntity(request, formatoExistente);
+        return formatoMapper.toDetalleResponse(formatoRepository.save(formatoExistente));
     }
 
     @Override
     @Transactional
     public void cambiarEstado(Long id, boolean estado) {
-        if (!formatoRepository.existsById(id)){
-            throw new RuntimeException("No se encontro Formato con ID: "+id);
+        if (!formatoRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un Formato con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             formatoRepository.activar(id);
-        else
+        } else {
             formatoRepository.desactivar(id);
+        }
     }
 }

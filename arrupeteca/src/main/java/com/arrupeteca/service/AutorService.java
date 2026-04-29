@@ -21,10 +21,8 @@ public interface AutorService {
     Page<AutorResumen> busquedaGlobal(String palabra, Integer anioInicio, Integer anioFin, Pageable pageable);
 
     Page<AutorResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObra,
-            String termino, Integer anioInicio, Integer anioFin, Pageable pageable);
-
-    Page<AutorResumen> buscarVivosEnRango(Integer anioInicio, Integer anioFin, Pageable pageable);
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            String termino, Pageable pageable);
 
     AutorDetalleResponse crear(AutorRequest request);
 

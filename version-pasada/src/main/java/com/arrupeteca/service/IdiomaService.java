@@ -1,24 +1,24 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.IdiomaRequest;
-import com.arrupeteca.persistence.projection.IdiomaResumen;
-
-import java.util.List;
+import com.arrupeteca.dto.response.detail.IdiomaDetalleResponse;
+import com.arrupeteca.dto.response.summary.IdiomaResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface IdiomaService {
 
-    List<IdiomaResumen> obtenerTodosActivos();
+    Page<IdiomaResumen> obtenerTodosActivos(Pageable pageable);
 
-    IdiomaResumen obtenerPorIdActivo(Long id);
+    IdiomaDetalleResponse obtenerPorIdActivo(Long id);
 
-    List<IdiomaResumen> obtenerTodos();
+    Page<IdiomaResumen> obtenerTodos(Pageable pageable);
 
-    IdiomaResumen obtenerPorId(Long id);
+    IdiomaDetalleResponse obtenerPorId(Long id);
 
-    IdiomaResumen crear(IdiomaRequest request);
+    IdiomaDetalleResponse crear(IdiomaRequest request);
 
-    IdiomaResumen actualizar(Long id, IdiomaRequest request);
+    IdiomaDetalleResponse actualizar(Long id, IdiomaRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-
 }

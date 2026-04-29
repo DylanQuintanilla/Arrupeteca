@@ -2,73 +2,75 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
 import com.arrupeteca.service.TipoAutoriaService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/tipoAutorias")
+@RequestMapping("/api/v1/tipo-autorias")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class TipoAutoriaController {
 
     private final TipoAutoriaService tipoAutoriaService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<TipoAutoriaResumen>>> obtenerTodosActivos() {
-        List<TipoAutoriaResumen> lista = tipoAutoriaService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de tipo de autorias activos", lista));
+    public ResponseEntity<ApiResponse<Page<TipoAutoriaResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de tipos de autoría activos", tipoAutoriaService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<TipoAutoriaResumen>> obtenerPorId(@PathVariable Long id) {
-        TipoAutoriaResumen TipoAutoria = tipoAutoriaService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo autoria encontrado", TipoAutoria));
+    public ResponseEntity<ApiResponse<TipoAutoriaResumen>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Tipo de autoría encontrado", tipoAutoriaService.obtenerPorIdActivo(id)));
     }
 
-    // POST: Crear nuevo
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<TipoAutoriaResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de tipos de autoría", tipoAutoriaService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<TipoAutoriaResumen>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Tipo de autoría encontrado (admin)", tipoAutoriaService.obtenerPorId(id)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<TipoAutoriaResumen>> crear(@Valid @RequestBody TipoAutoriaRequest request) {
-        TipoAutoriaResumen nuevo = tipoAutoriaService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Tipo autoria creado exitosamente", nuevo));
+        return new ResponseEntity<>(ApiResponse.exito("Tipo de autoría creado exitosamente",
+                tipoAutoriaService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<TipoAutoriaResumen>> actualizar(@PathVariable Long id,
-                                                               @Valid @RequestBody TipoAutoriaRequest request) {
-        TipoAutoriaResumen actualizado = tipoAutoriaService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo autoria actualizado correctamente", actualizado));
+    public ResponseEntity<ApiResponse<TipoAutoriaResumen>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody TipoAutoriaRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Tipo de autoría actualizado correctamente",
+                tipoAutoriaService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         tipoAutoriaService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo autoria desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Tipo de autoría desactivado correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         tipoAutoriaService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo autoria activado correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<TipoAutoriaResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de Tipos de autorias", tipoAutoriaService.obtenerTodos()));
+        return ResponseEntity.ok(ApiResponse.exito("Tipo de autoría activado correctamente"));
     }
 }

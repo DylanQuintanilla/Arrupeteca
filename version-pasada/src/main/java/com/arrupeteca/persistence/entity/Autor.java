@@ -1,11 +1,26 @@
 package com.arrupeteca.persistence.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -25,18 +40,18 @@ public class Autor extends Auditable {
     private Long id;
 
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    @Column(length = 100, nullable = true)
+    @Column(length = 100)
     private String nombre;
 
     @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    @Column(length = 50, nullable = true)
+    @Column(length = 50)
     private String seudonimo;
 
-    @Column(name = "anio_nacimiento", nullable = true)
+    @Column(name = "anio_nacimiento")
     @Max(value = 9999, message = "El año de nacimiento no puede tener más de 4 digitos")
     private Integer anioNacimiento;
 
-    @Column(name = "anio_fallecimiento", nullable = true)
+    @Column(name = "anio_fallecimiento")
     @Max(value = 9999, message = "El año de fallecimiento no puede tener más de 4 digitos")
     private Integer anioFallecimiento;
 
@@ -45,29 +60,28 @@ public class Autor extends Auditable {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String biografia;
 
-    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 
-
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pais_nacimiento", nullable = true)
+    @JoinColumn(name = "id_pais_nacimiento")
     private Pais paisNacimiento;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_nacionalidad", nullable = true)
+    @JoinColumn(name = "id_nacionalidad")
     private Nacionalidad nacionalidad;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_genero_principal", nullable = true)
+    @JoinColumn(name = "id_genero_principal")
     private Genero generoPrincipal;
 
     @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_obra", nullable = true)
+    @JoinColumn(name = "id_obra")
     private Obra obraCumbre;
 
     // --- VALIDACIONES ---
@@ -86,4 +100,5 @@ public class Autor extends Auditable {
         }
         return anioNacimiento <= anioFallecimiento;
     }
+
 }

@@ -1,6 +1,8 @@
 package com.arrupeteca.mapper;
 
 import com.arrupeteca.dto.request.FormatoRequest;
+import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
+import com.arrupeteca.dto.response.summary.FormatoResumen;
 import com.arrupeteca.persistence.entity.Formato;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -11,6 +13,10 @@ public interface FormatoMapper {
 
     Formato toEntity(FormatoRequest request);
 
-    void updateEntity(FormatoRequest request, @MappingTarget Formato Formato);
+    void updateEntity(FormatoRequest request, @MappingTarget Formato formato);
+
+    FormatoResumen toResumen(Formato formato);
+
+    FormatoDetalleResponse toDetalleResponse(Formato formato);
 
 }

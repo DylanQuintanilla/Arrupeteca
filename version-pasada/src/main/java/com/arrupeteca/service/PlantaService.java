@@ -1,29 +1,26 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.PlantaRequest;
-import com.arrupeteca.persistence.entity.Planta;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.projection.PlantaResumen;
-import com.arrupeteca.persistence.projection.SalonResumen;
-
-import java.util.List;
+import com.arrupeteca.dto.response.detail.PlantaDetalleResponse;
+import com.arrupeteca.dto.response.summary.PlantaResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface PlantaService {
 
-    List<PlantaResumen> obtenerTodosActivos();
+    Page<PlantaResumen> obtenerTodosActivos(Pageable pageable);
 
-    PlantaResumen obtenerPorIdActivo(Long id);
+    PlantaDetalleResponse obtenerPorIdActivo(Long id);
 
-    List<PlantaResumen> obtenerTodos();
+    Page<PlantaResumen> obtenerTodos(Pageable pageable);
 
-    PlantaResumen obtenerPorId(Long id);
+    PlantaDetalleResponse obtenerPorId(Long id);
 
-    PlantaResumen crear(PlantaRequest request);
+    Page<PlantaResumen> buscarPorEdificioId(Long idEdificio, Pageable pageable);
 
-    PlantaResumen actualizar(Long id, PlantaRequest request);
+    PlantaDetalleResponse crear(PlantaRequest request);
 
-    void cambiarBorradoLogico(Long id, Boolean estado);
+    PlantaDetalleResponse actualizar(Long id, PlantaRequest request);
 
-    List<PlantaResumen> obtenerPorIdEdificio(Long idEdificio);
-
+    void cambiarEstado(Long id, boolean estado);
 }

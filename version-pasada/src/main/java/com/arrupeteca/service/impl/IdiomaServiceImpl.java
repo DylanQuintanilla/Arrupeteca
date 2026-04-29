@@ -1,93 +1,91 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.IdiomaRequest;
+import com.arrupeteca.dto.response.detail.IdiomaDetalleResponse;
+import com.arrupeteca.dto.response.summary.IdiomaResumen;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.IdiomaMapper;
-import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.Idioma;
-import com.arrupeteca.persistence.projection.IdiomaResumen;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
-import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.service.IdiomaService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class IdiomaServiceImpl implements IdiomaService {
 
     private final IdiomaRepository idiomaRepository;
-    
     private final IdiomaMapper idiomaMapper;
 
     @Override
     @Transactional(readOnly = true)
-    public List<IdiomaResumen> obtenerTodosActivos() {
-
-        return idiomaRepository.findByBorradoLogicoFalse();
+    public Page<IdiomaResumen> obtenerTodosActivos(Pageable pageable) {
+        return idiomaRepository.findByBorradoLogicoFalse(pageable)
+                .map(idiomaMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public IdiomaResumen obtenerPorIdActivo(Long id) {
+    public IdiomaDetalleResponse obtenerPorIdActivo(Long id) {
         return idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Idioma con ID: "+id+", o no esta activo"));
+                .map(idiomaMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Idioma activo con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<IdiomaResumen> obtenerTodos() {
-        return idiomaRepository.findAllProjectedBy();
+    public Page<IdiomaResumen> obtenerTodos(Pageable pageable) {
+        return idiomaRepository.findAllProjectedBy(pageable)
+                .map(idiomaMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public IdiomaResumen obtenerPorId(Long id) {
+    public IdiomaDetalleResponse obtenerPorId(Long id) {
         return idiomaRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Idioma con ID: "+id));
-
+                .map(idiomaMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Idioma con ID: " + id));
     }
 
     @Override
     @Transactional
-    public IdiomaResumen crear(IdiomaRequest request) {
-        if(idiomaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("El nombre: "+request.getNombre()+" ya ha sido utilizado");
+    public IdiomaDetalleResponse crear(IdiomaRequest request) {
+        if (idiomaRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe un idioma con el nombre: " + request.getNombre());
         }
-        Idioma IdiomaMapeada = idiomaMapper.toEntity(request);
-        Idioma IdiomaGuarda = idiomaRepository.save(IdiomaMapeada);
-        return obtenerPorId(IdiomaGuarda.getId());
+        Idioma idioma = idiomaMapper.toEntity(request);
+        return idiomaMapper.toDetalleResponse(idiomaRepository.save(idioma));
     }
 
     @Override
     @Transactional
-    public IdiomaResumen actualizar(Long id, IdiomaRequest request) {
+    public IdiomaDetalleResponse actualizar(Long id, IdiomaRequest request) {
+        Idioma idiomaExistente = idiomaRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un Idioma con ID: " + id));
 
-        Idioma IdiomaEncontrada = idiomaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro Idioma con ID: "+id));
-
-        if (!IdiomaEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
-                && idiomaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un Idioma con el nombre: "+request.getNombre());
+        if (!idiomaExistente.getNombre().equalsIgnoreCase(request.getNombre())
+                && idiomaRepository.existsByNombreIgnoreCase(request.getNombre())) {
+            throw new ValidacionNegocioException("Ya existe otro idioma con el nombre: " + request.getNombre());
         }
 
-        idiomaMapper.updateEntity(request, IdiomaEncontrada);
-        Idioma IdiomaActualizada = idiomaRepository.save(IdiomaEncontrada);
-
-        return obtenerPorId(IdiomaEncontrada.getId());
+        idiomaMapper.updateEntity(request, idiomaExistente);
+        return idiomaMapper.toDetalleResponse(idiomaRepository.save(idiomaExistente));
     }
 
     @Override
     @Transactional
     public void cambiarEstado(Long id, boolean estado) {
-        if (!idiomaRepository.existsById(id)){
-            throw new RuntimeException("No se encontro Idioma con ID: "+id);
+        if (!idiomaRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un Idioma con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             idiomaRepository.activar(id);
-        else
+        } else {
             idiomaRepository.desactivar(id);
+        }
     }
 }

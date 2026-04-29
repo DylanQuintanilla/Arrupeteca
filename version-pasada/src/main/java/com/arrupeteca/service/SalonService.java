@@ -1,26 +1,26 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.SalonRequest;
-import com.arrupeteca.persistence.projection.SalonResumen;
-
-import java.util.List;
+import com.arrupeteca.dto.response.detail.SalonDetalleResponse;
+import com.arrupeteca.dto.response.summary.SalonResumen;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface SalonService {
 
-    List<SalonResumen> obtenerTodosActivos();
+    Page<SalonResumen> obtenerTodosActivos(Pageable pageable);
 
-    SalonResumen obtenerPorIdActivo(Long id);
+    SalonDetalleResponse obtenerPorIdActivo(Long id);
 
-    List<SalonResumen> obtenerTodos();
+    Page<SalonResumen> obtenerTodos(Pageable pageable);
 
-    SalonResumen obtenerPorId(Long id);
+    SalonDetalleResponse obtenerPorId(Long id);
 
-    SalonResumen crear(SalonRequest request);
+    Page<SalonResumen> buscarPorPlantaId(Long idPlanta, Pageable pageable);
 
-    SalonResumen actualizar(Long id, SalonRequest request);
+    SalonDetalleResponse crear(SalonRequest request);
 
-    void cambiarBorradoLogico(Long id, Boolean estado);
+    SalonDetalleResponse actualizar(Long id, SalonRequest request);
 
-    List<SalonResumen> obtenerPorIdPlanta(Long idPlanta);
-
+    void cambiarEstado(Long id, boolean estado);
 }

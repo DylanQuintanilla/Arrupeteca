@@ -2,15 +2,24 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.NacionalidadResumen;
+import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import com.arrupeteca.service.NacionalidadService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/nacionalidades")
@@ -20,55 +29,47 @@ public class NacionalidadController {
 
     private final NacionalidadService nacionalidadService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<NacionalidadResumen>>> obtenerTodosActivos() {
-        List<NacionalidadResumen> lista = nacionalidadService.obtenerTodasActivas();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de nacinalidades activos", lista));
+    public ResponseEntity<ApiResponse<Page<NacionalidadResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de nacionalidades activas", nacionalidadService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<NacionalidadResumen>> obtenerPorId(@PathVariable Long id) {
-        NacionalidadResumen Nacionalidad = nacionalidadService.obtenerPorIdActiva(id);
-        return ResponseEntity.ok(ApiResponse.exito("Nacionalidad encontrada", Nacionalidad));
+    public ResponseEntity<ApiResponse<NacionalidadResumen>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Nacionalidad encontrada", nacionalidadService.obtenerPorIdActivo(id)));
     }
 
-    // POST: Crear nuevo
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<NacionalidadResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de nacionalidades", nacionalidadService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<NacionalidadResumen>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Nacionalidad encontrada (admin)", nacionalidadService.obtenerPorId(id)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<NacionalidadResumen>> crear(@Valid @RequestBody NacionalidadRequest request) {
-        NacionalidadResumen nuevo = nacionalidadService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Nacionalidad creada exitosamente", nuevo));
+        return new ResponseEntity<>(ApiResponse.exito("Nacionalidad creada exitosamente",
+                nacionalidadService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<NacionalidadResumen>> actualizar(@PathVariable Long id,
-                                                               @Valid @RequestBody NacionalidadRequest request) {
-        NacionalidadResumen actualizado = nacionalidadService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Nacionalidad actualizada correctamente", actualizado));
+    public ResponseEntity<ApiResponse<NacionalidadResumen>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody NacionalidadRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Nacionalidad actualizada correctamente", nacionalidadService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
-        nacionalidadService.cambiarEstadoLogico(id, false);
+        nacionalidadService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Nacionalidad desactivada correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
-        nacionalidadService.cambiarEstadoLogico(id, true);
+        nacionalidadService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Nacionalidad activada correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<NacionalidadResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de nacionalidades", nacionalidadService.obtenerTodas()));
     }
 }

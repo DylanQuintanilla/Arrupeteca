@@ -70,7 +70,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<Autor> findProjectedById(Long id);
 
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad"})
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query(value = """
         SELECT DISTINCT a FROM Autor a
         LEFT JOIN a.paisNacimiento p
@@ -82,7 +82,6 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
             AND ( :idPais IS NULL OR p.id = :idPais )
             AND ( :idGenero IS NULL OR g.id = :idGenero )
-            AND ( :idObra IS NULL OR oc.id = :idObra )
             AND (
                 :termino IS NULL OR :termino = '' OR
                 (
@@ -90,8 +89,6 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
                     LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))
                 )
             )
-            AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
-            AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
     """,
             countQuery = """
         SELECT COUNT(DISTINCT a) FROM Autor a
@@ -104,7 +101,6 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
             AND ( :idPais IS NULL OR p.id = :idPais )
             AND ( :idGenero IS NULL OR g.id = :idGenero )
-            AND ( :idObra IS NULL OR oc.id = :idObra )
             AND (
                 :termino IS NULL OR :termino = '' OR
                 (
@@ -112,36 +108,23 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
                     LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))
                 )
             )
-            AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
-            AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
     """)
     Page<Autor> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
             @Param("idGenero") Long idGenero,
-            @Param("idObra") Long idObra,
             @Param("termino") String termino,
-            @Param("anioInicio") Integer anioInicio,
-            @Param("anioFin") Integer anioFin,
             Pageable pageable
     );
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad"})
     @Query("""
         SELECT a FROM Autor a
-        WHERE (a.anioFallecimiento IS NULL OR a.anioFallecimiento >= :inicio)
-        AND a.anioNacimiento <= :fin
-    """)
-    Page<Autor> buscarAutoresVivosEnRango(@Param("inicio") Integer anioInicio,
-                                          @Param("fin") Integer anioFin,
-                                          Pageable pageable);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad"})
-    @Query("""
-        SELECT a FROM Autor a
-        WHERE (LOWER(a.nombre) = LOWER(:termino)
-        OR (a.seudonimo IS NOT NULL AND LOWER(a.seudonimo) = LOWER(:termino)))
+        WHERE (
+            LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%'))
+            OR (a.seudonimo IS NOT NULL AND LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%')))
+        )
         AND (:idExcluir IS NULL OR a.id != :idExcluir)
     """)
     List<Autor> buscarPosiblesDuplicados(

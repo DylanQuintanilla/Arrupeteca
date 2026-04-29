@@ -2,11 +2,27 @@ package com.arrupeteca.persistence.entity;
 
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
@@ -25,11 +41,11 @@ public class EjemplarLibro extends Auditable {
     @EqualsAndHashCode.Include
     private Long id;
 
-    @Size(message = "El comentario no puede exceder los 255 caracteres")
+    @Size(max = 255, message = "El comentario no puede exceder los 255 caracteres")
     @Column(nullable = true)
     private String comentario;
 
-    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 
@@ -52,7 +68,5 @@ public class EjemplarLibro extends Auditable {
     @Enumerated(EnumType.STRING)
     @Column(name = "disponibilidad", nullable = false)
     private Disponibilidad disponibilidad;
-
-    //private Donacion donacion;
 
 }

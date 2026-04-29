@@ -7,8 +7,10 @@ import com.arrupeteca.dto.response.summary.AutorResumen;
 import com.arrupeteca.service.AutorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -34,7 +36,8 @@ public class AutorController {
     private final AutorService autorService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", autorService.obtenerTodosActivos(pageable)));
     }
 
@@ -44,7 +47,8 @@ public class AutorController {
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodos(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodos(
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
     }
 
@@ -58,7 +62,7 @@ public class AutorController {
             @RequestParam String palabra,
             @RequestParam(required = false) Integer inicio,
             @RequestParam(required = false) Integer fin,
-            Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", autorService.busquedaGlobal(palabra, inicio, fin, pageable)));
     }
 
@@ -68,22 +72,11 @@ public class AutorController {
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
             @RequestParam(required = false) Long idGenero,
-            @RequestParam(required = false) Long idObra,
             @RequestParam(required = false) String termino,
-            @RequestParam(required = false) Integer anioInicio,
-            @RequestParam(required = false) Integer anioFin,
-            Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
-                        termino, anioInicio, anioFin, pageable)));
-    }
-
-    @GetMapping("/vivos-rango")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> buscarVivos(
-            @RequestParam Integer inicio,
-            @RequestParam Integer fin,
-            Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Autores vivos en el rango", autorService.buscarVivosEnRango(inicio, fin, pageable)));
+                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero,
+                        termino, pageable)));
     }
 
     @GetMapping("/verificar-duplicados")

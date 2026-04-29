@@ -1,14 +1,14 @@
 package com.arrupeteca.dto.request;
 
-import com.arrupeteca.persistence.entity.Libro;
-import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder
@@ -17,7 +17,7 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EjemplarLibroRequest {
 
-    @Size(message = "El comentario no puede exceder los 255 caracteres")
+    @Size(max = 255, message = "El comentario no puede exceder los 255 caracteres")
     private String comentario;
 
     private EstadoFisico estadoFisico;

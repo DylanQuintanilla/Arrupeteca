@@ -1,7 +1,10 @@
 plugins {
 	id 'java'
-	id 'org.springframework.boot' version '4.0.2'
+	id 'org.springframework.boot' version '3.4.2'
 	id 'io.spring.dependency-management' version '1.1.7'
+	id 'checkstyle'
+	id 'jacoco'
+	id 'org.owasp.dependencycheck' version '12.1.0'
 }
 
 group = 'com.arrupeteca'
@@ -48,22 +51,80 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
+	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
 	// --- 5. PRUEBAS (TESTING) ---
-	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
-	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
-	// testImplementation 'org.springframework.boot:spring-boot-starter-test'
-
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testRuntimeOnly 'com.h2database:h2'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport
 }
 
-compileJava {
+// Esta línea conecta la verificación de cobertura al comando "build"
+check.dependsOn jacocoTestCoverageVerification
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+	// Esta sección filtra los archivos del reporte final (HTML/XML)
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					'com/arrupeteca/ArrupetecaApplication.class',
+					'com/arrupeteca/mapper/**'
+			])
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	dependsOn jacocoTestReport
+	violationRules {
+		rule {
+			element = 'CLASS'
+			excludes = [
+					'com.arrupeteca.ArrupetecaApplication',
+					'com.arrupeteca.mapper.**'
+			]
+			limit {
+				minimum = 1.0
+			}
+		}
+	}
+}
+
+checkstyle {
+	toolVersion = '10.21.2'
+	configFile = file("${project.rootDir}/config/checkstyle/checkstyle.xml")
+	ignoreFailures = false
+	maxWarnings = 0
+}
+
+dependencyCheck {
+	skipConfigurations = []
+	suppressionFile = file('config/dependency-check/suppressions.xml')
+	formats = ['HTML', 'JUNIT', 'JSON']
+	failBuildOnCVSS = 9.0
+
+	analyzers {
+		ossIndex {
+			enabled = false
+		}
+	}
+
+	nvd {
+		apiKey = 'c70a67d4-5383-4bd2-8e85-bfb748e2c780'
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
 	options.compilerArgs += [
 			'-Amapstruct.defaultComponentModel=spring',
 			'-Amapstruct.unmappedTargetPolicy=IGNORE'

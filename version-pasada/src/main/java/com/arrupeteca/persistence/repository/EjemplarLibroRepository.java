@@ -1,7 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.EjemplarLibro;
-import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -17,89 +16,78 @@ import java.util.Optional;
 public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Long> {
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibroResumen> findByBorradoLogicoFalse(Pageable pageable);
+    Page<EjemplarLibro> findByBorradoLogicoFalse(Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibroResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<EjemplarLibro> findProjectedByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
         SELECT e FROM EjemplarLibro e
-        LEFT JOIN e.libro l
-        LEFT JOIN e.mueble m
         WHERE e.borradoLogico = false
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
-                LOWER(l.isbn) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(l.obra.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(e.comentario) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(CAST(e.estadoFisico AS string)) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(CAST(e.disponibilidad AS string)) LIKE LOWER(CONCAT('%', :palabra, '%'))
+                LOWER(e.libro.isbn) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                LOWER(e.libro.obra.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                LOWER(e.comentario) LIKE LOWER(CONCAT('%', :palabra, '%'))
             )
         )
     """,
             countQuery = """
         SELECT COUNT(e) FROM EjemplarLibro e
-        LEFT JOIN e.libro l
         WHERE e.borradoLogico = false
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
-                LOWER(l.isbn) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(l.obra.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(e.comentario) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(CAST(e.estadoFisico AS string)) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                LOWER(CAST(e.disponibilidad AS string)) LIKE LOWER(CONCAT('%', :palabra, '%'))
+                LOWER(e.libro.isbn) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                LOWER(e.libro.obra.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
+                LOWER(e.comentario) LIKE LOWER(CONCAT('%', :palabra, '%'))
             )
         )
     """)
-    Page<EjemplarLibroResumen> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
+    Page<EjemplarLibro> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibroResumen> findAllProjectedBy(Pageable pageable);
+    Page<EjemplarLibro> findAllProjectedBy(Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibroResumen> findProjectedById(Long id);
+    Optional<EjemplarLibro> findProjectedById(Long id);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
         SELECT e FROM EjemplarLibro e
-        LEFT JOIN e.libro l
-        LEFT JOIN e.mueble m
         WHERE
             ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
-            AND ( :idLibro IS NULL OR l.id = :idLibro )
-            AND ( :idMueble IS NULL OR m.id = :idMueble )
+            AND ( :idLibro IS NULL OR e.libro.id = :idLibro )
+            AND ( :idMueble IS NULL OR e.mueble.id = :idMueble )
             AND ( :estadoFisico IS NULL OR e.estadoFisico = :estadoFisico )
             AND ( :disponibilidad IS NULL OR e.disponibilidad = :disponibilidad )
             AND (
                 :termino IS NULL OR :termino = '' OR
                 (
                     LOWER(e.comentario) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(l.obra.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))
+                    LOWER(e.libro.obra.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))
                 )
             )
     """,
             countQuery = """
         SELECT COUNT(e) FROM EjemplarLibro e
-        LEFT JOIN e.libro l
-        LEFT JOIN e.mueble m
         WHERE
             ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
-            AND ( :idLibro IS NULL OR l.id = :idLibro )
-            AND ( :idMueble IS NULL OR m.id = :idMueble )
+            AND ( :idLibro IS NULL OR e.libro.id = :idLibro )
+            AND ( :idMueble IS NULL OR e.mueble.id = :idMueble )
             AND ( :estadoFisico IS NULL OR e.estadoFisico = :estadoFisico )
             AND ( :disponibilidad IS NULL OR e.disponibilidad = :disponibilidad )
             AND (
                 :termino IS NULL OR :termino = '' OR
                 (
                     LOWER(e.comentario) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(l.obra.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))
+                    LOWER(e.libro.obra.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))
                 )
             )
     """)
-    Page<EjemplarLibroResumen> busquedaMaestraAdmin(
+    Page<EjemplarLibro> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("idLibro") Long idLibro,
             @Param("idMueble") Long idMueble,

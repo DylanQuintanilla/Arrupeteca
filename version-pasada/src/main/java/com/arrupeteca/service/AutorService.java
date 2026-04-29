@@ -1,39 +1,36 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.AutorRequest;
-import com.arrupeteca.persistence.projection.AutorResumen;
+import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
+import com.arrupeteca.dto.response.summary.AutorResumen;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface AutorService {
 
-    Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<AutorResumen> obtenerTodosActivos(Pageable pageable);
 
-    AutorResumen obtenerPorIdActivo(Long id);
+    AutorDetalleResponse obtenerPorIdActivo(Long id);
 
-    // Admin
-    Page<AutorResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    Page<AutorResumen> obtenerTodos(Pageable pageable);
 
-    AutorResumen obtenerPorId(Long id);
+    AutorDetalleResponse obtenerPorId(Long id);
 
+    Page<AutorResumen> busquedaGlobal(String palabra, Integer anioInicio, Integer anioFin, Pageable pageable);
 
-    Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin,
-                                              int page, int size, String ordenarPor, String direccion);
+    Page<AutorResumen> busquedaMaestraAdmin(
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObra,
+            String termino, Integer anioInicio, Integer anioFin, Pageable pageable);
 
-    Page<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
-                                            Long idGenero, Long idObra, String terminoBusqueda,
-                                            Integer anioInicio, Integer anioFin,
-                                            int page, int size, String ordenarPor, String direccion);
+    Page<AutorResumen> buscarVivosEnRango(Integer anioInicio, Integer anioFin, Pageable pageable);
 
-    Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin,
-                                                 int page, int size, String ordenarPor, String direccion);
+    AutorDetalleResponse crear(AutorRequest request);
 
-    AutorResumen crear(AutorRequest request);
+    AutorDetalleResponse actualizar(Long id, AutorRequest request);
 
-    AutorResumen actualizar(Long id, AutorRequest request);
+    void cambiarEstado(Long id, boolean estado);
 
-    void cambiarEstadoLogico(Long id, boolean estado);
-
-    List<AutorResumen> verificarDuplicados(String termino, Long idExcluir);
+    List<AutorResumen> buscarDuplicados(String termino, Long idExcluir);
 }

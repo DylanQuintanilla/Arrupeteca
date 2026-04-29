@@ -2,15 +2,24 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.PaisRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.PaisResumen;
+import com.arrupeteca.dto.response.summary.PaisResumen;
 import com.arrupeteca.service.PaisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/paises")
@@ -20,55 +29,45 @@ public class PaisController {
 
     private final PaisService paisService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<List<PaisResumen>>> obtenerTodosActivos() {
-        List<PaisResumen> lista = paisService.obtenerTodosActivos();
-        return ResponseEntity.ok(ApiResponse.exito("Lista de paises activos", lista));
+    public ResponseEntity<ApiResponse<Page<PaisResumen>>> obtenerTodosActivos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de países activos", paisService.obtenerTodosActivos(pageable)));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<PaisResumen>> obtenerPorId(@PathVariable Long id) {
-        PaisResumen Pais = paisService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Pais encontrado", Pais));
+    public ResponseEntity<ApiResponse<PaisResumen>> obtenerPorIdActivo(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("País encontrado", paisService.obtenerPorIdActivo(id)));
     }
 
-    // POST: Crear nuevo
+    @GetMapping("/admin")
+    public ResponseEntity<ApiResponse<Page<PaisResumen>>> obtenerTodos(Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Historial completo de países", paisService.obtenerTodos(pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<PaisResumen>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("País encontrado (admin)", paisService.obtenerPorId(id)));
+    }
+
     @PostMapping
     public ResponseEntity<ApiResponse<PaisResumen>> crear(@Valid @RequestBody PaisRequest request) {
-        PaisResumen nuevo = paisService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Pais creado exitosamente", nuevo));
+        return new ResponseEntity<>(ApiResponse.exito("País creado exitosamente", paisService.crear(request)), HttpStatus.CREATED);
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<PaisResumen>> actualizar(@PathVariable Long id,
-                                                                   @Valid @RequestBody PaisRequest request) {
-        PaisResumen actualizado = paisService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Pais actualizado correctamente", actualizado));
+    public ResponseEntity<ApiResponse<PaisResumen>> actualizar(@PathVariable Long id, @Valid @RequestBody PaisRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("País actualizado correctamente", paisService.actualizar(id, request)));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
-        paisService.cambiarEstadoLogico(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Pais desactivado correctamente"));
+        paisService.cambiarEstado(id, false);
+        return ResponseEntity.ok(ApiResponse.exito("País desactivado correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
-        paisService.cambiarEstadoLogico(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Pais activado correctamente"));
-    }
-
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<List<PaisResumen>>> obtenerTodosAdmin() {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de paises", paisService.obtenerTodos()));
+        paisService.cambiarEstado(id, true);
+        return ResponseEntity.ok(ApiResponse.exito("País activado correctamente"));
     }
 }

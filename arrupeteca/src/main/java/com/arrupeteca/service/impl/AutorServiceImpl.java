@@ -7,6 +7,10 @@ import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
 import com.arrupeteca.persistence.entity.Autor;
 import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.NacionalidadRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.PaisRepository;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -21,6 +25,10 @@ import java.util.List;
 public class AutorServiceImpl implements AutorService {
 
     private final AutorRepository autorRepository;
+    private final PaisRepository paisRepository;
+    private final NacionalidadRepository nacionalidadRepository;
+    private final GeneroRepository generoRepository;
+    private final ObraRepository obraRepository;
     private final AutorMapper autorMapper;
 
     @Override
@@ -63,17 +71,9 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional(readOnly = true)
     public Page<AutorResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObra,
-            String termino, Integer anioInicio, Integer anioFin, Pageable pageable) {
-        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
-                        termino, anioInicio, anioFin, pageable)
-                .map(autorMapper::toResumen);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> buscarVivosEnRango(Integer anioInicio, Integer anioFin, Pageable pageable) {
-        return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin, pageable)
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            String termino, Pageable pageable) {
+        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, termino, pageable)
                 .map(autorMapper::toResumen);
     }
 
@@ -83,7 +83,9 @@ public class AutorServiceImpl implements AutorService {
         if (autorRepository.existsByNombreIgnoreCase(request.getNombre())) {
             throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + request.getNombre());
         }
+
         Autor autor = autorMapper.toEntity(request);
+        asignarRelaciones(autor, request);
         return autorMapper.toDetalleResponse(autorRepository.save(autor));
     }
 
@@ -99,7 +101,48 @@ public class AutorServiceImpl implements AutorService {
         }
 
         autorMapper.updateEntity(request, autorExistente);
+        asignarRelaciones(autorExistente, request);
         return autorMapper.toDetalleResponse(autorRepository.save(autorExistente));
+    }
+
+    private void asignarRelaciones(Autor autor, AutorRequest request) {
+        java.util.List<String> errores = new java.util.ArrayList<>();
+
+        if (request.getIdPaisNacimiento() != null) {
+            paisRepository.findById(request.getIdPaisNacimiento())
+                    .ifPresentOrElse(autor::setPaisNacimiento,
+                            () -> errores.add("El país con ID " + request.getIdPaisNacimiento() + " no existe."));
+        } else {
+            autor.setPaisNacimiento(null);
+        }
+
+        if (request.getIdNacionalidad() != null) {
+            nacionalidadRepository.findById(request.getIdNacionalidad())
+                    .ifPresentOrElse(autor::setNacionalidad,
+                            () -> errores.add("La nacionalidad con ID " + request.getIdNacionalidad() + " no existe."));
+        } else {
+            autor.setNacionalidad(null);
+        }
+
+        if (request.getIdGeneroPrincipal() != null) {
+            generoRepository.findById(request.getIdGeneroPrincipal())
+                    .ifPresentOrElse(autor::setGeneroPrincipal,
+                            () -> errores.add("El género con ID " + request.getIdGeneroPrincipal() + " no existe."));
+        } else {
+            autor.setGeneroPrincipal(null);
+        }
+
+        if (request.getIdObraCumbre() != null) {
+            obraRepository.findById(request.getIdObraCumbre())
+                    .ifPresentOrElse(autor::setObraCumbre,
+                            () -> errores.add("La obra con ID " + request.getIdObraCumbre() + " no existe."));
+        } else {
+            autor.setObraCumbre(null);
+        }
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
     }
 
     @Override

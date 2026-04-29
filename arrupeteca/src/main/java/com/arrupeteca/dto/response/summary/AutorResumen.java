@@ -6,8 +6,9 @@ public record AutorResumen(
     String seudonimo,
     Integer anioNacimiento,
     Integer anioFallecimiento,
-    String biografia,
     boolean borradoLogico,
     String nombrePais,
-    String nombreNacionalidad
+    String nombreNacionalidad,
+    String nombreGeneroPrincipal,
+    String nombreObraCumbre
 ) { }

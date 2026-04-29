@@ -1,0 +1,238 @@
+{
+  "info": {
+    "_postman_id": "8b5f6e8d-4a2c-4b5c-8d7e-9f0a1b2c3d4e",
+    "name": "Arrupeteca API (Exhaustiva)",
+    "description": "Colección de Postman exhaustiva para la API de Arrupeteca. Mapeo granular controlador por controlador.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "Autor",
+          "item": [
+            { "name": "Listar Autores Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Búsqueda Global Avanzada", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/busqueda?palabra=nombre" } },
+            { "name": "Listar Vivos en Rango", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/vivos-rango?inicio=1950&fin=2024" } },
+            { "name": "Verificar Duplicados", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/verificar-duplicados?termino=nombre" } },
+            { "name": "Crear Autor", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Gabriel García Márquez\",\n  \"seudonimo\": \"Gabo\",\n  \"anioNacimiento\": 1927,\n  \"anioFallecimiento\": 2014,\n  \"biografia\": \"Escritor colombiano.\",\n  \"idPaisNacimiento\": 1,\n  \"idNacionalidad\": 1,\n  \"idGeneroPrincipal\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/autores" } },
+            { "name": "Actualizar Autor", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Nombre Editado\",\n  \"biografia\": \"Bio Editada\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/autores/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Autor", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/autores/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Autor", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/autores/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/autores/admin/busqueda-maestra?esBorrado=false&idNacionalidad=1&idPais=1&idGenero=1&idObra=1&termino=nombre&anioInicio=1900&anioFin=2000" } }
+          ]
+        },
+        {
+          "name": "Obra",
+          "item": [
+            { "name": "Listar Obras Activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Búsqueda Global", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/busqueda?palabra=titulo" } },
+            { "name": "Crear Obra", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Cien años de soledad\",\n  \"resumen\": \"Historia de Macondo.\",\n  \"anio\": 1967,\n  \"idGeneros\": [1],\n  \"idCategorias\": [1],\n  \"autores\": [{ \"idAutor\": 1, \"idTipoAutoria\": 1 }]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/obras" } },
+            { "name": "Actualizar Obra", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"titulo\": \"Cien años de soledad (Editada)\",\n  \"resumen\": \"Historia de Macondo (Editada).\",\n  \"anio\": 1967,\n  \"idGeneros\": [1],\n  \"idCategorias\": [1],\n  \"autores\": [{ \"idAutor\": 1, \"idTipoAutoria\": 1 }]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/obras/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Obra", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/obras/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Obra", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/obras/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/obras/admin/busqueda-maestra?esBorrado=false&termino=soledad&anioInicio=1960&anioFin=1970" } }
+          ]
+        },
+        {
+          "name": "Libro",
+          "item": [
+            { "name": "Listar Libros Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Búsqueda Global", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/busqueda?palabra=isbn" } },
+            { "name": "Listar por Obra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/por-obra/:idObra", "variable": [{ "key": "idObra", "value": "1" }] } },
+            { "name": "Crear Libro", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"isbn\": \"978-0-307-35044-3\",\n  \"anioPublicacion\": 1967,\n  \"precio\": 25.50,\n  \"idObra\": 1,\n  \"idFormato\": 1,\n  \"idEditorial\": 1,\n  \"idIdiomas\": [1]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/libros" } },
+            { "name": "Actualizar Libro", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"isbn\": \"978-0-307-35044-3-MOD\",\n  \"anioPublicacion\": 1968,\n  \"precio\": 30.00,\n  \"idObra\": 1,\n  \"idFormato\": 1,\n  \"idEditorial\": 1,\n  \"idIdiomas\": [1]\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/libros/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Libro", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/libros/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Libro", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/libros/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra?esBorrado=false&idObra=1&idEditorial=1&idFormato=1&grado=PRIMERO&ciclo=PRIMERO&termino=isbn&anioInicio=1900&anioFin=2024" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventario y Ubicaciones",
+      "item": [
+        {
+          "name": "Ejemplar",
+          "item": [
+            { "name": "Listar Ejemplares Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Búsqueda Global", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/busqueda?palabra=BIB" } },
+            { "name": "Crear Ejemplar", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"idLibro\": 1,\n  \"idMueble\": 1,\n  \"idPropio\": \"BIB-001\",\n  \"estadoFisico\": \"NUEVO\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/ejemplares" } },
+            { "name": "Actualizar Ejemplar", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"idLibro\": 1,\n  \"idMueble\": 1,\n  \"idPropio\": \"BIB-001-MOD\",\n  \"estadoFisico\": \"BUENO\",\n  \"disponibilidad\": \"DISPONIBLE\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/ejemplares/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Ejemplar", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/ejemplares/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Ejemplar", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/ejemplares/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra?esBorrado=false&idLibro=1&idMueble=1&estadoFisico=NUEVO&disponibilidad=DISPONIBLE&termino=BIB" } }
+          ]
+        },
+        {
+          "name": "Edificio",
+          "item": [
+            { "name": "Listar Edificios Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/edificios" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/edificios/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Edificio", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Edificio Central\",\n  \"descripcion\": \"Biblioteca\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/edificios" } },
+            { "name": "Actualizar Edificio", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Edificio Central (Editado)\",\n  \"descripcion\": \"Biblioteca Central\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/edificios/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Edificio", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/edificios/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Edificio", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/edificios/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/edificios/admin" } }
+          ]
+        },
+        {
+          "name": "Planta",
+          "item": [
+            { "name": "Listar Plantas Activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/plantas" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/plantas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Listar por Edificio", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/plantas/edificio/:idEdificio", "variable": [{ "key": "idEdificio", "value": "1" }] } },
+            { "name": "Crear Planta", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Planta 1\",\n  \"idEdificio\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/plantas" } },
+            { "name": "Actualizar Planta", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Planta 1 (Editada)\",\n  \"idEdificio\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/plantas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Planta", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/plantas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Planta", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/plantas/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/plantas/admin" } }
+          ]
+        },
+        {
+          "name": "Salón",
+          "item": [
+            { "name": "Listar Salones Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/salones" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/salones/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Listar por Planta", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/salones/planta/:idPlanta", "variable": [{ "key": "idPlanta", "value": "1" }] } },
+            { "name": "Crear Salón", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Salón de Lectura\",\n  \"idPlanta\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/salones" } },
+            { "name": "Actualizar Salón", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Salón de Lectura (Editado)\",\n  \"idPlanta\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/salones/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Salón", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/salones/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Salón", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/salones/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/salones/admin" } }
+          ]
+        },
+        {
+          "name": "Mueble",
+          "item": [
+            { "name": "Listar Muebles Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Búsqueda Global", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/busqueda?palabra=Estante" } },
+            { "name": "Crear Mueble", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Estante 1\",\n  \"idSalon\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/muebles" } },
+            { "name": "Actualizar Mueble", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Estante 1 Modificado\",\n  \"idSalon\": 1\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/muebles/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Mueble", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/muebles/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Mueble", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/muebles/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/muebles/admin/busqueda-maestra?esBorrado=false&idSalon=1&idPlanta=1&idEdificio=1&termino=Estante" } }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maestros",
+      "item": [
+        {
+          "name": "Categoria",
+          "description": "Gestión exhaustiva de categorías (7 endpoints)",
+          "item": [
+            { "name": "Listar Categorías Activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/categorias" } },
+            { "name": "Obtener Categoría por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/categorias/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Categoría", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Ficción\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/categorias" } },
+            { "name": "Actualizar Categoría", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Ficción (Editada)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/categorias/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Categoría", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/categorias/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Categoría", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/categorias/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/categorias/admin" } }
+          ]
+        },
+        {
+          "name": "Editorial",
+          "description": "Gestión exhaustiva de editoriales (8 endpoints)",
+          "item": [
+            { "name": "Listar Editoriales Activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales" } },
+            { "name": "Obtener Editorial por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Editorial", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Editorial Planeta\",\n  \"direccion\": \"Calle Falsa 123\",\n  \"correo\": \"contacto@planeta.com\",\n  \"telefono\": \"2222-3333\",\n  \"personaContacto\": \"Juan Pérez\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/editoriales" } },
+            { "name": "Actualizar Editorial", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Planeta Editada\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/editoriales/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Editorial", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/editoriales/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Editorial", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/editoriales/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/admin" } },
+            { "name": "Admin: Búsqueda Maestra", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/editoriales/admin/busqueda-maestra?esBorrado=false&termino=Planeta" } }
+          ]
+        },
+        {
+          "name": "Formato",
+          "item": [
+            { "name": "Listar Formatos Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/formatos" } },
+            { "name": "Obtener Formato por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/formatos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Formato", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Tapa Dura\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/formatos" } },
+            { "name": "Actualizar Formato", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Tapa Dura (Editado)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/formatos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Formato", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/formatos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Formato", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/formatos/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/formatos/admin" } }
+          ]
+        },
+        {
+          "name": "Género",
+          "item": [
+            { "name": "Listar Géneros Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/generos" } },
+            { "name": "Obtener Género por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/generos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Género", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Novela\",\n  \"descripcion\": \"Género literario narrativo\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/generos" } },
+            { "name": "Actualizar Género", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Novela (Editado)\",\n  \"descripcion\": \"Descripción actualizada\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/generos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Género", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/generos/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Género", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/generos/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/generos/admin" } }
+          ]
+        },
+        {
+          "name": "Idioma",
+          "item": [
+            { "name": "Listar Idiomas Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/idiomas" } },
+            { "name": "Obtener Idioma por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/idiomas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Idioma", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Español\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/idiomas" } },
+            { "name": "Actualizar Idioma", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Español (Editado)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/idiomas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Idioma", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/idiomas/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Idioma", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/idiomas/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/idiomas/admin" } }
+          ]
+        },
+        {
+          "name": "Nacionalidad",
+          "item": [
+            { "name": "Listar Nacionalidades Activas", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/nacionalidades" } },
+            { "name": "Obtener Nacionalidad por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/nacionalidades/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Nacionalidad", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Salvadoreña\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/nacionalidades" } },
+            { "name": "Actualizar Nacionalidad", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Salvadoreña (Editada)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/nacionalidades/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Nacionalidad", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/nacionalidades/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Nacionalidad", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/nacionalidades/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/nacionalidades/admin" } }
+          ]
+        },
+        {
+          "name": "País",
+          "item": [
+            { "name": "Listar Países Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/paises" } },
+            { "name": "Obtener País por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/paises/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear País", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"El Salvador\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/paises" } },
+            { "name": "Actualizar País", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"El Salvador (Editado)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/paises/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar País", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/paises/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar País", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/paises/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/paises/admin" } }
+          ]
+        },
+        {
+          "name": "Tipo de Autoría",
+          "item": [
+            { "name": "Listar Tipos de Autoría Activos", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tipos-autoria" } },
+            { "name": "Obtener por ID", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tipos-autoria/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Crear Tipo de Autoría", "request": { "method": "POST", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Autor Principal\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/tipos-autoria" } },
+            { "name": "Actualizar Tipo de Autoría", "request": { "method": "PUT", "body": { "mode": "raw", "raw": "{\n  \"nombre\": \"Autor Principal (Editado)\"\n}", "options": { "raw": { "language": "json" } } }, "url": "{{baseUrl}}/api/v1/tipos-autoria/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Desactivar Tipo de Autoría", "request": { "method": "DELETE", "url": "{{baseUrl}}/api/v1/tipos-autoria/:id", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Activar Tipo de Autoría", "request": { "method": "PATCH", "url": "{{baseUrl}}/api/v1/tipos-autoria/:id/activar", "variable": [{ "key": "id", "value": "1" }] } },
+            { "name": "Admin: Historial Completo", "request": { "method": "GET", "url": "{{baseUrl}}/api/v1/tipos-autoria/admin" } }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080", "type": "string" }
+  ]
+}
