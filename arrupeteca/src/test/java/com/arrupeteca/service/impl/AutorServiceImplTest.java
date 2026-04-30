@@ -143,23 +143,12 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should perform master search admin")
     void shouldPerformMasterSearchAdmin() {
         Page<Autor> expectedPage = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(autorRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any()))
                 .thenReturn(expectedPage);
 
         Page<AutorResumen> result = autorService.busquedaMaestraAdmin(
-                false, 1L, 1L, 1L, 1L, "test", 1900, 2000, Pageable.unpaged()
+                false, 1L, 1L, 1L, "test", Pageable.unpaged()
         );
-
-        assertThat(result).isEmpty();
-    }
-
-    @Test
-    @DisplayName("Should find alive authors in range")
-    void shouldFindAliveAuthorsInRange() {
-        Page<Autor> expectedPage = new PageImpl<>(List.of());
-        when(autorRepository.buscarAutoresVivosEnRango(any(), any(), any())).thenReturn(expectedPage);
-
-        Page<AutorResumen> result = autorService.buscarVivosEnRango(1900, 2000, Pageable.unpaged());
 
         assertThat(result).isEmpty();
     }

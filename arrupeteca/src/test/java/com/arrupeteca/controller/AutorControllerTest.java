@@ -74,20 +74,6 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/vivos-rango - Should return authors alive in range")
-    void shouldReturnAliveInRange() throws Exception {
-        Page<AutorResumen> page = new PageImpl<>(List.of());
-        when(autorService.buscarVivosEnRango(any(), any(), any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/autores/vivos-rango")
-                        .param("inicio", "1900")
-                        .param("fin", "2000"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Autores vivos en el rango"));
-    }
-
-    @Test
     @DisplayName("POST /api/v1/autores - Should create author")
     void shouldCreate() throws Exception {
         AutorRequest request = new AutorRequest();
@@ -161,7 +147,7 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/autores/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<AutorResumen> page = new PageImpl<>(List.of());
-        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/admin/busqueda-maestra")
