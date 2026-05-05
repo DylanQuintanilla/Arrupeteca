@@ -4,6 +4,7 @@ import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
 import com.arrupeteca.dto.response.summary.AutorResumen;
 import com.arrupeteca.persistence.entity.Autor;
+import java.time.Year;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
@@ -36,5 +37,13 @@ public interface AutorMapper {
     @Mapping(target = "generoPrincipal", source = "generoPrincipal")
     @Mapping(target = "obraCumbre", source = "obraCumbre")
     AutorDetalleResponse toDetalleResponse(Autor autor);
+
+    default Year integerToYear(Integer value) {
+        return value == null ? null : Year.of(value);
+    }
+
+    default Integer yearToInteger(Year value) {
+        return value == null ? null : value.getValue();
+    }
 
 }

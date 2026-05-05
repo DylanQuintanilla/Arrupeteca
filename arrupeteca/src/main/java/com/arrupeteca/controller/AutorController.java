@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.Year;
 import java.util.List;
 
 @RestController
@@ -60,8 +61,8 @@ public class AutorController {
     @GetMapping("/busqueda")
     public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaGlobal(
             @RequestParam String palabra,
-            @RequestParam(required = false) Integer inicio,
-            @RequestParam(required = false) Integer fin,
+            @RequestParam(required = false) Year inicio,
+            @RequestParam(required = false) Year fin,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", autorService.busquedaGlobal(palabra, inicio, fin, pageable)));
     }

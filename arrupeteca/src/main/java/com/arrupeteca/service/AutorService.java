@@ -6,6 +6,7 @@ import com.arrupeteca.dto.response.summary.AutorResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.Year;
 import java.util.List;
 
 public interface AutorService {
@@ -18,7 +19,7 @@ public interface AutorService {
 
     AutorDetalleResponse obtenerPorId(Long id);
 
-    Page<AutorResumen> busquedaGlobal(String palabra, Integer anioInicio, Integer anioFin, Pageable pageable);
+    Page<AutorResumen> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable);
 
     Page<AutorResumen> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,

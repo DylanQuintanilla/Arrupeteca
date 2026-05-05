@@ -11,13 +11,16 @@ import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.PaisRepository;
+import com.arrupeteca.persistence.specification.AutorSpecification;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
 import java.util.List;
 
 @Service
@@ -34,14 +37,15 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional(readOnly = true)
     public Page<AutorResumen> obtenerTodosActivos(Pageable pageable) {
-        return autorRepository.findByBorradoLogicoFalse(pageable)
+        Specification<Autor> spec = AutorSpecification.esBorrado(false);
+        return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AutorDetalleResponse obtenerPorIdActivo(Long id) {
-        return autorRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+        return autorRepository.findById(id)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor activo con ID: " + id));
     }
@@ -49,22 +53,23 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional(readOnly = true)
     public Page<AutorResumen> obtenerTodos(Pageable pageable) {
-        return autorRepository.findAllProjectedBy(pageable)
+        return autorRepository.findAll((Specification<Autor>) null, pageable)
                 .map(autorMapper::toResumen);
     }
 
     @Override
     @Transactional(readOnly = true)
     public AutorDetalleResponse obtenerPorId(Long id) {
-        return autorRepository.findProjectedById(id)
+        return autorRepository.findById(id)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<AutorResumen> busquedaGlobal(String palabra, Integer anioInicio, Integer anioFin, Pageable pageable) {
-        return autorRepository.busquedaGlobalAvanzada(palabra, anioInicio, anioFin, pageable)
+    public Page<AutorResumen> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
+        Specification<Autor> spec = AutorSpecification.filtroBusquedaGlobal(palabra, anioInicio, anioFin);
+        return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
 
@@ -73,7 +78,8 @@ public class AutorServiceImpl implements AutorService {
     public Page<AutorResumen> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
             String termino, Pageable pageable) {
-        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, termino, pageable)
+        Specification<Autor> spec = AutorSpecification.filtroMaestroAdmin(esBorrado, idNacionalidad, idPais, idGenero, termino);
+        return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
 
@@ -148,7 +154,7 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional
     public void cambiarEstado(Long id, boolean estado) {
-        if (!autorRepository.existsById(id)) {
+        if (!autorRepository.existsByIdIncludeDeleted(id)) {
             throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
         if (estado) {
