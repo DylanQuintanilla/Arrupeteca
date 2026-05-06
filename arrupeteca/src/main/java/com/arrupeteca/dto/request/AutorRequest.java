@@ -2,47 +2,56 @@ package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
+import java.time.Year;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AutorRequest {
-
+public record AutorRequest(
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    private String nombre;
+    String nombre,
 
     @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    private String seudonimo;
+    String seudonimo,
 
-    @Max(value = 9999, message = "El año de nacimiento no puede tener más de 4 digitos")
-    private Integer anioNacimiento;
+    @PastOrPresent(message = "El año de nacimiento no puede ser una fecha futura")
+    Year anioNacimiento,
 
-    @Max(value = 9999, message = "El año de fallecimiento no puede tener más de 4 digitos")
-    private Integer anioFallecimiento;
+    @PastOrPresent(message = "El año de fallecimiento no puede ser una fecha futura")
+    Year anioFallecimiento,
 
     @NotBlank(message = "La biografia no puede estar vacía")
     @Size(max = 5000, message = "La biografia es demasiado larga")
-    private String biografia;
+    String biografia,
 
-    private Long idPaisNacimiento;
-    private Long idNacionalidad;
-    private Long idGeneroPrincipal;
-    private Long idObraCumbre;
+    @Positive(message = "ID de país inválido")
+    Long idPaisNacimiento,
+
+    @Positive(message = "ID de nacionalidad inválido")
+    Long idNacionalidad,
+
+    @Positive(message = "ID de género inválido")
+    Long idGeneroPrincipal,
+
+    @Positive(message = "ID de obra inválido")
+    Long idObraCumbre
+) {
+
+    public AutorRequest {
+
+    }
 
     @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
     public boolean isIdentidadValida() {
-        boolean tieneNombreCompleto = (nombre != null && !nombre.isBlank());
+        boolean tieneNombre = (nombre != null && !nombre.isBlank());
         boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
-        return tieneNombreCompleto || tieneSeudonimo;
+        return tieneNombre || tieneSeudonimo;
     }
 
     @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
@@ -50,7 +59,7 @@ public class AutorRequest {
         if (anioNacimiento == null || anioFallecimiento == null) {
             return true;
         }
-        return anioNacimiento <= anioFallecimiento;
+        return !anioNacimiento.isAfter(anioFallecimiento);
     }
 
 }

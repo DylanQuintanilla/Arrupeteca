@@ -1,11 +1,13 @@
 package com.arrupeteca.dto.response.summary;
 
+import java.time.Year;
+
 public record AutorResumen(
     Long id,
     String nombre,
     String seudonimo,
-    Integer anioNacimiento,
-    Integer anioFallecimiento,
+    Year anioNacimiento,
+    Year anioFallecimiento,
     boolean borradoLogico,
     String nombrePais,
     String nombreNacionalidad,

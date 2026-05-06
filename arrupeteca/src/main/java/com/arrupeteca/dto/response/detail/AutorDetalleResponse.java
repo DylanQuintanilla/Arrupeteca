@@ -5,13 +5,14 @@ import com.arrupeteca.dto.response.summary.NacionalidadResumen;
 import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.dto.response.summary.PaisResumen;
 import java.time.LocalDateTime;
+import java.time.Year;
 
 public record AutorDetalleResponse(
     Long id,
     String nombre,
     String seudonimo,
-    Integer anioNacimiento,
-    Integer anioFallecimiento,
+    Year anioNacimiento,
+    Year anioFallecimiento,
     String biografia,
     boolean borradoLogico,
     String creadoPor,

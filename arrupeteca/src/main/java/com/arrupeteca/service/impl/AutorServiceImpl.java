@@ -45,7 +45,10 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional(readOnly = true)
     public AutorDetalleResponse obtenerPorIdActivo(Long id) {
-        return autorRepository.findById(id)
+        Specification<Autor> spec = Specification.where(AutorSpecification.tieneId(id))
+                .and(AutorSpecification.esBorrado(false));
+        
+        return autorRepository.findOne(spec)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor activo con ID: " + id));
     }
@@ -86,8 +89,8 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional
     public AutorDetalleResponse crear(AutorRequest request) {
-        if (autorRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + request.getNombre());
+        if (autorRepository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + request.nombre());
         }
 
         Autor autor = autorMapper.toEntity(request);
@@ -101,9 +104,9 @@ public class AutorServiceImpl implements AutorService {
         Autor autorExistente = autorRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
-        if (!autorExistente.getNombre().equalsIgnoreCase(request.getNombre())
-                && autorRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe otro autor con el nombre: " + request.getNombre());
+        if (!autorExistente.getNombre().equalsIgnoreCase(request.nombre())
+                && autorRepository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new ValidacionNegocioException("Ya existe otro autor con el nombre: " + request.nombre());
         }
 
         autorMapper.updateEntity(request, autorExistente);
@@ -114,34 +117,34 @@ public class AutorServiceImpl implements AutorService {
     private void asignarRelaciones(Autor autor, AutorRequest request) {
         java.util.List<String> errores = new java.util.ArrayList<>();
 
-        if (request.getIdPaisNacimiento() != null) {
-            paisRepository.findById(request.getIdPaisNacimiento())
+        if (request.idPaisNacimiento() != null) {
+            paisRepository.findById(request.idPaisNacimiento())
                     .ifPresentOrElse(autor::setPaisNacimiento,
-                            () -> errores.add("El país con ID " + request.getIdPaisNacimiento() + " no existe."));
+                            () -> errores.add("El país con ID " + request.idPaisNacimiento() + " no existe."));
         } else {
             autor.setPaisNacimiento(null);
         }
 
-        if (request.getIdNacionalidad() != null) {
-            nacionalidadRepository.findById(request.getIdNacionalidad())
+        if (request.idNacionalidad() != null) {
+            nacionalidadRepository.findById(request.idNacionalidad())
                     .ifPresentOrElse(autor::setNacionalidad,
-                            () -> errores.add("La nacionalidad con ID " + request.getIdNacionalidad() + " no existe."));
+                            () -> errores.add("La nacionalidad con ID " + request.idNacionalidad() + " no existe."));
         } else {
             autor.setNacionalidad(null);
         }
 
-        if (request.getIdGeneroPrincipal() != null) {
-            generoRepository.findById(request.getIdGeneroPrincipal())
+        if (request.idGeneroPrincipal() != null) {
+            generoRepository.findById(request.idGeneroPrincipal())
                     .ifPresentOrElse(autor::setGeneroPrincipal,
-                            () -> errores.add("El género con ID " + request.getIdGeneroPrincipal() + " no existe."));
+                            () -> errores.add("El género con ID " + request.idGeneroPrincipal() + " no existe."));
         } else {
             autor.setGeneroPrincipal(null);
         }
 
-        if (request.getIdObraCumbre() != null) {
-            obraRepository.findById(request.getIdObraCumbre())
+        if (request.idObraCumbre() != null) {
+            obraRepository.findById(request.idObraCumbre())
                     .ifPresentOrElse(autor::setObraCumbre,
-                            () -> errores.add("La obra con ID " + request.getIdObraCumbre() + " no existe."));
+                            () -> errores.add("La obra con ID " + request.idObraCumbre() + " no existe."));
         } else {
             autor.setObraCumbre(null);
         }

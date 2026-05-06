@@ -26,6 +26,9 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
     Optional<Autor> findById(Long id);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    Optional<Autor> findOne(Specification<Autor> spec);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query("""
         SELECT a FROM Autor a
         WHERE (
@@ -41,11 +44,11 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
     );
 
     @Modifying
-    @Query(value = "UPDATE autor SET borrado_logico = 1 WHERE id_autor = :id", nativeQuery = true)
+    @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
     void desactivar(@Param("id") Long id);
 
     @Modifying
-    @Query(value = "UPDATE autor SET borrado_logico = 0 WHERE id_autor = :id", nativeQuery = true)
+    @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
     void activar(@Param("id") Long id);
 
     @Query(value = "SELECT COUNT(*) > 0 FROM autor WHERE id_autor = :id", nativeQuery = true)

@@ -17,7 +17,17 @@ import java.util.List;
 public class AutorSpecification {
 
     private AutorSpecification() {
-        // Clase de utilidad
+
+    }
+
+    /**
+     * Filtra por ID.
+     */
+    public static Specification<Autor> tieneId(Long id) {
+        return (root, query, cb) -> {
+            if (id == null) return null;
+            return cb.equal(root.get("id"), id);
+        };
     }
 
     /**
@@ -77,11 +87,18 @@ public class AutorSpecification {
 
     /**
      * Búsqueda avanzada por palabra clave en múltiples campos.
+     * Importante: Se utiliza query.distinct(true) para evitar duplicados y JoinType.LEFT
+     * para no excluir autores que tengan campos (como país o nacionalidad) nulos.
      */
     public static Specification<Autor> busquedaGlobal(String palabra) {
         return (root, query, cb) -> {
             if (palabra == null || palabra.isBlank()) return null;
             String pattern = "%" + palabra.trim() + "%";
+
+            // Aseguramos que no haya duplicados si la consulta se vuelve compleja
+            if (query != null && query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.distinct(true);
+            }
 
             Join<Autor, Pais> joinPais = root.join("paisNacimiento", JoinType.LEFT);
             Join<Autor, Nacionalidad> joinNacionalidad = root.join("nacionalidad", JoinType.LEFT);
