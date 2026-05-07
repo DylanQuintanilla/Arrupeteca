@@ -1,13 +1,13 @@
 package com.arrupeteca.mapper;
 
+import com.arrupeteca.config.CentralMapperConfig;
 import com.arrupeteca.dto.request.PaisRequest;
 import com.arrupeteca.dto.response.summary.PaisResumen;
 import com.arrupeteca.persistence.entity.Pais;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(config = CentralMapperConfig.class)
 public interface PaisMapper {
 
     Pais toEntity(PaisRequest request);

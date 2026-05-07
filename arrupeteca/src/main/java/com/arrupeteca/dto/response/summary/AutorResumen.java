@@ -1,7 +1,9 @@
 package com.arrupeteca.dto.response.summary;
 
 import java.time.Year;
+import lombok.Builder;
 
+@Builder
 public record AutorResumen(
     Long id,
     String nombre,
@@ -12,5 +14,6 @@ public record AutorResumen(
     String nombrePais,
     String nombreNacionalidad,
     String nombreGeneroPrincipal,
-    String nombreObraCumbre
+    String nombreObraCumbre,
+    String biografiaResumida
 ) { }
