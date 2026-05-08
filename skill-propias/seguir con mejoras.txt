@@ -1,0 +1,12 @@
+que haga preguntas para saber que desicion tomar por ejemplo en el caso de Definir `nullable = false` en `@Column` o `@JoinColumn` solo si el campo es obligatorio por regla de negocio. ya que no sabemos que desicion se tomara entonces en la propia skill haya como esas preguntas para que el usuario pueda elegir que desicion tomar porfa, no solo con este si no con todos para que sea una entidad mas personalizada para cada una que se cree pero al mismo tiempo siga un buen patron de estrucutura 
+
+Agregar documentacion a todo lo que se pueda
+
+ 1. El Problema de la Serialización del Caché
+  Como estamos usando @Cacheable con Records (AutorDetalleResponse), si en el futuro decides usar Redis como servidor de caché (muy común en producción),
+  los Records a veces dan problemas de serialización si no tienen un constructor por defecto o si Jackson no está perfectamente configurado.
+
+   * Mejora: Ya añadimos @Jacksonized, lo cual ayuda mucho, pero para asegurar compatibilidad total con cualquier sistema de caché, nos aseguraremos de que
+     los DTOs que van al caché implementen Serializable.
+
+-----------------------------------------------------------------------------------------

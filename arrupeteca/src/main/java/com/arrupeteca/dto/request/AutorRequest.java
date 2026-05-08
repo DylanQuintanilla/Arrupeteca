@@ -30,6 +30,8 @@ public record AutorRequest(
     @Size(max = 5000, message = "La biografia es demasiado larga")
     String biografia,
 
+    Long version,
+
     @Positive(message = "ID de país inválido")
     Long idPaisNacimiento,
 

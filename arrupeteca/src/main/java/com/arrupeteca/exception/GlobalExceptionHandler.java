@@ -125,4 +125,19 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error("Error al procesar el cuerpo de la petición. Formato inválido."));
     }
 
+    /**
+     * 7. MANEJO DE CONFLICTOS DE CONCURRENCIA (Bloqueo Optimista).
+     */
+    @ExceptionHandler(org.springframework.orm.ObjectOptimisticLockingFailureException.class)
+    public ResponseEntity<ApiResponse<Void>> handleOptimisticLockingFailure(
+            org.springframework.orm.ObjectOptimisticLockingFailureException ex) {
+
+        log.warn("Conflicto de edición detectado (Bloqueo Optimista): Alguien más actualizó el registro.");
+
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error("El registro fue actualizado por otro usuario mientras lo editabas. "
+                        + "Por favor, refresca los datos e intenta de nuevo."));
+    }
+
 }

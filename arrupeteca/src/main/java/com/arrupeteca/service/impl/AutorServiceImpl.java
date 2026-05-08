@@ -14,6 +14,9 @@ import com.arrupeteca.persistence.repository.PaisRepository;
 import com.arrupeteca.persistence.specification.AutorSpecification;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,10 +24,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AutorServiceImpl implements AutorService {
 
     private final AutorRepository autorRepository;
@@ -35,52 +41,60 @@ public class AutorServiceImpl implements AutorService {
     private final AutorMapper autorMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public Page<AutorResumen> obtenerTodosActivos(Pageable pageable) {
+        log.debug("Obteniendo todos los autores activos con paginación: {}", pageable);
         Specification<Autor> spec = AutorSpecification.esBorrado(false);
         return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable(value = "autores", key = "#id")
     public AutorDetalleResponse obtenerPorIdActivo(Long id) {
+        log.debug("Buscando autor activo con ID: {}", id);
         Specification<Autor> spec = Specification.where(AutorSpecification.tieneId(id))
                 .and(AutorSpecification.esBorrado(false));
-        
+
         return autorRepository.findOne(spec)
                 .map(autorMapper::toDetalleResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor activo con ID: " + id));
+                .orElseThrow(() -> {
+                    log.warn("No se encontró Autor activo con ID: {}", id);
+                    return new ValidacionNegocioException("No se encontró Autor activo con ID: " + id);
+                });
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<AutorResumen> obtenerTodos(Pageable pageable) {
+        log.debug("Obteniendo todos los autores (incluyendo borrados) con paginación: {}", pageable);
         return autorRepository.findAll((Specification<Autor>) null, pageable)
                 .map(autorMapper::toResumen);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Cacheable(value = "autores", key = "#id")
     public AutorDetalleResponse obtenerPorId(Long id) {
+        log.debug("Buscando autor con ID (incluyendo borrados): {}", id);
         return autorRepository.findById(id)
                 .map(autorMapper::toDetalleResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
+                .orElseThrow(() -> {
+                    log.warn("No se encontró Autor con ID: {}", id);
+                    return new ValidacionNegocioException("No se encontró Autor con ID: " + id);
+                });
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<AutorResumen> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
+        log.debug("Iniciando búsqueda global: '{}', años: {} - {}", palabra, anioInicio, anioFin);
         Specification<Autor> spec = AutorSpecification.filtroBusquedaGlobal(palabra, anioInicio, anioFin);
         return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<AutorResumen> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
             String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda maestra admin para término: '{}'", termino);
         Specification<Autor> spec = AutorSpecification.filtroMaestroAdmin(esBorrado, idNacionalidad, idPais, idGenero, termino);
         return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
@@ -89,34 +103,53 @@ public class AutorServiceImpl implements AutorService {
     @Override
     @Transactional
     public AutorDetalleResponse crear(AutorRequest request) {
-        if (autorRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + request.nombre());
-        }
+        log.info("Creando nuevo autor con nombre: {}", request.nombre());
+        validarUnicidadNombre(request.nombre(), null);
 
         Autor autor = autorMapper.toEntity(request);
         asignarRelaciones(autor, request);
-        return autorMapper.toDetalleResponse(autorRepository.save(autor));
+        
+        Autor guardado = autorRepository.save(autor);
+        log.info("Autor creado exitosamente con ID: {}", guardado.getId());
+        return autorMapper.toDetalleResponse(guardado);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "autores", key = "#id")
     public AutorDetalleResponse actualizar(Long id, AutorRequest request) {
+        log.info("Actualizando autor con ID: {}", id);
         Autor autorExistente = autorRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
-        if (!autorExistente.getNombre().equalsIgnoreCase(request.nombre())
-                && autorRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe otro autor con el nombre: " + request.nombre());
-        }
+        validarUnicidadNombre(request.nombre(), autorExistente);
 
         autorMapper.updateEntity(request, autorExistente);
         asignarRelaciones(autorExistente, request);
-        return autorMapper.toDetalleResponse(autorRepository.save(autorExistente));
+        
+        Autor actualizado = autorRepository.save(autorExistente);
+        log.info("Autor con ID: {} actualizado exitosamente", id);
+        return autorMapper.toDetalleResponse(actualizado);
+    }
+
+    private void validarUnicidadNombre(String nombreNuevo, Autor autorExistente) {
+        if (nombreNuevo == null || nombreNuevo.isBlank()) {
+            return;
+        }
+
+        boolean esNuevo = (autorExistente == null);
+        boolean nombreCambio = !esNuevo && !autorExistente.getNombre().equalsIgnoreCase(nombreNuevo.trim());
+
+        if ((esNuevo || nombreCambio) && autorRepository.existsByNombreIgnoreCase(nombreNuevo.trim())) {
+            log.warn("Intento de duplicar nombre de autor: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + nombreNuevo);
+        }
     }
 
     private void asignarRelaciones(Autor autor, AutorRequest request) {
-        java.util.List<String> errores = new java.util.ArrayList<>();
+        List<String> errores = new ArrayList<>();
 
+        // Validación de País
         if (request.idPaisNacimiento() != null) {
             paisRepository.findById(request.idPaisNacimiento())
                     .ifPresentOrElse(autor::setPaisNacimiento,
@@ -125,6 +158,7 @@ public class AutorServiceImpl implements AutorService {
             autor.setPaisNacimiento(null);
         }
 
+        // Validación de Nacionalidad
         if (request.idNacionalidad() != null) {
             nacionalidadRepository.findById(request.idNacionalidad())
                     .ifPresentOrElse(autor::setNacionalidad,
@@ -133,6 +167,7 @@ public class AutorServiceImpl implements AutorService {
             autor.setNacionalidad(null);
         }
 
+        // Validación de Género
         if (request.idGeneroPrincipal() != null) {
             generoRepository.findById(request.idGeneroPrincipal())
                     .ifPresentOrElse(autor::setGeneroPrincipal,
@@ -141,6 +176,7 @@ public class AutorServiceImpl implements AutorService {
             autor.setGeneroPrincipal(null);
         }
 
+        // Validación de Obra Cumbre
         if (request.idObraCumbre() != null) {
             obraRepository.findById(request.idObraCumbre())
                     .ifPresentOrElse(autor::setObraCumbre,
@@ -150,13 +186,16 @@ public class AutorServiceImpl implements AutorService {
         }
 
         if (!errores.isEmpty()) {
+            log.warn("Errores al asignar relaciones para autor: {}", errores);
             throw new ValidacionNegocioException(errores);
         }
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "autores", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
+        log.info("Cambiando estado de borrado del autor ID: {} a {}", id, !estado);
         if (!autorRepository.existsByIdIncludeDeleted(id)) {
             throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
@@ -168,8 +207,11 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<AutorResumen> buscarDuplicados(String termino, Long idExcluir) {
+        if (termino == null || termino.isBlank()) {
+            return List.of();
+        }
+        log.debug("Buscando duplicados para el término: '{}'", termino);
         return autorRepository.buscarPosiblesDuplicados(termino.trim(), idExcluir)
                 .stream()
                 .map(autorMapper::toResumen)

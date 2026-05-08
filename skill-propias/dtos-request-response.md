@@ -1,48 +1,44 @@
-# Estándar de Desarrollo: Request DTOs (Arrupeteca)
+# Estándar de Desarrollo: Request y Response DTOs (Arrupeteca)
 
-Este documento es la guía definitiva para crear objetos de petición (Request DTOs) desde cero. Define la estructura obligatoria para garantizar inmutabilidad, seguridad y validación automática.
+Este documento es la guía definitiva para crear objetos de transferencia de datos (DTOs) desde cero. Define la estructura obligatoria para garantizar inmutabilidad, seguridad, validación automática y soporte para caché y concurrencia.
 
 ## 1. Estructura Base (Java Records)
-Todas las peticiones deben ser **Java Records** (Java 21+). No se permiten clases tradicionales para peticiones de entrada.
+Todas las transferencias de datos deben ser **Java Records** (Java 21+). No se permiten clases tradicionales para DTOs.
 
-*   **Archivo**: `[NombreEntidad]Request.java`
-*   **Anotaciones de Clase**:
-    *   `@Builder`: Permite la creación fluida de instancias (especialmente útil en Tests).
-    *   `@Jacksonized`: Obligatorio para que Jackson use el Builder al deserializar el JSON.
-    *   `@JsonIgnoreProperties(ignoreUnknown = true)`: Evita errores si el cliente envía campos adicionales no definidos.
+*   **Request**: `[NombreEntidad]Request.java`
+*   **Resumen**: `[NombreEntidad]Resumen.java`
+*   **Detalle**: `[NombreEntidad]DetalleResponse.java`
 
-## 2. Definición de Campos (Header del Record)
+### Anotaciones de Clase Obligatorias:
+*   `@Builder`: Permite la creación fluida de instancias.
+*   `@Jacksonized`: Obligatorio para que Jackson use el Builder al deserializar el JSON.
+*   `@JsonIgnoreProperties(ignoreUnknown = true)`: (Solo en Request) Evita errores por campos adicionales.
+
+## 2. Definición de Campos y Validación
 Los campos deben usar tipos semánticos y estar validados individualmente:
 
-*   **Identificadores**: Usar `Long` con `@Positive`.
-*   **Fechas/Años**: Usar `java.time.Year` o `java.time.LocalDate` según corresponda. Usar `@PastOrPresent` para fechas históricas.
+*   **Identificadores**: Usar `Long` con `@NotNull` y `@Positive`.
+*   **Bloqueo Optimista (Concurrencia)**: 
+    *   Incluir `Long version` en **Request** (obligatorio para actualizaciones) y **Detalle**.
+*   **Fechas/Años**: Usar `java.time.Year` o `java.time.LocalDateTime`. Usar `@PastOrPresent`.
 *   **Textos**: 
-    *   `@NotBlank`: Para campos obligatorios (evita cadenas vacías o solo con espacios).
-    *   `@Size(max = X)`: Siempre definir el límite máximo según el esquema de la DB.
-*   **Números**: Usar `@Positive`, `@Min`, `@Max` para restringir rangos de negocio.
+    *   `@NotBlank`: Para campos obligatorios.
+    *   `@Size(max = X)`: Definir el límite máximo según el esquema de la DB.
+*   **Soporte para Caché**: 
+    *   Todos los DTOs de respuesta (`Resumen` y `Detalle`) deben implementar `java.io.Serializable` para compatibilidad con sistemas de caché externos (ej. Redis).
 
 ## 3. Validaciones de Integridad (@AssertTrue)
 Para reglas que dependan de dos o más campos, se deben incluir métodos dentro del cuerpo del record:
 
 ```java
-@AssertTrue(message = "La fecha de fin debe ser posterior a la de inicio")
-public boolean isRangoValido() {
-    if (inicio == null || fin == null) return true;
-    return !inicio.isAfter(fin);
+@AssertTrue(message = "El año de nacimiento no puede ser mayor al de fallecimiento")
+public boolean isFechasValidas() {
+    if (anioNacimiento == null || anioFallecimiento == null) return true;
+    return !anioNacimiento.isAfter(anioFallecimiento);
 }
 ```
 
-## 4. Fail-Fast (Constructor Compacto)
-Se recomienda incluir un constructor compacto para asegurar que el objeto sea consistente incluso si se instancia manualmente fuera de Spring.
-
-```java
-public [NombreEntidad]Request {
-    // Espacio para validaciones defensivas manuales o normalización de datos
-}
-```
-
-## 5. Ejemplo de Plantilla Completa
-Copia este código como base para cualquier nuevo Request:
+## 4. Ejemplo de Plantilla Completa (Request)
 
 ```java
 package com.arrupeteca.dto.request;
@@ -58,25 +54,44 @@ import lombok.extern.jackson.Jacksonized;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EjemploRequest(
     @NotBlank(message = "El nombre es obligatorio")
-    @Size(max = 100, message = "Máximo 100 caracteres")
+    @Size(max = 100)
     String nombre,
 
-    @Positive(message = "ID de relación inválido")
+    @Positive(message = "ID inválido")
     Long idRelacion,
+
+    Long version, // Para bloqueo optimista
 
     @PastOrPresent(message = "No puede ser una fecha futura")
     Year anio
 ) {
-    public EjemploRequest {
-        // Constructor compacto
-    }
-
-    @AssertTrue(message = "Mensaje de error lógico")
-    public boolean isEstadoValido() {
-        return true; // Lógica aquí
-    }
+    public EjemploRequest {}
 }
 ```
 
+## 5. Ejemplo de Plantilla Completa (Response Detalle)
+
+```java
+package com.arrupeteca.dto.response.detail;
+
+import jakarta.validation.constraints.*;
+import java.io.Serializable;
+import java.time.LocalDateTime;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
+
+@Builder
+@Jacksonized
+public record EjemploDetalleResponse(
+    @NotNull Long id,
+    @NotBlank String nombre,
+    Long version, // Crucial para que el front lo devuelva en el PUT
+    @NotBlank String creadoPor,
+    @NotNull LocalDateTime fechaCreacion,
+    // ... otros campos
+    RelacionResumen relacion
+) implements Serializable { }
+```
+
 ---
-*Este estándar asegura que cada petición que entra al sistema sea una "Fortaleza de Datos" antes de llegar al Servicio.*
+*Este estándar asegura que cada petición sea una "Fortaleza de Datos" y cada respuesta sea "Cacheable" y segura.*

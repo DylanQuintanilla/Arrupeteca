@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -43,6 +44,10 @@ public class Autor extends Auditable {
     @EqualsAndHashCode.Include
     @ToString.Include
     private Long id;
+
+    @Version
+    @Column(name = "version")
+    private Long version;
 
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     @Column(name = "nombre", length = 100)
