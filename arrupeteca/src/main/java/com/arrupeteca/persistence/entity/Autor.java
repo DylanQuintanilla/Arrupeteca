@@ -52,13 +52,11 @@ public class Autor extends Auditable {
     @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     @Column(name = "nombre", length = 100)
     @ToString.Include
-    @EqualsAndHashCode.Include
     private String nombre;
 
     @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
     @Column(name = "seudonimo", length = 50)
     @ToString.Include
-    @EqualsAndHashCode.Include
     private String seudonimo;
 
     @Column(name = "anio_nacimiento")

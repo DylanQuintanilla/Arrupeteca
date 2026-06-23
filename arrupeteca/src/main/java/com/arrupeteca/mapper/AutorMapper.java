@@ -31,10 +31,6 @@ public interface AutorMapper {
     @Mapping(target = "nacionalidad", ignore = true)
     @Mapping(target = "generoPrincipal", ignore = true)
     @Mapping(target = "obraCumbre", ignore = true)
-    @Mapping(target = "creadoPor", ignore = true)
-    @Mapping(target = "fechaCreacion", ignore = true)
-    @Mapping(target = "actualizadoPor", ignore = true)
-    @Mapping(target = "fechaActualizacion", ignore = true)
     @Mapping(target = "version", ignore = true)
     Autor toEntity(AutorRequest request);
 
@@ -54,7 +50,7 @@ public interface AutorMapper {
     @Mapping(target = "paisNacimiento", source = "paisNacimiento")
     @Mapping(target = "nacionalidad", source = "nacionalidad")
     @Mapping(target = "generoPrincipal", source = "generoPrincipal")
-    @Mapping(target = "obraCumbre", source = "obraCumbre")
+    @Mapping(target = "obraCumbre", source = "obraCumbre", qualifiedByName = "toResumen")
     @Mapping(target = "nombre", source = "nombre", qualifiedByName = "trimString")
     @Mapping(target = "seudonimo", source = "seudonimo", qualifiedByName = "trimString")
     AutorDetalleResponse toDetalleResponse(Autor autor);

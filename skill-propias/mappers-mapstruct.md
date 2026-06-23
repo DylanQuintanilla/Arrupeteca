@@ -1,47 +1,58 @@
 # Estándar de Desarrollo: Mappers con MapStruct (Arrupeteca)
 
-Este documento define las reglas para la transformación de datos entre Entidades y DTOs, con especial énfasis en el soporte para el Bloqueo Optimista.
+    Este documento define las reglas para la transformación de datos entre Entidades y DTOs, con especial énfasis en
+  el soporte para el Bloqueo Optimista y la consistencia con Lombok.
 
-## 1. Configuración Centralizada
-Todos los mappers deben usar: `config = CentralMapperConfig.class`.
+    ## 1. Configuración Centralizada
+    Todos los mappers deben usar: `config = CentralMapperConfig.class`. Esto asegura políticas uniformes como la
+  inyección en Spring y el descarte automático de campos no mapeados.
 
-## 2. Reglas de Mapeo de Versión (Bloqueo Optimista)
-Para que el sistema detecte conflictos de edición, la versión debe fluir correctamente:
+    ## 2. Reglas de Mapeo de Versión (Bloqueo Optimista)
+    Para que el sistema detecte conflictos de edición (Optimistic Locking), la versión debe fluir correctamente:
 
-*   **Creación (`toEntity`)**: 
-    *   Debe ignorar el campo `version` de la entidad: `@Mapping(target = "version", ignore = true)`. 
-    *   Hibernate inicializará la versión en 0 o 1 automáticamente.
-*   **Actualización (`updateEntity`)**: 
-    *   Debe mapear explícitamente la versión desde el DTO: `@Mapping(target = "version", source = "version")`. 
-    *   Esto permite que JPA compare la versión enviada por el cliente con la de la base de datos.
+    *   **Creación (`toEntity`)**:
+        *   Debe ignorar el campo `version` de la entidad: `@Mapping(target = "version", ignore = true)`.
+        *   Hibernate inicializará la versión en 0 o 1 automáticamente en la base de datos.
+    *   **Actualización (`updateEntity`)**:
+        *   Debe mapear explícitamente la versión desde el DTO: `@Mapping(target = "version", source = "version")`.
+        *   Esto permite que JPA compare la versión enviada por el cliente con la existente en la base de datos al
+  hacer el `merge`.
 
-## 3. Patrones de Mapeo
-*   **Ignorar Auditoría**: Siempre ignorar `creadoPor`, `fechaCreacion`, etc., en `toEntity`.
-*   **Herencia de Configuración**: Usar `@InheritConfiguration` en `updateEntity` para reutilizar las reglas de ignorar campos técnicos.
+    ## 3. Patrones de Mapeo y Seguridad de Auditoría
+    *   **Campos de Auditoría Técnicos**:
+        *   Los campos heredados de `Auditable` (`creadoPor`, `fechaCreacion`, `actualizadoPor`, `fechaActualizacion`)
+  **no deben ser mapeados ni declarados como ignorados (`ignore = true`)** en los métodos de mapeo como `toEntity`.
+        *   **Razón técnica**: Las entidades utilizan `@Builder` de Lombok, el cual no incluye campos de la clase
+  padre en el constructor del builder del hijo. Intentar declarar ignores explícitos para estos campos causará un
+  error de compilación de MapStruct (*Unknown property*).
+        *   **Razón de arquitectura**: La auditoría debe ser inyectada exclusivamente por Spring Data JPA a través de
+  sus Listeners (`@CreatedBy`, `@LastModifiedBy`, etc.). MapStruct los omitirá de forma limpia y segura gracias a la
+  política global `unmappedTargetPolicy = ReportingPolicy.IGNORE` configurada en `CentralMapperConfig`.
+    *   **Herencia de Configuración**: Usar `@InheritConfiguration` en `updateEntity` para reutilizar las reglas de
+  ignorar campos técnicos que sí pertenezcan a la entidad (como `id` o `borradoLogico`).
 
-## 4. Ejemplo de Plantilla Completa
+    ## 4. Ejemplo de Plantilla Completa
 
-```java
-@Mapper(config = CentralMapperConfig.class, uses = { RelacionMapper.class })
-public interface EjemploMapper {
+    ```java
+    @Mapper(config = CentralMapperConfig.class, uses = { RelacionMapper.class })
+    public interface EjemploMapper {
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "version", ignore = true) // Ignorar en creación
-    @Mapping(target = "borradoLogico", ignore = true)
-    @Mapping(target = "creadoPor", ignore = true)
-    @Mapping(target = "fechaCreacion", ignore = true)
-    @Mapping(target = "actualizadoPor", ignore = true)
-    @Mapping(target = "fechaActualizacion", ignore = true)
-    Ejemplo toEntity(EjemploRequest request);
+        // 1. Mapeo para Creación (toEntity)
+        @Mapping(target = "id", ignore = true)
+        @Mapping(target = "version", ignore = true)       // Ignorar versión en creación
+        @Mapping(target = "borradoLogico", ignore = true)  // Ignorar borrado lógico inicial
+        // Nota: Los campos de auditoría heredados de Auditable se omiten aquí, MapStruct los ignora implícitamente
+        Ejemplo toEntity(EjemploRequest request);
 
-    @InheritConfiguration(name = "toEntity")
-    @Mapping(target = "version", source = "version") // Mapear en actualización
-    void updateEntity(EjemploRequest request, @MappingTarget Ejemplo ejemplo);
+        // 2. Mapeo para Actualización (updateEntity)
+        @InheritConfiguration(name = "toEntity")
+        @Mapping(target = "version", source = "version")   // Mapear explícitamente para bloqueo optimista
+        void updateEntity(EjemploRequest request, @MappingTarget Ejemplo ejemplo);
 
-    @Mapping(target = "relacion", source = "relacion")
-    EjemploDetalleResponse toDetalleResponse(Ejemplo entidad);
-}
-```
-
----
-*Este estándar asegura que las transformaciones de datos respeten el ciclo de vida de las entidades y su versionamiento.*
+        // 3. Mapeo para Respuestas de Detalle (toDetalleResponse)
+        @Mapping(target = "relacion", source = "relacion")
+        EjemploDetalleResponse toDetalleResponse(Ejemplo entidad);
+    }
+    
+  Este estándar asegura que las transformaciones de datos respeten el ciclo de vida de las entidades, la seguridad de
+  la auditoría y el versionamiento óptimo del sistema.
