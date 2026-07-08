@@ -8,7 +8,7 @@ import lombok.extern.jackson.Jacksonized;
 
 @Builder
 @Jacksonized
-public record AutorResumen(
+public record AutorResumenResponse(
     @NotNull
     Long id,
     

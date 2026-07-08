@@ -3,8 +3,10 @@ package com.arrupeteca.controller;
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
-import com.arrupeteca.dto.response.summary.AutorResumen;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.service.AutorService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -32,34 +34,55 @@ import java.util.List;
 @RequestMapping("/api/v1/autores")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@Tag(name = "Autores", description = "Endpoints para la gestión de autores literarios")
 public class AutorController {
 
     private final AutorService autorService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodosActivos(
+    @Operation(
+        summary = "Obtener autores activos",
+        description = "Retorna una página de autores registrados que no están borrados lógicamente."
+    )
+    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> obtenerTodosActivos(
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", autorService.obtenerTodosActivos(pageable)));
     }
 
     @GetMapping("/{id}")
+    @Operation(
+        summary = "Obtener detalle de autor activo",
+        description = "Busca la información detallada de un autor por su ID si está activo."
+    )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Autor encontrado", autorService.obtenerPorIdActivo(id)));
     }
 
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> obtenerTodos(
+    @Operation(
+        summary = "Obtener historial de autores (Admin)",
+        description = "Retorna todos los autores incluyendo eliminados lógicamente (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> obtenerTodos(
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
     }
 
     @GetMapping("/admin/{id}")
+    @Operation(
+        summary = "Obtener autor por ID (Admin)",
+        description = "Busca el detalle de un autor por su ID sin importar su estado lógico (solo admin)."
+    )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorId(@PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.obtenerPorId(id)));
     }
 
     @GetMapping("/busqueda")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaGlobal(
+    @Operation(
+        summary = "Búsqueda global de autores",
+        description = "Busca autores por coincidencia parcial de texto y rango de año de nacimiento."
+    )
+    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaGlobal(
             @RequestParam String palabra,
             @RequestParam(required = false) Year inicio,
             @RequestParam(required = false) Year fin,
@@ -68,7 +91,11 @@ public class AutorController {
     }
 
     @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<AutorResumen>>> busquedaMaestraAdmin(
+    @Operation(
+        summary = "Búsqueda avanzada (Admin)",
+        description = "Búsqueda avanzada multi-filtro por estado, género, país y coincidencia de término (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
@@ -81,29 +108,50 @@ public class AutorController {
     }
 
     @GetMapping("/verificar-duplicados")
-    public ResponseEntity<ApiResponse<List<AutorResumen>>> buscarDuplicados(
+    @Operation(
+        summary = "Verificar duplicados",
+        description = "Busca autores con nombres o seudónimos similares en el sistema."
+    )
+    public ResponseEntity<ApiResponse<List<AutorResumenResponse>>> buscarDuplicados(
             @RequestParam String termino,
             @RequestParam(required = false) Long idExcluir) {
         return ResponseEntity.ok(ApiResponse.exito("Verificación completada", autorService.buscarDuplicados(termino, idExcluir)));
     }
 
     @PostMapping
+    @Operation(
+        summary = "Registrar nuevo autor",
+        description = "Crea un nuevo autor en el sistema validando la unicidad del nombre."
+    )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> crear(@Valid @RequestBody AutorRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)));
     }
 
     @PutMapping("/{id}")
+    @Operation(
+        summary = "Actualizar autor",
+        description = "Actualiza los campos de un autor existente y valida su versión de bloqueo optimista."
+    )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody AutorRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Autor actualizado correctamente", autorService.actualizar(id, request)));
     }
 
     @DeleteMapping("/{id}")
+    @Operation(
+        summary = "Desactivar autor (Borrado lógico)",
+        description = "Oculta el autor en el catálogo público cambiando su estado a borrado."
+    )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         autorService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Autor desactivado"));
     }
 
     @PatchMapping("/{id}/activar")
+    @Operation(
+        summary = "Activar autor",
+        description = "Restaura la visibilidad pública de un autor previamente desactivado."
+    )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         autorService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Autor activado"));

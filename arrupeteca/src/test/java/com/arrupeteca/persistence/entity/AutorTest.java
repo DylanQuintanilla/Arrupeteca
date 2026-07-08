@@ -1,5 +1,6 @@
 package com.arrupeteca.persistence.entity;
 
+import java.time.Year;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,33 +19,14 @@ class AutorTest {
     private TestEntityManager entityManager;
 
     @Test
-    @DisplayName("Should validate identity correctly")
-    void shouldValidateIdentity() {
-        assertThat(Autor.builder().nombre("Nombre").build().isIdentidadValida()).isTrue();
-        assertThat(Autor.builder().seudonimo("Seudonimo").build().isIdentidadValida()).isTrue();
-        assertThat(Autor.builder().nombre("").seudonimo(null).build().isIdentidadValida()).isFalse();
-        assertThat(Autor.builder().nombre(null).seudonimo(" ").build().isIdentidadValida()).isFalse();
-    }
-
-    @Test
-    @DisplayName("Should validate dates correctly")
-    void shouldValidateDates() {
-        assertThat(Autor.builder().anioNacimiento(1900).anioFallecimiento(1980).build().isFechasValidas()).isTrue();
-        assertThat(Autor.builder().anioNacimiento(1900).anioFallecimiento(1900).build().isFechasValidas()).isTrue();
-        assertThat(Autor.builder().anioNacimiento(1980).anioFallecimiento(1900).build().isFechasValidas()).isFalse();
-        assertThat(Autor.builder().anioNacimiento(1900).build().isFechasValidas()).isTrue();
-        assertThat(Autor.builder().anioFallecimiento(1900).build().isFechasValidas()).isTrue();
-    }
-
-    @Test
     @DisplayName("Should test all getters and setters")
     void shouldTestGettersAndSetters() {
         Autor autor = new Autor();
         autor.setId(1L);
         autor.setNombre("Nombre");
         autor.setSeudonimo("Seudonimo");
-        autor.setAnioNacimiento(1900);
-        autor.setAnioFallecimiento(2000);
+        autor.setAnioNacimiento(Year.of(1900));
+        autor.setAnioFallecimiento(Year.of(2000));
         autor.setBiografia("Bio");
         autor.setBorradoLogico(true);
         
@@ -63,8 +45,8 @@ class AutorTest {
         assertThat(autor.getId()).isEqualTo(1L);
         assertThat(autor.getNombre()).isEqualTo("Nombre");
         assertThat(autor.getSeudonimo()).isEqualTo("Seudonimo");
-        assertThat(autor.getAnioNacimiento()).isEqualTo(1900);
-        assertThat(autor.getAnioFallecimiento()).isEqualTo(2000);
+        assertThat(autor.getAnioNacimiento()).isEqualTo(Year.of(1900));
+        assertThat(autor.getAnioFallecimiento()).isEqualTo(Year.of(2000));
         assertThat(autor.getBiografia()).isEqualTo("Bio");
         assertThat(autor.isBorradoLogico()).isTrue();
         assertThat(autor.getPaisNacimiento()).isEqualTo(pais);

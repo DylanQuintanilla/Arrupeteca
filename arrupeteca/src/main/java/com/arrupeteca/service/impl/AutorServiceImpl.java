@@ -1,8 +1,9 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import org.openapitools.jackson.nullable.JsonNullable;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
-import com.arrupeteca.dto.response.summary.AutorResumen;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
 import com.arrupeteca.persistence.entity.Autor;
@@ -41,7 +42,7 @@ public class AutorServiceImpl implements AutorService {
     private final AutorMapper autorMapper;
 
     @Override
-    public Page<AutorResumen> obtenerTodosActivos(Pageable pageable) {
+    public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
         log.debug("Obteniendo todos los autores activos con paginación: {}", pageable);
         Specification<Autor> spec = AutorSpecification.esBorrado(false);
         return autorRepository.findAll(spec, pageable)
@@ -64,7 +65,7 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public Page<AutorResumen> obtenerTodos(Pageable pageable) {
+    public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
         log.debug("Obteniendo todos los autores (incluyendo borrados) con paginación: {}", pageable);
         return autorRepository.findAll((Specification<Autor>) null, pageable)
                 .map(autorMapper::toResumen);
@@ -83,7 +84,7 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public Page<AutorResumen> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
+    public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
         log.debug("Iniciando búsqueda global: '{}', años: {} - {}", palabra, anioInicio, anioFin);
         Specification<Autor> spec = AutorSpecification.filtroBusquedaGlobal(palabra, anioInicio, anioFin);
         return autorRepository.findAll(spec, pageable)
@@ -91,7 +92,7 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public Page<AutorResumen> busquedaMaestraAdmin(
+    public Page<AutorResumenResponse> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
             String termino, Pageable pageable) {
         log.debug("Iniciando búsqueda maestra admin para término: '{}'", termino);
@@ -150,39 +151,51 @@ public class AutorServiceImpl implements AutorService {
         List<String> errores = new ArrayList<>();
 
         // Validación de País
-        if (request.idPaisNacimiento() != null) {
-            paisRepository.findById(request.idPaisNacimiento())
-                    .ifPresentOrElse(autor::setPaisNacimiento,
-                            () -> errores.add("El país con ID " + request.idPaisNacimiento() + " no existe."));
-        } else {
-            autor.setPaisNacimiento(null);
+        if (request.idPaisNacimiento() != null && request.idPaisNacimiento().isPresent()) {
+            Long idPais = request.idPaisNacimiento().orElse(null);
+            if (idPais != null) {
+                paisRepository.findById(idPais)
+                        .ifPresentOrElse(autor::setPaisNacimiento,
+                                () -> errores.add("El país con ID " + idPais + " no existe."));
+            } else {
+                autor.setPaisNacimiento(null);
+            }
         }
 
         // Validación de Nacionalidad
-        if (request.idNacionalidad() != null) {
-            nacionalidadRepository.findById(request.idNacionalidad())
-                    .ifPresentOrElse(autor::setNacionalidad,
-                            () -> errores.add("La nacionalidad con ID " + request.idNacionalidad() + " no existe."));
-        } else {
-            autor.setNacionalidad(null);
+        if (request.idNacionalidad() != null && request.idNacionalidad().isPresent()) {
+            Long idNac = request.idNacionalidad().orElse(null);
+            if (idNac != null) {
+                nacionalidadRepository.findById(idNac)
+                        .ifPresentOrElse(autor::setNacionalidad,
+                                () -> errores.add("La nacionalidad con ID " + idNac + " no existe."));
+            } else {
+                autor.setNacionalidad(null);
+            }
         }
 
         // Validación de Género
-        if (request.idGeneroPrincipal() != null) {
-            generoRepository.findById(request.idGeneroPrincipal())
-                    .ifPresentOrElse(autor::setGeneroPrincipal,
-                            () -> errores.add("El género con ID " + request.idGeneroPrincipal() + " no existe."));
-        } else {
-            autor.setGeneroPrincipal(null);
+        if (request.idGeneroPrincipal() != null && request.idGeneroPrincipal().isPresent()) {
+            Long idGen = request.idGeneroPrincipal().orElse(null);
+            if (idGen != null) {
+                generoRepository.findById(idGen)
+                        .ifPresentOrElse(autor::setGeneroPrincipal,
+                                () -> errores.add("El género con ID " + idGen + " no existe."));
+            } else {
+                autor.setGeneroPrincipal(null);
+            }
         }
 
         // Validación de Obra Cumbre
-        if (request.idObraCumbre() != null) {
-            obraRepository.findById(request.idObraCumbre())
-                    .ifPresentOrElse(autor::setObraCumbre,
-                            () -> errores.add("La obra con ID " + request.idObraCumbre() + " no existe."));
-        } else {
-            autor.setObraCumbre(null);
+        if (request.idObraCumbre() != null && request.idObraCumbre().isPresent()) {
+            Long idObra = request.idObraCumbre().orElse(null);
+            if (idObra != null) {
+                obraRepository.findById(idObra)
+                        .ifPresentOrElse(autor::setObraCumbre,
+                                () -> errores.add("La obra con ID " + idObra + " no existe."));
+            } else {
+                autor.setObraCumbre(null);
+            }
         }
 
         if (!errores.isEmpty()) {
@@ -207,7 +220,7 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public List<AutorResumen> buscarDuplicados(String termino, Long idExcluir) {
+    public List<AutorResumenResponse> buscarDuplicados(String termino, Long idExcluir) {
         if (termino == null || termino.isBlank()) {
             return List.of();
         }

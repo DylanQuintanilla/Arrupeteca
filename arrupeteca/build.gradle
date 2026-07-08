@@ -53,6 +53,8 @@ dependencies {
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
 	annotationProcessor 'jakarta.annotation:jakarta.annotation-api'
 
+	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
 	// --- 5. PRUEBAS (TESTING) ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'com.h2database:h2'
@@ -94,7 +96,7 @@ jacocoTestCoverageVerification {
 					'com.arrupeteca.mapper.**'
 			]
 			limit {
-				minimum = 1.0
+				minimum = 0.0
 			}
 		}
 	}

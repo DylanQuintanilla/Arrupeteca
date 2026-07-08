@@ -10,13 +10,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecificationExecutor<Autor> {
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
@@ -43,11 +39,11 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
             @Param("idExcluir") Long idExcluir
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
     void activar(@Param("id") Long id);
 

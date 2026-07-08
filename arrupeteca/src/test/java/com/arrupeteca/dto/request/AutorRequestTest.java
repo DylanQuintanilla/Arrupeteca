@@ -10,13 +10,18 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.json.JacksonTester;
+import org.openapitools.jackson.nullable.JsonNullable;
+import org.springframework.context.annotation.Import;
+import com.arrupeteca.config.JacksonConfig;
 
 import java.io.IOException;
+import java.time.Year;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JsonTest
+@Import(JacksonConfig.class)
 @DisplayName("AutorRequest JSON and Validation Tests")
 class AutorRequestTest {
 
@@ -36,16 +41,16 @@ class AutorRequestTest {
     void shouldSerialize() throws IOException {
         AutorRequest request = AutorRequest.builder()
                 .nombre("Gabriel García Márquez")
-                .seudonimo("Gabo")
-                .anioNacimiento(1927)
-                .anioFallecimiento(2014)
+                .seudonimo(JsonNullable.of("Gabo"))
+                .anioNacimiento(JsonNullable.of(Year.of(1927)))
+                .anioFallecimiento(JsonNullable.of(Year.of(2014)))
                 .biografia("Escritor colombiano...")
                 .build();
 
         assertThat(json.write(request)).hasJsonPathStringValue("@.nombre", "Gabriel García Márquez");
         assertThat(json.write(request)).hasJsonPathStringValue("@.seudonimo", "Gabo");
-        assertThat(json.write(request)).hasJsonPathNumberValue("@.anioNacimiento", 1927);
-        assertThat(json.write(request)).hasJsonPathNumberValue("@.anioFallecimiento", 2014);
+        assertThat(json.write(request)).hasJsonPathStringValue("@.anioNacimiento", "1927");
+        assertThat(json.write(request)).hasJsonPathStringValue("@.anioFallecimiento", "2014");
     }
 
     @Test
@@ -53,7 +58,7 @@ class AutorRequestTest {
     void shouldFailWhenIdentityIsInvalid() {
         AutorRequest request = AutorRequest.builder()
                 .nombre("")
-                .seudonimo("")
+                .seudonimo(JsonNullable.of(""))
                 .biografia("Bio")
                 .build();
 
@@ -66,8 +71,8 @@ class AutorRequestTest {
     void shouldFailWhenDatesAreInvalid() {
         AutorRequest request = AutorRequest.builder()
                 .nombre("Autor")
-                .anioNacimiento(2000)
-                .anioFallecimiento(1990)
+                .anioNacimiento(JsonNullable.of(Year.of(2000)))
+                .anioFallecimiento(JsonNullable.of(Year.of(1990)))
                 .biografia("Bio")
                 .build();
 

@@ -11,9 +11,6 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import java.time.Year;
 import lombok.AccessLevel;
@@ -49,12 +46,10 @@ public class Autor extends Auditable {
     @Column(name = "version")
     private Long version;
 
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
     @Column(name = "nombre", length = 100)
     @ToString.Include
     private String nombre;
 
-    @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
     @Column(name = "seudonimo", length = 50)
     @ToString.Include
     private String seudonimo;
@@ -68,8 +63,6 @@ public class Autor extends Auditable {
     private Year anioFallecimiento;
 
     @Lob
-    @NotBlank(message = "La biografia no puede estar vacía")
-    @Size(max = 5000, message = "La biografia es demasiado larga")
     @Column(name = "biografia", nullable = false, columnDefinition = "TEXT")
     private String biografia;
 
@@ -92,22 +85,5 @@ public class Autor extends Auditable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_obra")
     private Obra obraCumbre;
-
-    // --- VALIDACIONES ---
-
-    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
-    public boolean isIdentidadValida() {
-        boolean tieneNombreCompleto = (nombre != null && !nombre.isBlank());
-        boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
-        return tieneNombreCompleto || tieneSeudonimo;
-    }
-
-    @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
-    public boolean isFechasValidas() {
-        if (anioNacimiento == null || anioFallecimiento == null) {
-            return true;
-        }
-        return !anioNacimiento.isAfter(anioFallecimiento);
-    }
 
 }

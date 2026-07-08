@@ -1,11 +1,13 @@
 package com.arrupeteca.service.impl;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import org.openapitools.jackson.nullable.JsonNullable;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
-import com.arrupeteca.dto.response.summary.AutorResumen;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
 import com.arrupeteca.persistence.entity.Autor;
@@ -21,6 +23,7 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,14 +58,14 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all active paginated")
     void shouldReturnAllActive() {
-        Autor autor = new Autor();
+        Autor autor = Autor.builder().build();
         Page<Autor> expectedPage = new PageImpl<>(List.of(autor));
-        AutorResumen resumen = mock(AutorResumen.class);
+        AutorResumenResponse resumen = mock(AutorResumenResponse.class);
 
-        when(autorRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(expectedPage);
         when(autorMapper.toResumen(autor)).thenReturn(resumen);
 
-        Page<AutorResumen> result = autorService.obtenerTodosActivos(Pageable.unpaged());
+        Page<AutorResumenResponse> result = autorService.obtenerTodosActivos(Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(resumen);
     }
@@ -70,9 +73,9 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return by ID and active")
     void shouldReturnByIdAndActive() {
-        Autor autor = new Autor();
+        Autor autor = Autor.builder().build();
         AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
-        when(autorRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(autor));
+        when(autorRepository.findOne(any(Specification.class))).thenReturn(Optional.of(autor));
         when(autorMapper.toDetalleResponse(autor)).thenReturn(detalle);
 
         AutorDetalleResponse result = autorService.obtenerPorIdActivo(1L);
@@ -83,7 +86,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when not found or inactive")
     void shouldThrowWhenNotFoundOrInactive() {
-        when(autorRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(autorRepository.findOne(any(Specification.class))).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> autorService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -93,14 +96,14 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all for admin")
     void shouldReturnAllAdmin() {
-        Autor autor = new Autor();
+        Autor autor = Autor.builder().build();
         Page<Autor> expectedPage = new PageImpl<>(List.of(autor));
-        AutorResumen resumen = mock(AutorResumen.class);
+        AutorResumenResponse resumen = mock(AutorResumenResponse.class);
 
-        when(autorRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(autorRepository.findAll((Specification<Autor>) any(), any(Pageable.class))).thenReturn(expectedPage);
         when(autorMapper.toResumen(autor)).thenReturn(resumen);
 
-        Page<AutorResumen> result = autorService.obtenerTodos(Pageable.unpaged());
+        Page<AutorResumenResponse> result = autorService.obtenerTodos(Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(resumen);
     }
@@ -108,9 +111,9 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return by ID")
     void shouldReturnById() {
-        Autor autor = new Autor();
+        Autor autor = Autor.builder().build();
         AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.of(autor));
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(autor));
         when(autorMapper.toDetalleResponse(autor)).thenReturn(detalle);
 
         AutorDetalleResponse result = autorService.obtenerPorId(1L);
@@ -121,7 +124,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when not found")
     void shouldThrowWhenNotFound() {
-        when(autorRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+        when(autorRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> autorService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -132,9 +135,9 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should perform global advanced search")
     void shouldPerformGlobalAdvancedSearch() {
         Page<Autor> expectedPage = new PageImpl<>(List.of());
-        when(autorRepository.busquedaGlobalAvanzada(any(), any(), any(), any())).thenReturn(expectedPage);
+        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(expectedPage);
 
-        Page<AutorResumen> result = autorService.busquedaGlobal("test", 1900, 2000, Pageable.unpaged());
+        Page<AutorResumenResponse> result = autorService.busquedaGlobal("test", Year.of(1900), Year.of(2000), Pageable.unpaged());
 
         assertThat(result).isEmpty();
     }
@@ -143,10 +146,9 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should perform master search admin")
     void shouldPerformMasterSearchAdmin() {
         Page<Autor> expectedPage = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any()))
-                .thenReturn(expectedPage);
+        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(expectedPage);
 
-        Page<AutorResumen> result = autorService.busquedaMaestraAdmin(
+        Page<AutorResumenResponse> result = autorService.busquedaMaestraAdmin(
                 false, 1L, 1L, 1L, "test", Pageable.unpaged()
         );
 
@@ -156,19 +158,24 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should create author with default values and valid relations")
     void shouldCreateAuthor() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Test");
-        request.setIdPaisNacimiento(1L);
-        request.setIdNacionalidad(1L);
-        request.setIdGeneroPrincipal(1L);
-        request.setIdObraCumbre(1L);
+        AutorRequest request = AutorRequest.builder()
+                .nombre("Test")
+                .idPaisNacimiento(JsonNullable.of(1L))
+                .idNacionalidad(JsonNullable.of(1L))
+                .idGeneroPrincipal(JsonNullable.of(1L))
+                .idObraCumbre(JsonNullable.of(1L))
+                .build();
 
         when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
+        when(paisRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Pais()));
+        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Nacionalidad()));
+        when(generoRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Genero()));
+        when(obraRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Obra()));
         
-        Autor autorEntity = new Autor();
+        Autor autorEntity = Autor.builder().build();
         when(autorMapper.toEntity(any())).thenReturn(autorEntity);
 
-        Autor saved = new Autor();
+        Autor saved = Autor.builder().build();
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
@@ -184,15 +191,14 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should create author with null relations")
     void shouldCreateAuthorWithNullRelations() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Test");
+        AutorRequest request = AutorRequest.builder().nombre("Test").build();
 
         when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
 
-        Autor autorEntity = new Autor();
+        Autor autorEntity = Autor.builder().build();
         when(autorMapper.toEntity(any())).thenReturn(autorEntity);
 
-        Autor saved = new Autor();
+        Autor saved = Autor.builder().build();
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
@@ -207,16 +213,15 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update author")
     void shouldUpdateAuthor() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Nuevo Nombre");
+        AutorRequest request = AutorRequest.builder().nombre("Nuevo Nombre").build();
 
-        Autor existing = new Autor();
+        Autor existing = Autor.builder().build();
         existing.setId(1L);
         existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(autorRepository.existsByNombreIgnoreCase("Nuevo Nombre")).thenReturn(false);
         
-        Autor saved = new Autor();
+        Autor saved = Autor.builder().build();
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
@@ -235,7 +240,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingNonExistent() {
         when(autorRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> autorService.actualizar(1L, new AutorRequest()))
+        assertThatThrownBy(() -> autorService.actualizar(1L, AutorRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Autor con ID: 1");
     }
@@ -243,7 +248,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should deactivate author")
     void shouldDeactivate() {
-        when(autorRepository.existsById(1L)).thenReturn(true);
+        when(autorRepository.existsByIdIncludeDeleted(1L)).thenReturn(true);
 
         autorService.cambiarEstado(1L, false);
 
@@ -253,7 +258,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should activate author")
     void shouldActivate() {
-        when(autorRepository.existsById(1L)).thenReturn(true);
+        when(autorRepository.existsByIdIncludeDeleted(1L)).thenReturn(true);
 
         autorService.cambiarEstado(1L, true);
 
@@ -263,7 +268,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw when changing state of non-existent author")
     void shouldThrowWhenChangingStateNonExistent() {
-        when(autorRepository.existsById(1L)).thenReturn(false);
+        when(autorRepository.existsByIdIncludeDeleted(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> autorService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -273,15 +278,14 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update author with same name")
     void shouldUpdateAuthorSameName() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Mismo");
+        AutorRequest request = AutorRequest.builder().nombre("Mismo").build();
 
-        Autor existing = new Autor();
+        Autor existing = Autor.builder().build();
         existing.setId(1L);
         existing.setNombre("Mismo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
         
-        Autor saved = new Autor();
+        Autor saved = Autor.builder().build();
         saved.setId(1L);
         when(autorRepository.save(any())).thenReturn(saved);
 
@@ -296,10 +300,9 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw when updating author with name that already exists")
     void shouldThrowWhenUpdateNameExists() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Existente");
+        AutorRequest request = AutorRequest.builder().nombre("Existente").build();
 
-        Autor existing = new Autor();
+        Autor existing = Autor.builder().build();
         existing.setId(1L);
         existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
@@ -307,14 +310,13 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro autor con el nombre: Existente");
+                .hasMessageContaining("Ya existe un autor con el nombre: Existente");
     }
 
     @Test
     @DisplayName("Should throw exception if author name exists during creation")
     void crearNombreExists() {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Test");
+        AutorRequest request = AutorRequest.builder().nombre("Test").build();
         when(autorRepository.existsByNombreIgnoreCase("Test")).thenReturn(true);
 
         assertThatThrownBy(() -> autorService.crear(request))
@@ -325,10 +327,10 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should verify duplicates with trimming")
     void shouldVerifyDuplicatesWithTrimming() {
-        Autor autor = new Autor();
+        Autor autor = Autor.builder().build();
         when(autorRepository.buscarPosiblesDuplicados("Termino", 1L))
                 .thenReturn(List.of(autor));
-        when(autorMapper.toResumen(autor)).thenReturn(mock(AutorResumen.class));
+        when(autorMapper.toResumen(autor)).thenReturn(mock(AutorResumenResponse.class));
 
         assertThat(autorService.buscarDuplicados("  Termino  ", 1L)).isNotEmpty();
         verify(autorRepository).buscarPosiblesDuplicados("Termino", 1L);

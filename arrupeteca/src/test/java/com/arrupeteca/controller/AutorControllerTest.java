@@ -2,7 +2,7 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.AutorRequest;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
-import com.arrupeteca.dto.response.summary.AutorResumen;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.service.AutorService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +34,7 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores - Should return active authors")
     void shouldReturnActive() throws Exception {
-        Page<AutorResumen> page = new PageImpl<>(List.of());
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
         when(autorService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores"))
@@ -46,9 +46,11 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/{id} - Should return author by ID")
     void shouldReturnById() throws Exception {
-        AutorDetalleResponse detalle = new AutorDetalleResponse(
-                1L, "Autor Test", null, null, null, null, false,
-                null, null, null, null, null, null, null, null);
+        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("Autor Test")
+                .biografia("Bio")
+                .build();
         when(autorService.obtenerPorIdActivo(1L)).thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/autores/1"))
@@ -61,7 +63,7 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/busqueda - Should perform global search")
     void shouldPerformGlobalSearch() throws Exception {
-        Page<AutorResumen> page = new PageImpl<>(List.of());
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
         when(autorService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/busqueda")
@@ -76,13 +78,16 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/autores - Should create author")
     void shouldCreate() throws Exception {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Nuevo");
-        request.setBiografia("Biografia de prueba");
+        AutorRequest request = AutorRequest.builder()
+                .nombre("Nuevo")
+                .biografia("Biografia de prueba")
+                .build();
 
-        AutorDetalleResponse detalle = new AutorDetalleResponse(
-                1L, "Nuevo", null, null, null, null, false,
-                null, null, null, null, null, null, null, null);
+        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("Nuevo")
+                .biografia("Biografia de prueba")
+                .build();
         when(autorService.crear(any())).thenReturn(detalle);
 
         mockMvc.perform(post("/api/v1/autores")
@@ -96,13 +101,16 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/autores/{id} - Should update author")
     void shouldUpdate() throws Exception {
-        AutorRequest request = new AutorRequest();
-        request.setNombre("Actualizado");
-        request.setBiografia("Nueva biografia");
+        AutorRequest request = AutorRequest.builder()
+                .nombre("Actualizado")
+                .biografia("Nueva biografia")
+                .build();
 
-        AutorDetalleResponse detalle = new AutorDetalleResponse(
-                1L, "Actualizado", null, null, null, null, false,
-                null, null, null, null, null, null, null, null);
+        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("Actualizado")
+                .biografia("Nueva biografia")
+                .build();
         when(autorService.actualizar(any(Long.class), any(AutorRequest.class))).thenReturn(detalle);
 
         mockMvc.perform(put("/api/v1/autores/1")
@@ -134,7 +142,7 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/admin - Should return all authors for admin")
     void shouldReturnAllAdmin() throws Exception {
-        Page<AutorResumen> page = new PageImpl<>(List.of());
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
         when(autorService.obtenerTodos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/admin"))
@@ -146,7 +154,7 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
-        Page<AutorResumen> page = new PageImpl<>(List.of());
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
         when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
@@ -160,9 +168,11 @@ class AutorControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/autores/admin/{id} - Should return author by ID for admin")
     void shouldReturnByIdAdmin() throws Exception {
-        AutorDetalleResponse detalle = new AutorDetalleResponse(
-                1L, "Autor Test", null, null, null, null, false,
-                null, null, null, null, null, null, null, null);
+        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("Autor Test")
+                .biografia("Bio")
+                .build();
         when(autorService.obtenerPorId(1L)).thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/autores/admin/1"))

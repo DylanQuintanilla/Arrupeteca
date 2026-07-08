@@ -26,7 +26,8 @@ class AutorRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should search globally")
     void shouldSearchGlobal() {
         autorRepository.save(Autor.builder().nombre("Gabriel Garcia").biografia("Bio").build());
-        Page<Autor> page = autorRepository.busquedaGlobalAvanzada("Gabriel", null, null, PageRequest.of(0, 10));
+        org.springframework.data.jpa.domain.Specification<Autor> spec = com.arrupeteca.persistence.specification.AutorSpecification.filtroBusquedaGlobal("Gabriel", null, null);
+        Page<Autor> page = autorRepository.findAll(spec, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 }

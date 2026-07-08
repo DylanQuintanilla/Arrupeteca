@@ -4,7 +4,6 @@ import com.arrupeteca.persistence.entity.Autor;
 import com.arrupeteca.persistence.entity.Nacionalidad;
 import com.arrupeteca.persistence.entity.Pais;
 import com.arrupeteca.persistence.entity.Genero;
-import com.arrupeteca.persistence.entity.Obra;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -25,7 +24,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> tieneId(Long id) {
         return (root, query, cb) -> {
-            if (id == null) return null;
+            if (id == null) {
+                return null;
+            }
             return cb.equal(root.get("id"), id);
         };
     }
@@ -43,7 +44,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> tieneNacionalidad(Long idNacionalidad) {
         return (root, query, cb) -> {
-            if (idNacionalidad == null) return null;
+            if (idNacionalidad == null) {
+                return null;
+            }
             Join<Autor, Nacionalidad> join = root.join("nacionalidad", JoinType.LEFT);
             return cb.equal(join.get("id"), idNacionalidad);
         };
@@ -54,7 +57,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> tienePais(Long idPais) {
         return (root, query, cb) -> {
-            if (idPais == null) return null;
+            if (idPais == null) {
+                return null;
+            }
             Join<Autor, Pais> join = root.join("paisNacimiento", JoinType.LEFT);
             return cb.equal(join.get("id"), idPais);
         };
@@ -65,7 +70,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> tieneGenero(Long idGenero) {
         return (root, query, cb) -> {
-            if (idGenero == null) return null;
+            if (idGenero == null) {
+                return null;
+            }
             Join<Autor, Genero> join = root.join("generoPrincipal", JoinType.LEFT);
             return cb.equal(join.get("id"), idGenero);
         };
@@ -76,7 +83,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> contieneTermino(String termino) {
         return (root, query, cb) -> {
-            if (termino == null || termino.isBlank()) return null;
+            if (termino == null || termino.isBlank()) {
+                return null;
+            }
             String pattern = "%" + termino.trim() + "%";
             return cb.or(
                     cb.like(root.get("nombre"), pattern),
@@ -92,7 +101,9 @@ public class AutorSpecification {
      */
     public static Specification<Autor> busquedaGlobal(String palabra) {
         return (root, query, cb) -> {
-            if (palabra == null || palabra.isBlank()) return null;
+            if (palabra == null || palabra.isBlank()) {
+                return null;
+            }
             String pattern = "%" + palabra.trim() + "%";
 
             // Aseguramos que no haya duplicados si la consulta se vuelve compleja

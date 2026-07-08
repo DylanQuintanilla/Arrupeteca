@@ -13,12 +13,12 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
 
 ### Phase 2: Refinement, Optimization and Quality (Fase 2: Refinamiento, Optimización y Calidad) [EN PROGRESO]
 - [X] **Technical Debt & Standards**:
-    - [X] Infraestructura de Checkstyle (5 Golden Rules).
-    - [X] Limpieza manual y refactor de estilo de Controllers, Services, Mappers y Entities (100% cumplimiento).
-    - [ ] Migración de DTOs a **Java Records**.
-    - [ ] Implementación de **@Version** en `Auditable.java`.
+    - [X] Infraestructura de Checkstyle (5 Golden Rules). *(Nota: Verificación temporalmente obviada por refactorización activa).*
+    - [X] Limpieza manual y refactor de estilo de Controllers, Services, Mappers y Entities (100% cumplimiento). *(Nota: Verificación temporalmente obviada por refactorización activa).*
+    - [/] Migración de DTOs a **Java Records** (Records de respuesta implementados; request DTOs pendientes excepto AutorRequest).
+    - [X] Implementación de **@Version** a nivel de entidad transaccional (ej. `Autor`).
     - [ ] Mejora de `ApiResponse` con estructura completa.
-    - [ ] Optimización de repositorios y JPA (EntityGraph, Batch Fetching).
+    - [/] Optimización de repositorios y JPA (EntityGraph en AutorRepository; Batch Fetching configurado a nivel global; pendiente en demás entidades).
 - [ ] **Functional Enhancements**:
     - [ ] Nueva entidad **Etiqueta** (M:M con Libros).
     - [ ] Campo **Popularidad** en Libros e **id_donacion** en EjemplarLibro.
@@ -28,9 +28,17 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
     - [ ] Manejo de errores profesional y SLF4J.
     - [ ] **Borrado Lógico en Cascada** (Obra -> Libros -> Ejemplares).
 - [ ] **Quality Control**:
-    - [ ] Estabilización de la base de pruebas (Fix de tests rotos tras refactor).
+    - [/] Estabilización de la base de pruebas (Fix de tests rotos tras refactor; en progreso/pausado por refactorización).
     - [ ] **Plan de Pruebas Maestro**: Crear el suite de pruebas (Unitarias e Integración) para todo el proyecto.
-    - [ ] Cobertura de pruebas al 100% (JaCoCo).
+    - [ ] Cobertura de pruebas al 100% (JaCoCo). *(Nota: Temporalmente obviado por refactorización activa).*
+- [ ] **Infrastructure & Documentation**:
+    - [ ] Configuración e integración de caché local con `@Cacheable`.
+    - [ ] Asegurar deserialización correcta de Records de respuesta mediante `@Jacksonized`.
+    - [ ] Estandarización de Javadoc en clases de servicio y anotaciones OpenAPI/OpenAPI UI (Swagger) en controladores (incluyendo el uso de `@ParameterObject` y `@PageableDefault` para paginación).
+    - [ ] Creación de la tabla de logs en la base de datos para auditoría y persistencia de trazas.
+    - [ ] Configurar la IP directa del frontend en la anotación `@CrossOrigin` de los controladores en lugar del comodín (`*`).
+
+
 
 ### Phase 3: Advanced Operational Flows (Fase 3: Flujos Operativos Avanzados)
 - [ ] **Módulo de Préstamos:** Solicitudes, renovaciones y límites.

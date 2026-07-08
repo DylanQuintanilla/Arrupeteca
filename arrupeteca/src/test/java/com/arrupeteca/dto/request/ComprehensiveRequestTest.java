@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
 import org.junit.jupiter.api.Test;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.time.Year;
 import java.util.Collections;
 
 class ComprehensiveRequestTest {
@@ -13,32 +15,44 @@ class ComprehensiveRequestTest {
     void shouldCoverAutorRequest() {
         AutorRequest request = AutorRequest.builder()
                 .nombre("Nombre")
-                .seudonimo("Seudonimo")
-                .anioNacimiento(1900)
-                .anioFallecimiento(1980)
+                .seudonimo(JsonNullable.of("Seudonimo"))
+                .anioNacimiento(JsonNullable.of(Year.of(1900)))
+                .anioFallecimiento(JsonNullable.of(Year.of(1980)))
                 .biografia("Bio")
-                .idPaisNacimiento(1L)
-                .idNacionalidad(1L)
-                .idGeneroPrincipal(1L)
-                .idObraCumbre(1L)
+                .idPaisNacimiento(JsonNullable.of(1L))
+                .idNacionalidad(JsonNullable.of(1L))
+                .idGeneroPrincipal(JsonNullable.of(1L))
+                .idObraCumbre(JsonNullable.of(1L))
                 .build();
 
         assertThat(request.isIdentidadValida()).isTrue();
         assertThat(request.isFechasValidas()).isTrue();
 
-        request.setNombre(null);
-        assertThat(request.isIdentidadValida()).isTrue(); // Has seudonimo
+        AutorRequest requestSinNombre = AutorRequest.builder()
+                .nombre(null)
+                .seudonimo(JsonNullable.of("Seudonimo"))
+                .biografia("Bio")
+                .build();
+        assertThat(requestSinNombre.isIdentidadValida()).isTrue(); // Has seudonimo
 
-        request.setSeudonimo(null);
-        assertThat(request.isIdentidadValida()).isFalse(); // No identity
+        AutorRequest requestSinNombreNiSeudonimo = AutorRequest.builder()
+                .nombre(null)
+                .seudonimo(null)
+                .biografia("Bio")
+                .build();
+        assertThat(requestSinNombreNiSeudonimo.isIdentidadValida()).isFalse(); // No identity
 
-        request.setAnioNacimiento(2000);
-        request.setAnioFallecimiento(1900);
-        assertThat(request.isFechasValidas()).isFalse();
+        AutorRequest requestFechasInvalidas = AutorRequest.builder()
+                .nombre("Nombre")
+                .biografia("Bio")
+                .anioNacimiento(JsonNullable.of(Year.of(2000)))
+                .anioFallecimiento(JsonNullable.of(Year.of(1900)))
+                .build();
+        assertThat(requestFechasInvalidas.isFechasValidas()).isFalse();
 
-        // Trigger Lombok methods
+        // Trigger Lombok/Record methods
         assertThat(request.toString()).contains("AutorRequest");
-        AutorRequest other = new AutorRequest();
+        AutorRequest other = AutorRequest.builder().build();
         assertThat(request.equals(other)).isFalse();
         assertThat(request.hashCode()).isNotZero();
     }

@@ -16,7 +16,7 @@ import com.arrupeteca.dto.response.detail.ObraAutorDetalleResponse;
 import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
 import com.arrupeteca.dto.response.detail.PlantaDetalleResponse;
 import com.arrupeteca.dto.response.detail.SalonDetalleResponse;
-import com.arrupeteca.dto.response.summary.AutorResumen;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.dto.response.summary.CategoriaResumen;
 import com.arrupeteca.dto.response.summary.EdificioResumen;
 import com.arrupeteca.dto.response.summary.EditorialResumen;
@@ -36,6 +36,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.Year;
 import java.util.Collections;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,7 +53,17 @@ class RecordSerializationTest {
 
     @Test
     void shouldCoverAllSummaryRecords() throws Exception {
-        AutorResumen autor = new AutorResumen(1L, "Nombre", "Seudonimo", 1900, 1980, "Bio", false, "Pais", "Nacionalidad");
+        AutorResumenResponse autor = AutorResumenResponse.builder()
+                .id(1L)
+                .nombre("Nombre")
+                .seudonimo("Seudonimo")
+                .anioNacimiento(Year.of(1900))
+                .anioFallecimiento(Year.of(1980))
+                .biografiaResumida("Bio")
+                .borradoLogico(false)
+                .nombrePais("Pais")
+                .nombreNacionalidad("Nacionalidad")
+                .build();
         CategoriaResumen cat = new CategoriaResumen(1L, "Cat", false);
         EdificioResumen edif = new EdificioResumen(1L, "Edif", false);
         EditorialResumen edit = new EditorialResumen(1L, "Edit", "Dir", "Email", "Tel", "Contacto", false);
@@ -92,8 +103,19 @@ class RecordSerializationTest {
     void shouldCoverAllDetailRecords() throws Exception {
         LocalDateTime now = LocalDateTime.now();
         
-        AutorDetalleResponse autor = new AutorDetalleResponse(1L, "N", "S", 1900, 1980, "B", true, "U", now, "U", now,
-                null, null, null, null);
+        AutorDetalleResponse autor = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("N")
+                .seudonimo("S")
+                .anioNacimiento(Year.of(1900))
+                .anioFallecimiento(Year.of(1980))
+                .biografia("B")
+                .borradoLogico(true)
+                .creadoPor("U")
+                .fechaCreacion(now)
+                .actualizadoPor("U")
+                .fechaActualizacion(now)
+                .build();
         CategoriaDetalleResponse cat = new CategoriaDetalleResponse(1L, "C", true, "U", now, "U", now,
                 Collections.emptySet());
         EdificioDetalleResponse edif = new EdificioDetalleResponse(1L, "E", true, "U", now, "U", now);

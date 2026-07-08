@@ -25,7 +25,8 @@ El sistema está diseñado para tres perfiles principales:
 ### 3.2 Inventory and Location Control (Control de Inventario y Ubicación)
 - Gestión de **Ejemplares**: Control de copias físicas individuales, rastreando su estado físico y disponibilidad (Disponible, Prestado, Reservado, Mantenimiento, Perdido).
 - Jerarquía de Ubicación: Organización estructurada por Edificio -> Planta -> Salón -> Mueble (Estante).
-- **Muebles de Transición:** Capacidad de asignar ejemplares a "muebles comodín" de forma temporal cuando llegan de una transferencia y aún no se les ha asignado su estante definitivo.
+- **Muebles de Transición (A futuro):** Capacidad de asignar ejemplares a "muebles comodín" de forma temporal cuando llegan de una transferencia y aún no se les ha asignado su estante definitivo (Pendiente de implementar en Fase 3).
+
 
 ### 3.3 Operational Flows (Flujos Operativos - Futuro)
 - **Préstamos y Reservas:** Creación de solicitudes y aprobaciones. Incluye la aplicación de reglas de negocio restrictivas (ej. los Alumnos solo pueden tener 1 copia de un mismo ejemplar y un máximo de 3 préstamos activos en total).
