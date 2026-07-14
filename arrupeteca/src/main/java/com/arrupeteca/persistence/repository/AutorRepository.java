@@ -47,8 +47,8 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
     @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) > 0 FROM autor WHERE id_autor = :id", nativeQuery = true)
-    boolean existsByIdIncludeDeleted(@Param("id") Long id);
+    @Query(value = "SELECT COUNT(*) FROM autor WHERE id_autor = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
 }

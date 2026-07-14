@@ -44,10 +44,16 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
 - [ ] **Módulo de Préstamos:** Solicitudes, renovaciones y límites.
 - [ ] **Módulo de Transferencias:** Movimientos y "Muebles de Transición".
 - [ ] **Módulo de Donaciones:** Entradas/Salidas y registro de entidades.
-- [ ] Gestión de Usuarios y Roles (Admin, Maestro, Alumno).
+- [ ] **Gestión de Usuarios y Roles (Admin, Maestro, Alumno):**
+    - [ ] Registro, login y control de accesos.
+    - [ ] Verificación de la validez y existencia de correos al registrar nuevos usuarios.
+    - [ ] Flujo de envío de correos para recuperación de contraseñas.
 
 ### Phase 4: Future Enhancements (Fase 4: Mejoras Futuras)
-- [ ] **Notificaciones Automáticas vía Correo** (Préstamos vencidos, solicitudes aprobadas).
+- [ ] **Sistema de Notificaciones Automáticas y Envío de Correos:**
+    - [ ] Plantillas y lógica de aviso para préstamos próximos a vencer (alertas previas) y vencidos.
+    - [ ] Correos para avisos generales de la biblioteca y comunicados.
+    - [ ] Notificaciones automáticas de flujos operativos (donación registrada, transferencia iniciada, etc.).
 - [ ] Sistema de Etiquetas (Tags) transversales para eventos.
 - [ ] Versionado en la clase auditable y multidioma.
 

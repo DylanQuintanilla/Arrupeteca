@@ -138,7 +138,7 @@ public class AutorController {
         description = "Busca autores por coincidencia parcial de texto y rango de año de nacimiento."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaGlobal(
-            @RequestParam String palabra,
+            @RequestParam(required = false) String palabra,
             @RequestParam(required = false) Year inicio,
             @RequestParam(required = false) Year fin,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
@@ -148,18 +148,20 @@ public class AutorController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada (Admin)",
-        description = "Búsqueda avanzada multi-filtro por estado, género, país y coincidencia de término (solo admin)."
+        description = "Búsqueda avanzada de administración con filtros opcionales de estado, género, país, período y término."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
             @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Year anioInicio,
+            @RequestParam(required = false) Year anioFin,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero,
-                        termino, pageable)));
+                        anioInicio, anioFin, termino, pageable)));
     }
 
     @PostMapping
@@ -218,7 +220,7 @@ public class AutorController {
 5. **¿Autodocumentación limpia y libre de colisiones?**
    * ¿Se incluyó `@Tag` a nivel de clase y `@Operation` en cada método?
    * ¿Se evitaron anotaciones `@ApiResponse` redundantes para dejar que Springdoc infiera el esquema automáticamente?
-   * ¿Los parámetros de tipo `Pageable` tienen anotados `@ParameterObject` y `@PageableDefault` para una correcta documentación y valores por defecto?
+   * ¿Los parámetros de tipo `Pageable` tienen anotados `@ParameterObject` y `@PageableDefault`?
 6. **¿Conformidad con Checkstyle?**
    * ¿Se formatearon las anotaciones OpenAPI en múltiples líneas para asegurar que ninguna línea de código supere los 140 caracteres?
 

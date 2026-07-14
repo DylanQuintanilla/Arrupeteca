@@ -72,7 +72,6 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    @Cacheable(value = "autores", key = "#id")
     public AutorDetalleResponse obtenerPorId(Long id) {
         log.debug("Buscando autor con ID (incluyendo borrados): {}", id);
         return autorRepository.findById(id)
@@ -94,9 +93,9 @@ public class AutorServiceImpl implements AutorService {
     @Override
     public Page<AutorResumenResponse> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
-            String termino, Pageable pageable) {
-        log.debug("Iniciando búsqueda maestra admin para término: '{}'", termino);
-        Specification<Autor> spec = AutorSpecification.filtroMaestroAdmin(esBorrado, idNacionalidad, idPais, idGenero, termino);
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda maestra admin para término: '{}', años: {} - {}", termino, anioInicio, anioFin);
+        Specification<Autor> spec = AutorSpecification.filtroMaestroAdmin(esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino);
         return autorRepository.findAll(spec, pageable)
                 .map(autorMapper::toResumen);
     }
@@ -105,12 +104,13 @@ public class AutorServiceImpl implements AutorService {
     @Transactional
     public AutorDetalleResponse crear(AutorRequest request) {
         log.info("Creando nuevo autor con nombre: {}", request.nombre());
+        validarDatosCreacion(request);
         validarUnicidadNombre(request.nombre(), null);
 
         Autor autor = autorMapper.toEntity(request);
         asignarRelaciones(autor, request);
         
-        Autor guardado = autorRepository.save(autor);
+        Autor guardado = autorRepository.saveAndFlush(autor);
         log.info("Autor creado exitosamente con ID: {}", guardado.getId());
         return autorMapper.toDetalleResponse(guardado);
     }
@@ -123,27 +123,87 @@ public class AutorServiceImpl implements AutorService {
         Autor autorExistente = autorRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
+        validarDatosActualizacion(request, autorExistente);
         validarUnicidadNombre(request.nombre(), autorExistente);
 
         autorMapper.updateEntity(request, autorExistente);
         asignarRelaciones(autorExistente, request);
+
+        // Validar fechas cruzadas post-merge
+        if (autorExistente.getAnioNacimiento() != null && autorExistente.getAnioFallecimiento() != null) {
+            if (autorExistente.getAnioNacimiento().isAfter(autorExistente.getAnioFallecimiento())) {
+                throw new ValidacionNegocioException("El año de nacimiento no puede ser mayor al año de fallecimiento (" + autorExistente.getAnioFallecimiento() + ")");
+            }
+        }
         
-        Autor actualizado = autorRepository.save(autorExistente);
+        Autor actualizado = autorRepository.saveAndFlush(autorExistente);
         log.info("Autor con ID: {} actualizado exitosamente", id);
         return autorMapper.toDetalleResponse(actualizado);
     }
 
-    private void validarUnicidadNombre(String nombreNuevo, Autor autorExistente) {
-        if (nombreNuevo == null || nombreNuevo.isBlank()) {
+    private void validarDatosCreacion(AutorRequest request) {
+        boolean tieneNombre = (request.nombre() != null && request.nombre().isPresent() && request.nombre().get() != null && !request.nombre().get().isBlank());
+        boolean tieneSeudonimo = (request.seudonimo() != null && request.seudonimo().isPresent() && request.seudonimo().get() != null && !request.seudonimo().get().isBlank());
+        if (!tieneNombre && !tieneSeudonimo) {
+            throw new ValidacionNegocioException("El autor debe tener al menos un Nombre o un Seudonimo");
+        }
+        
+        boolean tieneBiografia = (request.biografia() != null && request.biografia().isPresent() && request.biografia().get() != null && !request.biografia().get().isBlank());
+        if (!tieneBiografia) {
+            throw new ValidacionNegocioException("La biografia no puede estar vacía");
+        }
+    }
+
+    private void validarDatosActualizacion(AutorRequest request, Autor autorExistente) {
+        // Validación manual de Bloqueo Optimista
+        if (request.version() != null && !request.version().equals(autorExistente.getVersion())) {
+            throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
+        }
+
+        // Si se envían en el JSON, no deben estar vacíos
+        if (request.nombre() != null && request.nombre().isPresent()) {
+            if (request.nombre().get() == null || request.nombre().get().isBlank()) {
+                throw new ValidacionNegocioException("El nombre no puede estar vacío");
+            }
+        }
+        if (request.seudonimo() != null && request.seudonimo().isPresent()) {
+            if (request.seudonimo().get() == null || request.seudonimo().get().isBlank()) {
+                throw new ValidacionNegocioException("El seudonimo no puede estar vacío");
+            }
+        }
+        if (request.biografia() != null && request.biografia().isPresent()) {
+            if (request.biografia().get() == null || request.biografia().get().isBlank()) {
+                throw new ValidacionNegocioException("La biografia no puede estar vacía");
+            }
+        }
+
+        // Post-merge, verificar que aún quede al menos un nombre o seudónimo válido
+        String nombreFinal = (request.nombre() != null && request.nombre().isPresent())
+                ? (request.nombre().get() != null ? request.nombre().get().trim() : null)
+                : autorExistente.getNombre();
+        String seudonimoFinal = (request.seudonimo() != null && request.seudonimo().isPresent())
+                ? (request.seudonimo().get() != null ? request.seudonimo().get().trim() : null)
+                : autorExistente.getSeudonimo();
+
+        boolean tieneNombre = (nombreFinal != null && !nombreFinal.isBlank());
+        boolean tieneSeudonimo = (seudonimoFinal != null && !seudonimoFinal.isBlank());
+        if (!tieneNombre && !tieneSeudonimo) {
+            throw new ValidacionNegocioException("El autor debe tener al menos un Nombre o un Seudonimo");
+        }
+    }
+
+    private void validarUnicidadNombre(JsonNullable<String> nombreNuevo, Autor autorExistente) {
+        if (nombreNuevo == null || !nombreNuevo.isPresent() || nombreNuevo.get() == null || nombreNuevo.get().isBlank()) {
             return;
         }
 
+        String nombreVal = nombreNuevo.get().trim();
         boolean esNuevo = (autorExistente == null);
-        boolean nombreCambio = !esNuevo && !autorExistente.getNombre().equalsIgnoreCase(nombreNuevo.trim());
+        boolean nombreCambio = !esNuevo && !autorExistente.getNombre().equalsIgnoreCase(nombreVal);
 
-        if ((esNuevo || nombreCambio) && autorRepository.existsByNombreIgnoreCase(nombreNuevo.trim())) {
-            log.warn("Intento de duplicar nombre de autor: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + nombreNuevo);
+        if ((esNuevo || nombreCambio) && autorRepository.existsByNombreIgnoreCase(nombreVal)) {
+            log.warn("Intento de duplicar nombre de autor: {}", nombreVal);
+            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + nombreVal);
         }
     }
 
@@ -209,7 +269,7 @@ public class AutorServiceImpl implements AutorService {
     @CacheEvict(value = "autores", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado del autor ID: {} a {}", id, !estado);
-        if (!autorRepository.existsByIdIncludeDeleted(id)) {
+        if (autorRepository.countByIdIncludeDeleted(id) == 0) {
             throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
         if (estado) {

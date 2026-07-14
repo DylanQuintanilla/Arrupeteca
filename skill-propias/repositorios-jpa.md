@@ -44,14 +44,21 @@ Para consultas personalizadas de actualización o borrado directo (ej. actualiza
 
 ---
 
-## 4. Gestión de Borrado Lógico y Consultas Nativa
+## 4. Gestión de Borrado Lógico y Compatibilidad MySQL (COUNT)
 
-Dado que el borrado lógico preserva la fila en la tabla, el método por defecto `existsById` de Spring Data JPA podría retornar `true` aunque el registro esté borrado lógicamente (dependiendo de la configuración del filtro global).
+Dado que el borrado lógico preserva la fila en la tabla, necesitamos chequear si un ID existe físicamente (incluso si está borrado lógicamente) antes de activarlo o desactivarlo. 
 
-*   **Solución Estándar**: Para validar existencia física real sin interferencias lógicas, se debe declarar una consulta nativa explícita:
+*   **Problema de Compatibilidad**: En MySQL, la función booleana nativa `SELECT COUNT(*) > 0` retorna un entero (`Integer`), lo cual lanza un error `ClassCastException` si intentamos recibirlo en Java como `boolean`.
+*   **Solución Estándar**: Para validar existencia física de manera compatible con cualquier motor de base de datos (H2, MySQL, PostgreSQL, etc.), se debe realizar un conteo numérico (`long`) y comprobar en el servicio si el valor es mayor a cero:
     ```java
-    @Query(value = "SELECT COUNT(*) > 0 FROM autor WHERE id_autor = :id", nativeQuery = true)
-    boolean existsByIdIncludeDeleted(@Param("id") Long id);
+    @Query(value = "SELECT COUNT(*) FROM autor WHERE id_autor = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
+    ```
+*   En la capa de servicio:
+    ```java
+    if (autorRepository.countByIdIncludeDeleted(id) == 0) {
+        throw new ValidacionNegocioException("No se encontró el registro...");
+    }
     ```
 
 ---
@@ -109,8 +116,8 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
     @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) > 0 FROM autor WHERE id_autor = :id", nativeQuery = true)
-    boolean existsByIdIncludeDeleted(@Param("id") Long id);
+    @Query(value = "SELECT COUNT(*) FROM autor WHERE id_autor = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
 }
@@ -131,9 +138,11 @@ Antes de considerar listo un repositorio, verifique el cumplimiento de los sigui
 4. **¿Los métodos `@Modifying` son seguros para el contexto de Hibernate?**
    * ¿Tienen todos los métodos `@Modifying` configurado `clearAutomatically = true` y `flushAutomatically = true`?
 5. **¿Se utiliza `@Param` explícito?**
-   * ¿Todos los parámetros en los métodos `@Query` tienen su correspondiente `@Param("nombre")` para evitar problemas de resolución de parámetros en tiempo de compilación?
-6. **¿El método de verificación de existencia física está presente?**
-   * Si la entidad maneja borrado lógico, ¿existe el método native query `existsByIdIncludeDeleted` para chequear existencia física real?
-
+   * ¿Todos los parámetros en los métodos `@Query` tienen su correspondiente `@Param("nombre")`?
+6. **¿El método de verificación de existencia física es compatible con MySQL?**
+   * Si la entidad maneja borrado lógico, ¿existe el método native query `countByIdIncludeDeleted` retornando un `long` en lugar de una comparación booleana directa?
+7. **¿Se realiza el conteo correctamente en el Servicio?**
+   * ¿La capa de servicio comprueba `countByIdIncludeDeleted(id) == 0` para lanzar la excepción?
+ 
 ---
 *Este estándar garantiza que la capa de persistencia sea consultada de forma eficiente y proteja el estado transaccional del sistema.*

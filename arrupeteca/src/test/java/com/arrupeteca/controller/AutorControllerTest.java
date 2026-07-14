@@ -6,6 +6,7 @@ import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.service.AutorService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -79,8 +80,8 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("POST /api/v1/autores - Should create author")
     void shouldCreate() throws Exception {
         AutorRequest request = AutorRequest.builder()
-                .nombre("Nuevo")
-                .biografia("Biografia de prueba")
+                .nombre(JsonNullable.of("Nuevo"))
+                .biografia(JsonNullable.of("Biografia de prueba"))
                 .build();
 
         AutorDetalleResponse detalle = AutorDetalleResponse.builder()
@@ -102,8 +103,8 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("PUT /api/v1/autores/{id} - Should update author")
     void shouldUpdate() throws Exception {
         AutorRequest request = AutorRequest.builder()
-                .nombre("Actualizado")
-                .biografia("Nueva biografia")
+                .nombre(JsonNullable.of("Actualizado"))
+                .biografia(JsonNullable.of("Nueva biografia"))
                 .build();
 
         AutorDetalleResponse detalle = AutorDetalleResponse.builder()
@@ -155,7 +156,7 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/autores/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any()))
+        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/admin/busqueda-maestra")

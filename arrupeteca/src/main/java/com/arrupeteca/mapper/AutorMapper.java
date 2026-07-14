@@ -40,7 +40,7 @@ public interface AutorMapper {
     Autor toEntity(AutorRequest request);
 
     @InheritConfiguration(name = "toEntity")
-    @Mapping(target = "version", source = "version")
+    @Mapping(target = "version", ignore = true)
     void updateEntity(AutorRequest request, @MappingTarget Autor autor);
 
     @Mapping(target = "nombrePais", source = "paisNacimiento.nombre")

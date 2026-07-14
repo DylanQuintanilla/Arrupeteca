@@ -1,4 +1,50 @@
--- 1. Tablas Maestras Simples (Sin auditoría en tu código Java)
+-- DESACTIVAR RESTRICCIONES DE LLAVE FORÁNEA
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- LIMPIAR TABLAS CON DELETE (Evita el error #1701 de MySQL)
+DELETE FROM ejemplar_libro;
+DELETE FROM libro_idioma;
+DELETE FROM libro;
+DELETE FROM mueble;
+DELETE FROM salon;
+DELETE FROM planta;
+DELETE FROM editorial;
+DELETE FROM obra_categoria;
+DELETE FROM obra_genero;
+DELETE FROM obra_autor;
+DELETE FROM autor;
+DELETE FROM obra;
+DELETE FROM tipo_autoria;
+DELETE FROM pais;
+DELETE FROM nacionalidad;
+DELETE FROM idioma;
+DELETE FROM genero;
+DELETE FROM formato;
+DELETE FROM edificio;
+DELETE FROM categoria;
+
+-- RESTABLECER LOS CONTADORES AUTO_INCREMENT A 1
+ALTER TABLE ejemplar_libro AUTO_INCREMENT = 1;
+ALTER TABLE libro AUTO_INCREMENT = 1;
+ALTER TABLE editorial AUTO_INCREMENT = 1;
+ALTER TABLE planta AUTO_INCREMENT = 1;
+ALTER TABLE salon AUTO_INCREMENT = 1;
+ALTER TABLE mueble AUTO_INCREMENT = 1;
+ALTER TABLE autor AUTO_INCREMENT = 1;
+ALTER TABLE obra AUTO_INCREMENT = 1;
+ALTER TABLE tipo_autoria AUTO_INCREMENT = 1;
+ALTER TABLE pais AUTO_INCREMENT = 1;
+ALTER TABLE nacionalidad AUTO_INCREMENT = 1;
+ALTER TABLE idioma AUTO_INCREMENT = 1;
+ALTER TABLE genero AUTO_INCREMENT = 1;
+ALTER TABLE formato AUTO_INCREMENT = 1;
+ALTER TABLE edificio AUTO_INCREMENT = 1;
+ALTER TABLE categoria AUTO_INCREMENT = 1;
+
+-- ACTIVAR RESTRICCIONES DE NUEVO
+SET FOREIGN_KEY_CHECKS = 1;
+
+-- 1. Tablas Maestras Simples
 INSERT INTO categoria (nombre, borrado_logico) VALUES
 ('Literatura General', 0), ('Referencia', 0), ('Hemeroteca', 0), ('Ciencias Exactas', 0), ('Infantil y Juvenil', 0);
 
@@ -31,13 +77,13 @@ INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, fecha_creacion
 ('Cien años de soledad', 1967, 'Realismo mágico en Macondo.', 0, NOW(), NOW(), 'SYSTEM'),
 ('Inundación Castálida', 1689, 'Colección de poemas del barroco.', 0, NOW(), NOW(), 'SYSTEM');
 
--- 3. AUTOR (Requiere Auditoría)
-INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biografia, borrado_logico, id_pais_nacimiento, id_nacionalidad, id_genero_principal, id_obra, fecha_creacion, fecha_actualizacion, creado_por) VALUES
-('Roque Dalton García', NULL, 1935, 1975, 'Poeta y ensayista salvadoreño.', 0, 1, 1, 4, 1, NOW(), NOW(), 'SYSTEM'),
-('Stephen Edwin King', 'Richard Bachman', 1947, NULL, 'El rey del terror contemporáneo.', 0, 2, 2, 3, 2, NOW(), NOW(), 'SYSTEM'),
-('Miguel de Cervantes Saavedra', 'El Manco de Lepanto', 1547, 1616, 'Máxima figura de la literatura española.', 0, 3, 3, 1, 3, NOW(), NOW(), 'SYSTEM'),
-('Gabriel José de la Concordia García Márquez', 'Gabo', 1927, 2014, 'Padre del realismo mágico.', 0, 4, 4, 1, 4, NOW(), NOW(), 'SYSTEM'),
-('Juana Inés de Asbaje y Ramírez de Santillana', 'Sor Juana', 1648, 1695, 'La décima musa mexicana.', 0, 5, 5, 4, 5, NOW(), NOW(), 'SYSTEM');
+-- 3. AUTOR (Requiere Auditoría e incluye la columna `version` en 0)
+INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biografia, borrado_logico, id_pais_nacimiento, id_nacionalidad, id_genero_principal, id_obra, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+('Roque Dalton García', NULL, 1935, 1975, 'Poeta y ensayista salvadoreño.', 0, 1, 1, 4, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('Stephen Edwin King', 'Richard Bachman', 1947, NULL, 'El rey del terror contemporáneo.', 0, 2, 2, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Miguel de Cervantes Saavedra', 'El Manco de Lepanto', 1547, 1616, 'Máxima figura de la literatura española.', 0, 3, 3, 1, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Gabriel José de la Concordia García Márquez', 'Gabo', 1927, 2014, 'Padre del realismo mágico.', 0, 4, 4, 1, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Juana Inés de Asbaje y Ramírez de Santillana', 'Sor Juana', 1648, 1695, 'La décima musa mexicana.', 0, 5, 5, 4, 5, 0, NOW(), NOW(), 'SYSTEM');
 
 -- 4. Relaciones de Obra
 INSERT INTO obra_autor (id_obra, id_autor, id_tipo_autoria, borrado_logico) VALUES

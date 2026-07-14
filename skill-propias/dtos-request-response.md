@@ -1,6 +1,6 @@
 # Estándar de Desarrollo: Request y Response DTOs (Arrupeteca)
 
-Este documento establece las directrices definitivas para la creación y estructuración de los Objetos de Transferencia de Datos (DTOs) en Arrupeteca. Los DTOs actúan como la barrera de validación (API Gateway) y control de contratos de comunicación entre el frontend y el backend.
+Este documento establece las directrices definitivas para la creación y estructuración de los Objetos de Transferencia de Datos (DTOs) en Arrupeteca. Los DTOs actúan como la barrera de validación sintáctica (API Gateway) y control de contratos de comunicación entre el frontend y el backend.
 
 ---
 
@@ -10,7 +10,7 @@ Para cumplir con el estándar de rendimiento **Summary vs Detail**, cada módulo
 
 | Categoría DTO | Convención de Nombre | Capa / Dirección | Propósito | Características de Validación |
 | :--- | :--- | :--- | :--- | :--- |
-| **Request** | `[Entidad]Request.java` | Entrada (Cliente $\rightarrow$ API) | Creación y actualización de datos. | **Validación Rigurosa** (`@NotBlank`, `@Size`, `@AssertTrue`, etc.). |
+| **Request** | `[Entidad]Request.java` | Entrada (Cliente $\rightarrow$ API) | Creación y actualización de datos. | **Validación Sintáctica** (Formatos, límites de caracteres) y soporte a edición parcial mediante **`JsonNullable<T>`**. |
 | **Resumen** | `[Entidad]ResumenResponse.java` | Salida (API $\rightarrow$ Cliente) | Listados paginados rápidos. Evita traer relaciones pesadas o colecciones. | Sin validación de negocio. Anotaciones de formato para OpenAPI. |
 | **Detalle** | `[Entidad]DetalleResponse.java` | Salida (API $\rightarrow$ Cliente) | Consulta individual por ID. Contiene relaciones anidadas completas y auditoría. | Incluye auditoría, versión y objetos `Resumen` de entidades relacionadas. |
 
@@ -18,43 +18,48 @@ Para cumplir con el estándar de rendimiento **Summary vs Detail**, cada módulo
 
 ## 2. Separación de Responsabilidades y Validación
 
-*   **Validaciones en DTOs (Request)**: Toda validación de formato, obligatoriedad, tamaño y lógica cruzada de atributos debe residir **exclusivamente** en los Request DTOs.
-*   **Anotaciones Comunes**:
-    *   `@NotBlank(message = "...")`: Obligatorio para textos. Previene cadenas vacías o espacios.
-    *   `@NotNull(message = "...")`: Obligatorio para IDs, números y tipos como `Year` o `LocalDateTime`.
+*   **Validación Sintáctica (En el DTO)**: Toda validación estática de longitud, formato o valores permitidos debe residir en el Request DTO mediante anotaciones estándar de Java Validation (ej: `@Size`, `@Positive`, `@PastOrPresent`).
+*   **Validación Lógica/Negocio (En el Servicio)**: Las comprobaciones de obligatoriedad según la acción (crear vs. actualizar), unicidad o lógica condicional deben residir **exclusivamente en la capa de Servicio**. Esto evita colisiones de validación en peticiones parciales (`PUT`/`PATCH`).
+*   **Anotaciones Comunes en DTOs**:
     *   `@Size(max = X, message = "...")`: Límite superior de caracteres mapeado idénticamente al tamaño máximo de la columna en la BD.
-    *   `@Positive(message = "...")` / `@PositiveOrZero`: Para IDs y montos monetarios.
-    *   `@PastOrPresent(message = "...")`: Para años de nacimiento o publicación.
+    *   `@Positive(message = "...")` / `@PositiveOrZero`: Para IDs de relaciones y montos.
+    *   `@PastOrPresent(message = "...")`: Para años o fechas históricas.
 
-### Validaciones Cruzadas (`@AssertTrue`)
-Para validaciones lógicas que dependan de dos o más atributos (ej. verificar que se envíe al menos un nombre o seudónimo, o que el año de nacimiento no supere al de fallecimiento):
+### Lógica de Fechas Cruzadas (`@AssertTrue`)
+Para validaciones estáticas entre atributos (como verificar que el año de nacimiento no supere al de fallecimiento):
 *   Se declaran como métodos públicos que retornan `boolean` dentro del cuerpo del Record.
-*   Deben cumplir estrictamente con Checkstyle, utilizando llaves `{}` para envolver el código de retorno.
+*   Al validar campos `JsonNullable`, se debe extraer su valor de forma segura si están presentes:
     ```java
-    @AssertTrue(message = "El año de nacimiento no puede ser mayor al de fallecimiento")
+    @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
     public boolean isFechasValidas() {
-        if (anioNacimiento == null || anioFallecimiento == null) {
+        Year nacimiento = (anioNacimiento != null && anioNacimiento.isPresent()) ? anioNacimiento.get() : null;
+        Year fallecimiento = (anioFallecimiento != null && anioFallecimiento.isPresent()) ? anioFallecimiento.get() : null;
+        if (nacimiento == null || fallecimiento == null) {
             return true;
         }
-        return !anioNacimiento.isAfter(anioFallecimiento);
+        return !nacimiento.isAfter(fallecimiento);
     }
     ```
 
 ---
 
-## 3. Caché y Deserialización de Jackson
+## 3. Actualización Parcial con `JsonNullable`
 
-*   **Uso de Caché Local**: Dado que las respuestas de detalle se almacenan en caché local mediante Spring (RAM interna), **no es obligatorio** que los Records de salida implementen `Serializable` para la serialización. Esto simplifica su diseño.
-*   **Deserialización Segura**: Los Java Records carecen de constructores sin argumentos. Para que Jackson pueda deserializar el JSON de entrada de forma fluida:
-    *   Decorar los Records con `@Builder` y la anotación **`@Jacksonized`**. Esto indica a Jackson que utilice el patrón Builder generado por Lombok.
-    *   Usar `@JsonIgnoreProperties(ignoreUnknown = true)` en los Request DTOs para evitar caídas del servicio si el frontend envía campos no mapeados.
+Para dar soporte a peticiones de actualización parcial (`PATCH`/`PUT` parcial) donde los campos del DTO pueden ser omitidos, enviados con valor, o enviados explícitamente como nulos (borrado de datos), debemos envolver los tipos de datos opcionales en **`JsonNullable<T>`**:
+
+*   **Presente con valor**: `"seudonimo": "Gabo"` $\rightarrow$ `JsonNullable.of("Gabo")`
+*   **Presente con nulo (borrado)**: `"seudonimo": null` $\rightarrow$ `JsonNullable.of(null)`
+*   **Ausente (no actualizar)**: Se omite del JSON $\rightarrow$ `JsonNullable.undefined()`
+
+El campo `version` (bloqueo optimista) no debe envolverse en `JsonNullable`, sino declararse como `Long version` simple (puede llegar como nulo en la creación).
 
 ---
 
-## 4. Anotaciones de Validación en DTOs de Respuesta
+## 4. Deserialización de Jackson y OpenAPI
 
-*   Las anotaciones `@NotNull` y `@NotBlank` presentes en `Resumen` y `DetalleResponse` no son validadas por Spring en el flujo de salida.
-*   **Propósito**: Se mantienen de forma intencional para servir como metadatos de documentación para **Springdoc OpenAPI (Swagger UI)**. Permiten que los desarrolladores de frontend identifiquen de forma interactiva qué campos están garantizados a nunca retornar nulos en el JSON.
+*   **Deserialización Segura**: Decorar los Records con `@Builder` y la anotación **`@Jacksonized`**. Esto indica a Jackson que utilice el patrón Builder generado por Lombok.
+*   **Ignorar propiedades desconocidas**: Usar `@JsonIgnoreProperties(ignoreUnknown = true)` en los Request DTOs.
+*   **Documentación en Respuestas**: Las anotaciones de validación (`@NotNull`, `@NotBlank`) en los DTOs de salida (`Resumen` y `Detalle`) no se validan en ejecución, sino que actúan como metadatos para **Springdoc OpenAPI (Swagger UI)**.
 
 ---
 
@@ -66,63 +71,63 @@ package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.Year;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 @Builder
 @Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AutorRequest(
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    String nombre,
+    JsonNullable<String> nombre,
 
-    @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    String seudonimo,
+    JsonNullable<String> seudonimo,
 
-    @PastOrPresent(message = "El año de nacimiento no puede ser una fecha futura")
-    Year anioNacimiento,
+    JsonNullable<Year> anioNacimiento,
 
-    @PastOrPresent(message = "El año de fallecimiento no puede ser una fecha futura")
-    Year anioFallecimiento,
+    JsonNullable<Year> anioFallecimiento,
 
-    @NotBlank(message = "La biografia no puede estar vacía")
-    @Size(max = 5000, message = "La biografia es demasiado larga")
-    String biografia,
+    JsonNullable<String> biografia,
 
     Long version,
 
-    @Positive(message = "ID de país inválido")
-    Long idPaisNacimiento,
+    JsonNullable<Long> idPaisNacimiento,
 
-    @Positive(message = "ID de nacionalidad inválido")
-    Long idNacionalidad,
+    JsonNullable<Long> idNacionalidad,
 
-    @Positive(message = "ID de género inválido")
-    Long idGeneroPrincipal,
+    JsonNullable<Long> idGeneroPrincipal,
 
-    @Positive(message = "ID de obra inválido")
-    Long idObraCumbre
+    JsonNullable<Long> idObraCumbre
 ) {
     public AutorRequest {}
 
-    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
-    public boolean isIdentidadValida() {
-        boolean tieneNombre = (nombre != null && !nombre.isBlank());
-        boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
-        return tieneNombre || tieneSeudonimo;
+    @AssertTrue(message = "El nombre no puede exceder 100 caracteres")
+    public boolean isNombreLongitudValida() {
+        if (nombre == null || !nombre.isPresent() || nombre.get() == null) {
+            return true;
+        }
+        return nombre.get().length() <= 100;
+    }
+
+    @AssertTrue(message = "El seudonimo no puede exceder 50 caracteres")
+    public boolean isSeudonimoValido() {
+        if (seudonimo == null || !seudonimo.isPresent() || seudonimo.get() == null) {
+            return true;
+        }
+        return seudonimo.get().length() <= 50;
     }
 
     @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
     public boolean isFechasValidas() {
-        if (anioNacimiento == null || anioFallecimiento == null) {
+        Year nacimiento = (anioNacimiento != null && anioNacimiento.isPresent()) ? anioNacimiento.get() : null;
+        Year fallecimiento = (anioFallecimiento != null && anioFallecimiento.isPresent()) ? anioFallecimiento.get() : null;
+        if (nacimiento == null || fallecimiento == null) {
             return true;
         }
-        return !anioNacimiento.isAfter(anioFallecimiento);
+        return !nacimiento.isAfter(fallecimiento);
     }
 }
 ```
@@ -195,17 +200,13 @@ public record AutorDetalleResponse(
 
 ## 6. Lista de Autoverificación (Checklist del Desarrollador)
 
-1. **¿Es un Java Record?**
-   * ¿Todos los DTOs están definidos como `record` para garantizar inmutabilidad?
-2. **¿Tiene las anotaciones de deserialización Jackson?**
-   * ¿Todos los DTOs tienen `@Builder` y `@Jacksonized`?
-   * En los Request DTOs, ¿se incluyó `@JsonIgnoreProperties(ignoreUnknown = true)`?
-3. **¿La validación cruzada cumple con Checkstyle?**
-   * En métodos `@AssertTrue`, ¿se envolvieron todos los bloques `if` en llaves `{}`?
-4. **¿Los campos numéricos/IDs de relaciones están validados?**
-   * ¿Los atributos `idRelacion` o similares tienen la anotación `@Positive` para evitar envíos con valores cero o negativos?
-5. **¿Las longitudes de textos coinciden con la BD?**
-   * ¿Los límites establecidos en `@Size(max = X)` de los Request DTOs se corresponden de manera exacta con el tamaño físico configurado en la entidad JPA / Base de Datos?
-
----
-*Este estándar garantiza DTOs consistentes, autodeclarativos y seguros en toda la API de Arrupeteca.*
+1. **¿El DTO está libre de lógica de negocio condicional?**
+   * ¿Se removieron validaciones de obligatoriedad condicional como `@NotBlank` o `@NotNull` para dar soporte a actualizaciones parciales?
+2. **¿Los campos opcionales están envueltos en `JsonNullable<T>`?**
+   * ¿Todos los campos mutables opcionales usan `JsonNullable` para permitir actualizar a nulo o ignorar si se omiten?
+3. **¿La versión es un `Long` simple?**
+   * ¿El atributo `version` es un `Long` de referencia para admitir valores nulos en creaciones?
+4. **¿Tiene las anotaciones `@Builder` y `@Jacksonized`?**
+   * ¿Se agregaron para permitir la deserialización de Jackson basada en Lombok en los records?
+5. **¿Las validaciones en `@AssertTrue` controlan nulos de `JsonNullable`?**
+   * ¿Se verifica `isPresent()` y si el valor es nulo antes de ejecutar aserciones lógicas?

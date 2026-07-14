@@ -2,8 +2,6 @@ package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import java.time.Year;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
@@ -13,8 +11,7 @@ import org.openapitools.jackson.nullable.JsonNullable;
 @Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record AutorRequest(
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    String nombre,
+    JsonNullable<String> nombre,
 
     JsonNullable<String> seudonimo,
 
@@ -22,9 +19,7 @@ public record AutorRequest(
 
     JsonNullable<Year> anioFallecimiento,
 
-    @NotBlank(message = "La biografia no puede estar vacía")
-    @Size(max = 5000, message = "La biografia es demasiado larga")
-    String biografia,
+    JsonNullable<String> biografia,
 
     Long version,
 
@@ -41,11 +36,12 @@ public record AutorRequest(
 
     }
 
-    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
-    public boolean isIdentidadValida() {
-        boolean tieneNombre = (nombre != null && !nombre.isBlank());
-        boolean tieneSeudonimo = (seudonimo != null && seudonimo.isPresent() && seudonimo.get() != null && !seudonimo.get().isBlank());
-        return tieneNombre || tieneSeudonimo;
+    @AssertTrue(message = "El nombre no puede exceder 100 caracteres")
+    public boolean isNombreLongitudValida() {
+        if (nombre == null || !nombre.isPresent() || nombre.get() == null) {
+            return true;
+        }
+        return nombre.get().length() <= 100;
     }
 
     @AssertTrue(message = "El seudonimo no puede exceder 50 caracteres")
@@ -54,6 +50,14 @@ public record AutorRequest(
             return true;
         }
         return seudonimo.get().length() <= 50;
+    }
+
+    @AssertTrue(message = "La biografia es demasiado larga")
+    public boolean isBiografiaLongitudValida() {
+        if (biografia == null || !biografia.isPresent() || biografia.get() == null) {
+            return true;
+        }
+        return biografia.get().length() <= 5000;
     }
 
     @AssertTrue(message = "El año de nacimiento no puede ser una fecha futura")

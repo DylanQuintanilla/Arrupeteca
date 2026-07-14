@@ -36,7 +36,12 @@ public class AutorSpecification {
      * Si es null, por defecto filtra solo los no borrados (comportamiento estándar).
      */
     public static Specification<Autor> esBorrado(Boolean esBorrado) {
-        return (root, query, cb) -> cb.equal(root.get("borradoLogico"), esBorrado != null ? esBorrado : false);
+        return (root, query, cb) -> {
+            if (esBorrado == null) {
+                return null;
+            }
+            return cb.equal(root.get("borradoLogico"), esBorrado);
+        };
     }
 
     /**
@@ -124,16 +129,22 @@ public class AutorSpecification {
     }
 
     /**
-     * Filtra por rango de años de nacimiento.
+     * Filtra por periodo de vida del autor (Lógica de Intersección).
+     * Devuelve autores que estuvieron vivos en algún momento del periodo [inicio, fin].
+     * Lógica: birth_year <= fin AND (death_year >= inicio OR death_year IS NULL)
      */
-    public static Specification<Autor> anioNacimientoEntre(Year inicio, Year fin) {
+    public static Specification<Autor> vivoEnPeriodo(Year inicio, Year fin) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (inicio != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("anioNacimiento"), inicio));
-            }
             if (fin != null) {
+                // Nació antes o durante el año fin
                 predicates.add(cb.lessThanOrEqualTo(root.get("anioNacimiento"), fin));
+            }
+            if (inicio != null) {
+                // Falleció después o durante el año inicio, o sigue vivo
+                Predicate murioDespues = cb.greaterThanOrEqualTo(root.get("anioFallecimiento"), inicio);
+                Predicate sigueVivo = cb.isNull(root.get("anioFallecimiento"));
+                predicates.add(cb.or(murioDespues, sigueVivo));
             }
             return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -143,11 +154,13 @@ public class AutorSpecification {
      * Orquestador para Búsqueda Maestra de Admin.
      */
     public static Specification<Autor> filtroMaestroAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, String termino) {
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            Year anioInicio, Year anioFin, String termino) {
         return Specification.where(esBorrado(esBorrado))
                 .and(tieneNacionalidad(idNacionalidad))
                 .and(tienePais(idPais))
                 .and(tieneGenero(idGenero))
+                .and(vivoEnPeriodo(anioInicio, anioFin))
                 .and(contieneTermino(termino));
     }
 
@@ -157,6 +170,6 @@ public class AutorSpecification {
     public static Specification<Autor> filtroBusquedaGlobal(String palabra, Year inicio, Year fin) {
         return Specification.where(esBorrado(false)) // Usuarios solo ven lo no borrado
                 .and(busquedaGlobal(palabra))
-                .and(anioNacimientoEntre(inicio, fin));
+                .and(vivoEnPeriodo(inicio, fin));
     }
 }

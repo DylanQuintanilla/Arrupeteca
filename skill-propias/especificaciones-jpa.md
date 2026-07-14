@@ -44,7 +44,53 @@ Cuando un criterio requiere unir tablas relacionadas (ej. buscar autores por pa�
 
 ---
 
-## 4. Plantilla Base Recomendada (Ejemplo de AutorSpecification)
+## 4. Estado de Borrado Lógico en Specifications
+
+Para que la búsqueda maestra de administración sea consistente, el método de filtrado de borrado lógico no debe imponer filtros si el parámetro es nulo:
+
+*   **Si `esBorrado` es `null`**: Debe retornar `null` para que no se filtre por este estado (permitiendo al admin ver registros borrados y activos juntos).
+*   **Si `esBorrado` tiene valor (`true`/`false`)**: Filtra estrictamente por el estado enviado.
+*   En las consultas del catálogo público, el servicio debe llamar de forma explícita a `esBorrado(false)` para ocultar los eliminados a los usuarios comunes.
+
+```java
+public static Specification<Autor> esBorrado(Boolean esBorrado) {
+    return (root, query, cb) -> {
+        if (esBorrado == null) {
+            return null;
+        }
+        return cb.equal(root.get("borradoLogico"), esBorrado);
+    };
+}
+```
+
+---
+
+## 5. Lógica de Intersección de Fechas
+
+Al realizar búsquedas por periodos históricos (ej: buscar autores activos en un siglo o rango de años), la especificación debe implementar la **Lógica de Intersección de Periodos** en lugar de filtrar solo la fecha de nacimiento.
+*   **Lógica**: El autor debe haber nacido antes del fin del filtro Y (haber fallecido después del inicio del filtro O seguir vivo hoy).
+*   **SQL**: `birth_year <= fin AND (death_year >= inicio OR death_year IS NULL)`
+
+```java
+public static Specification<Autor> vivoEnPeriodo(Year inicio, Year fin) {
+    return (root, query, cb) -> {
+        List<Predicate> predicates = new ArrayList<>();
+        if (fin != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("anioNacimiento"), fin));
+        }
+        if (inicio != null) {
+            Predicate murioDespues = cb.greaterThanOrEqualTo(root.get("anioFallecimiento"), inicio);
+            Predicate sigueVivo = cb.isNull(root.get("anioFallecimiento"));
+            predicates.add(cb.or(murioDespues, sigueVivo));
+        }
+        return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
+    };
+}
+```
+
+---
+
+## 6. Plantilla Base Recomendada (Ejemplo de AutorSpecification)
 
 ```java
 package com.arrupeteca.persistence.specification;
@@ -78,7 +124,12 @@ public class AutorSpecification {
     }
 
     public static Specification<Autor> esBorrado(Boolean esBorrado) {
-        return (root, query, cb) -> cb.equal(root.get("borradoLogico"), esBorrado != null ? esBorrado : false);
+        return (root, query, cb) -> {
+            if (esBorrado == null) {
+                return null;
+            }
+            return cb.equal(root.get("borradoLogico"), esBorrado);
+        };
     }
 
     public static Specification<Autor> tieneNacionalidad(Long idNacionalidad) {
@@ -147,44 +198,54 @@ public class AutorSpecification {
         };
     }
 
-    public static Specification<Autor> anioNacimientoEntre(Year inicio, Year fin) {
+    public static Specification<Autor> vivoEnPeriodo(Year inicio, Year fin) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
-            if (inicio != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("anioNacimiento"), inicio));
-            }
             if (fin != null) {
                 predicates.add(cb.lessThanOrEqualTo(root.get("anioNacimiento"), fin));
+            }
+            if (inicio != null) {
+                Predicate murioDespues = cb.greaterThanOrEqualTo(root.get("anioFallecimiento"), inicio);
+                Predicate sigueVivo = cb.isNull(root.get("anioFallecimiento"));
+                predicates.add(cb.or(murioDespues, sigueVivo));
             }
             return predicates.isEmpty() ? null : cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 
     public static Specification<Autor> filtroMaestroAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, String termino) {
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            Year anioInicio, Year anioFin, String termino) {
         return Specification.where(esBorrado(esBorrado))
                 .and(tieneNacionalidad(idNacionalidad))
                 .and(tienePais(idPais))
                 .and(tieneGenero(idGenero))
+                .and(vivoEnPeriodo(anioInicio, anioFin))
                 .and(contieneTermino(termino));
+    }
+
+    public static Specification<Autor> filtroBusquedaGlobal(String palabra, Year inicio, Year fin) {
+        return Specification.where(esBorrado(false))
+                .and(busquedaGlobal(palabra))
+                .and(vivoEnPeriodo(inicio, fin));
     }
 }
 ```
 
 ---
 
-## 5. Lista de Autoverificación (Checklist del Desarrollador)
+## 7. Lista de Autoverificación (Checklist del Desarrollador)
 
 1. **¿Es una clase de utilidad cerrada?**
    * ¿Tiene la clase un constructor privado sin argumentos para evitar instanciaciones directas?
 2. **¿Los condicionales `if` cumplen con Checkstyle?**
-   * ¿Tienen todos los `if` sus respectivas llaves `{}` para envolver el bloque de código de retorno?
+   * ¿Tienen todos los `if` sus respectivas llaves `{}` para verificar la sintaxis?
 3. **¿Se manejan correctamente los valores nulos?**
-   * ¿Retornan `null` los predicados si el parámetro de filtro recibido es nulo o vacío? (Spring Data JPA descarta los predicados nulos al combinar consultas).
-4. **¿Los joins usan LEFT JOIN?**
-   * ¿Se configuraron los joins de relaciones usando explícitamente `JoinType.LEFT` para no descartar registros con campos relacionados nulos?
-5. **¿Se configuró distinct seguro para paginaciones?**
+   * ¿Retornan `null` los predicados si el parámetro de filtro recibido es nulo o vacío?
+   * ¿El método `esBorrado()` retorna `null` si el parámetro es nulo para que el admin pueda buscar sin filtro de estado?
+4. **¿Se usa la lógica de intersección en fechas?**
+   * ¿Las búsquedas por año emplean la lógica `vivoEnPeriodo()` (nacido antes del fin Y (muerto después del inicio o vivo)) para una precisión histórica correcta?
+5. **¿Los joins usan LEFT JOIN?**
+   * ¿Se configuraron los joins de relaciones usando explícitamente `JoinType.LEFT`?
+6. **¿Se configuró distinct seguro para paginaciones?**
    * Al usar `query.distinct(true)` en joins, ¿se validó que el tipo de consulta no sea de conteo (`query.getResultType() != Long.class`)?
-
----
-*Este estándar asegura que las búsquedas dinámicas sean modulares, seguras y altamente legibles.*

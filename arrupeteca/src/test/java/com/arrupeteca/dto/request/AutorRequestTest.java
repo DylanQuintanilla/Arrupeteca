@@ -40,11 +40,11 @@ class AutorRequestTest {
     @DisplayName("Should serialize AutorRequest correctly")
     void shouldSerialize() throws IOException {
         AutorRequest request = AutorRequest.builder()
-                .nombre("Gabriel García Márquez")
+                .nombre(JsonNullable.of("Gabriel García Márquez"))
                 .seudonimo(JsonNullable.of("Gabo"))
                 .anioNacimiento(JsonNullable.of(Year.of(1927)))
                 .anioFallecimiento(JsonNullable.of(Year.of(2014)))
-                .biografia("Escritor colombiano...")
+                .biografia(JsonNullable.of("Escritor colombiano..."))
                 .build();
 
         assertThat(json.write(request)).hasJsonPathStringValue("@.nombre", "Gabriel García Márquez");
@@ -53,27 +53,16 @@ class AutorRequestTest {
         assertThat(json.write(request)).hasJsonPathStringValue("@.anioFallecimiento", "2014");
     }
 
-    @Test
-    @DisplayName("Should fail when both nombre and seudonimo are blank")
-    void shouldFailWhenIdentityIsInvalid() {
-        AutorRequest request = AutorRequest.builder()
-                .nombre("")
-                .seudonimo(JsonNullable.of(""))
-                .biografia("Bio")
-                .build();
 
-        Set<ConstraintViolation<AutorRequest>> violations = validator.validate(request);
-        assertThat(violations).anyMatch(v -> v.getMessage().contains("Nombre o un Seudonimo"));
-    }
 
     @Test
     @DisplayName("Should fail when birth year is greater than death year")
     void shouldFailWhenDatesAreInvalid() {
         AutorRequest request = AutorRequest.builder()
-                .nombre("Autor")
+                .nombre(JsonNullable.of("Autor"))
                 .anioNacimiento(JsonNullable.of(Year.of(2000)))
                 .anioFallecimiento(JsonNullable.of(Year.of(1990)))
-                .biografia("Bio")
+                .biografia(JsonNullable.of("Bio"))
                 .build();
 
         Set<ConstraintViolation<AutorRequest>> violations = validator.validate(request);

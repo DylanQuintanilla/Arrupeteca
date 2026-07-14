@@ -14,37 +14,22 @@ class ComprehensiveRequestTest {
     @Test
     void shouldCoverAutorRequest() {
         AutorRequest request = AutorRequest.builder()
-                .nombre("Nombre")
+                .nombre(JsonNullable.of("Nombre"))
                 .seudonimo(JsonNullable.of("Seudonimo"))
                 .anioNacimiento(JsonNullable.of(Year.of(1900)))
                 .anioFallecimiento(JsonNullable.of(Year.of(1980)))
-                .biografia("Bio")
+                .biografia(JsonNullable.of("Bio"))
                 .idPaisNacimiento(JsonNullable.of(1L))
                 .idNacionalidad(JsonNullable.of(1L))
                 .idGeneroPrincipal(JsonNullable.of(1L))
                 .idObraCumbre(JsonNullable.of(1L))
                 .build();
 
-        assertThat(request.isIdentidadValida()).isTrue();
         assertThat(request.isFechasValidas()).isTrue();
 
-        AutorRequest requestSinNombre = AutorRequest.builder()
-                .nombre(null)
-                .seudonimo(JsonNullable.of("Seudonimo"))
-                .biografia("Bio")
-                .build();
-        assertThat(requestSinNombre.isIdentidadValida()).isTrue(); // Has seudonimo
-
-        AutorRequest requestSinNombreNiSeudonimo = AutorRequest.builder()
-                .nombre(null)
-                .seudonimo(null)
-                .biografia("Bio")
-                .build();
-        assertThat(requestSinNombreNiSeudonimo.isIdentidadValida()).isFalse(); // No identity
-
         AutorRequest requestFechasInvalidas = AutorRequest.builder()
-                .nombre("Nombre")
-                .biografia("Bio")
+                .nombre(JsonNullable.of("Nombre"))
+                .biografia(JsonNullable.of("Bio"))
                 .anioNacimiento(JsonNullable.of(Year.of(2000)))
                 .anioFallecimiento(JsonNullable.of(Year.of(1900)))
                 .build();
