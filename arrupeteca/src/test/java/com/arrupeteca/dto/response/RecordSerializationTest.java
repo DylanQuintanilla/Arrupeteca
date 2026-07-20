@@ -2,8 +2,8 @@ package com.arrupeteca.dto.response;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.arrupeteca.dto.response.CategoriaResponse;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
-import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
 import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
 import com.arrupeteca.dto.response.detail.EditorialDetalleResponse;
 import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
@@ -17,7 +17,6 @@ import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
 import com.arrupeteca.dto.response.detail.PlantaDetalleResponse;
 import com.arrupeteca.dto.response.detail.SalonDetalleResponse;
 import com.arrupeteca.dto.response.summary.AutorResumenResponse;
-import com.arrupeteca.dto.response.summary.CategoriaResumen;
 import com.arrupeteca.dto.response.summary.EdificioResumen;
 import com.arrupeteca.dto.response.summary.EditorialResumen;
 import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
@@ -64,7 +63,7 @@ class RecordSerializationTest {
                 .nombrePais("Pais")
                 .nombreNacionalidad("Nacionalidad")
                 .build();
-        CategoriaResumen cat = new CategoriaResumen(1L, "Cat", false);
+        CategoriaResponse cat = new CategoriaResponse(1L, "Cat", false);
         EdificioResumen edif = new EdificioResumen(1L, "Edif", false);
         EditorialResumen edit = new EditorialResumen(1L, "Edit", "Dir", "Email", "Tel", "Contacto", false);
         EjemplarLibroResumen ejem = new EjemplarLibroResumen(1L, "Comentario", false, "BUENO", "DISPONIBLE", "Libro", "Mueble");
@@ -116,8 +115,6 @@ class RecordSerializationTest {
                 .actualizadoPor("U")
                 .fechaActualizacion(now)
                 .build();
-        CategoriaDetalleResponse cat = new CategoriaDetalleResponse(1L, "C", true, "U", now, "U", now,
-                Collections.emptySet());
         EdificioDetalleResponse edif = new EdificioDetalleResponse(1L, "E", true, "U", now, "U", now);
         EditorialDetalleResponse edit = new EditorialDetalleResponse(1L, "E", "D", "T", "D", "E", true, "U", now, "U", now);
         EjemplarLibroDetalleResponse ejem = new EjemplarLibroDetalleResponse(1L, "C", true, "U", "U", "U", now, "U", now,
@@ -135,7 +132,6 @@ class RecordSerializationTest {
         SalonDetalleResponse sal = new SalonDetalleResponse(1L, "S", true, "U", now, "U", now, null);
 
         verifySerialization(autor);
-        verifySerialization(cat);
         verifySerialization(edif);
         verifySerialization(edit);
         verifySerialization(ejem);

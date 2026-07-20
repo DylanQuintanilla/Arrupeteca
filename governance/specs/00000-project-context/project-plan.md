@@ -15,10 +15,13 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
 - [X] **Technical Debt & Standards**:
     - [X] Infraestructura de Checkstyle (5 Golden Rules). *(Nota: Verificación temporalmente obviada por refactorización activa).*
     - [X] Limpieza manual y refactor de estilo de Controllers, Services, Mappers y Entities (100% cumplimiento). *(Nota: Verificación temporalmente obviada por refactorización activa).*
-    - [/] Migración de DTOs a **Java Records** (Records de respuesta implementados; request DTOs pendientes excepto AutorRequest).
+    - [/] Migración de DTOs a **Java Records** (Records de respuesta implementados; request DTOs de Autor y Categoría completos; demás pendientes).
     - [X] Implementación de **@Version** a nivel de entidad transaccional (ej. `Autor`).
     - [ ] Mejora de `ApiResponse` con estructura completa.
-    - [/] Optimización de repositorios y JPA (EntityGraph en AutorRepository; Batch Fetching configurado a nivel global; pendiente en demás entidades).
+    - [/] Optimización de repositorios y JPA (EntityGraph en AutorRepository; Batch Fetching global; CategoriaRepository optimizado; demás pendientes).
+    - [/] **Centralización y Homogeneidad**:
+        - [X] Aplicar la centralización de configuraciones de MapStruct (`CentralMapperConfig`) en `CategoriaMapper` y `AutorMapper`.
+        - [ ] Revisar si otras clases (como DTOs comunes o estructuras de respuesta) se benefician de una centralización o herencia para evitar boilerplate.
 - [ ] **Functional Enhancements**:
     - [ ] Nueva entidad **Etiqueta** (M:M con Libros).
     - [ ] Campo **Popularidad** en Libros e **id_donacion** en EjemplarLibro.
@@ -56,6 +59,9 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
     - [ ] Notificaciones automáticas de flujos operativos (donación registrada, transferencia iniciada, etc.).
 - [ ] Sistema de Etiquetas (Tags) transversales para eventos.
 - [ ] Versionado en la clase auditable y multidioma.
+- [ ] **Optimización del Summary de Obras y Libros (Listas):**
+    - [ ] Incorporar el listado de nombres de autores en `ObraResumen.java` y `LibroResumen.java` (ej. como string concatenado o lista simple).
+    - [ ] Implementar la **Opción 1 (Consultas Divididas / Explicit Multi-fetching)** en `ObraServiceImpl` y `LibroServiceImpl` para cargar las relaciones en lote de forma óptima sin N+1 ni producto cartesiano.
 
 ## 3. Key Milestones (Hitos Clave)
 - **M-01**: Cierre de infraestructura optimizada y tests al 100% (Checkstyle + JaCoCo).

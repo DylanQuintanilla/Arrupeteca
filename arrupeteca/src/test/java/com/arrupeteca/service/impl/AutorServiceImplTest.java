@@ -32,11 +32,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-@ExtendWith(MockitoExtension.class)
-class AutorServiceImplTest {
+class AutorServiceImplTest extends BaseServiceTest {
 
     @Mock
     private AutorRepository autorRepository;
@@ -400,5 +396,119 @@ class AutorServiceImplTest {
         assertThatThrownBy(() -> autorService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("El nombre no puede estar vacío");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating with empty pseudonym if present")
+    void shouldThrowWhenUpdatingWithEmptyPseudonym() {
+        AutorRequest request = AutorRequest.builder()
+                .seudonimo(JsonNullable.of(""))
+                .build();
+
+        Autor existing = Autor.builder().build();
+        existing.setId(1L);
+        existing.setVersion(1L);
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> autorService.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("El seudonimo no puede estar vacío");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating with empty biography if present")
+    void shouldThrowWhenUpdatingWithEmptyBiography() {
+        AutorRequest request = AutorRequest.builder()
+                .biografia(JsonNullable.of(""))
+                .build();
+
+        Autor existing = Autor.builder().build();
+        existing.setId(1L);
+        existing.setVersion(1L);
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> autorService.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("La biografia no puede estar vacía");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when update results in both empty name and pseudonym")
+    void shouldThrowWhenUpdatingResultsInEmptyIdentity() {
+        AutorRequest request = AutorRequest.builder().build(); // No fields sent
+
+        Autor existing = Autor.builder().build();
+        existing.setId(1L);
+        existing.setVersion(1L);
+        existing.setNombre(null);
+        existing.setSeudonimo(null);
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+
+        assertThatThrownBy(() -> autorService.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("El autor debe tener al menos un Nombre o un Seudonimo");
+    }
+
+    @Test
+    @DisplayName("Should throw exception when birth year is greater than death year after update")
+    void shouldThrowWhenUpdatingWithBirthYearAfterDeathYear() {
+        AutorRequest request = AutorRequest.builder()
+                .anioNacimiento(JsonNullable.of(Year.of(2010)))
+                .build();
+
+        Autor existing = Autor.builder()
+                .id(1L)
+                .version(1L)
+                .nombre("Existente")
+                .anioFallecimiento(Year.of(2000))
+                .build();
+
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
+        org.mockito.Mockito.doAnswer(invocation -> {
+            AutorRequest req = invocation.getArgument(0);
+            Autor ent = invocation.getArgument(1);
+            if (req.anioNacimiento() != null && req.anioNacimiento().isPresent()) {
+                ent.setAnioNacimiento(req.anioNacimiento().get());
+            }
+            return null;
+        }).when(autorMapper).updateEntity(any(AutorRequest.class), any(Autor.class));
+
+        assertThatThrownBy(() -> autorService.actualizar(1L, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("El año de nacimiento no puede ser mayor al año de fallecimiento");
+    }
+
+    @Test
+    @DisplayName("Should accumulate errors when multiple relation entities do not exist")
+    void shouldAccumulateErrorsWhenMultipleRelationsNotFound() {
+        AutorRequest request = AutorRequest.builder()
+                .nombre(JsonNullable.of("Nuevo"))
+                .biografia(JsonNullable.of("Bio"))
+                .idPaisNacimiento(JsonNullable.of(99L))
+                .idNacionalidad(JsonNullable.of(88L))
+                .idGeneroPrincipal(JsonNullable.of(77L))
+                .idObraCumbre(JsonNullable.of(66L))
+                .build();
+
+        when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
+        when(paisRepository.findById(99L)).thenReturn(Optional.empty());
+        when(nacionalidadRepository.findById(88L)).thenReturn(Optional.empty());
+        when(generoRepository.findById(77L)).thenReturn(Optional.empty());
+        when(obraRepository.findById(66L)).thenReturn(Optional.empty());
+
+        Autor entity = Autor.builder().build();
+        when(autorMapper.toEntity(any())).thenReturn(entity);
+
+        assertThatThrownBy(() -> autorService.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .satisfies(ex -> {
+                    ValidacionNegocioException exception = (ValidacionNegocioException) ex;
+                    assertThat(exception.getErrores()).contains(
+                            "El país con ID 99 no existe.",
+                            "La nacionalidad con ID 88 no existe.",
+                            "El género con ID 77 no existe.",
+                            "La obra con ID 66 no existe."
+                    );
+                });
     }
 }

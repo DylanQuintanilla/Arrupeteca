@@ -1,6 +1,6 @@
 package com.arrupeteca.dto.response.detail;
 
-import com.arrupeteca.dto.response.summary.CategoriaResumen;
+import com.arrupeteca.dto.response.CategoriaResponse;
 import com.arrupeteca.dto.response.summary.GeneroResumen;
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -16,6 +16,6 @@ public record ObraDetalleResponse(
     String modificadoPor,
     LocalDateTime fechaModificacion,
     Set<GeneroResumen> generos,
-    Set<CategoriaResumen> categorias,
+    Set<CategoriaResponse> categorias,
     Set<ObraAutorDetalleResponse> autores
 ) { }

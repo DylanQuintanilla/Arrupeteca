@@ -1,24 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
-import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
-import com.arrupeteca.dto.response.summary.CategoriaResumen;
+import com.arrupeteca.dto.response.CategoriaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface CategoriaService {
 
-    Page<CategoriaResumen> obtenerTodosActivos(Pageable pageable);
+    Page<CategoriaResponse> obtenerTodosActivos(Pageable pageable);
 
-    CategoriaDetalleResponse obtenerPorIdActivo(Long id);
+    CategoriaResponse obtenerPorIdActivo(Long id);
 
-    Page<CategoriaResumen> obtenerTodos(Pageable pageable);
+    Page<CategoriaResponse> obtenerTodos(Pageable pageable);
 
-    CategoriaDetalleResponse obtenerPorId(Long id);
+    CategoriaResponse obtenerPorId(Long id);
 
-    CategoriaDetalleResponse crear(CategoriaRequest request);
+    CategoriaResponse crear(CategoriaRequest request);
 
-    CategoriaDetalleResponse actualizar(Long id, CategoriaRequest request);
+    CategoriaResponse actualizar(Long id, CategoriaRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Year;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -193,5 +194,33 @@ class AutorControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Verificación completada"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/autores - Should return 400 Bad Request when request is invalid")
+    void shouldReturnBadRequestWhenCreatingInvalid() throws Exception {
+        AutorRequest request = AutorRequest.builder()
+                .nombre(JsonNullable.of("A".repeat(101))) // Nombre demasiado largo
+                .build();
+
+        mockMvc.perform(post("/api/v1/autores")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.exito").value(false));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/autores/{id} - Should return 400 Bad Request when request is invalid")
+    void shouldReturnBadRequestWhenUpdatingInvalid() throws Exception {
+        AutorRequest request = AutorRequest.builder()
+                .anioNacimiento(JsonNullable.of(Year.now().plusYears(1))) // Año futuro
+                .build();
+
+        mockMvc.perform(put("/api/v1/autores/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.exito").value(false));
     }
 }

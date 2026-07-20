@@ -1,8 +1,7 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
-import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
-import com.arrupeteca.dto.response.summary.CategoriaResumen;
+import com.arrupeteca.dto.response.CategoriaResponse;
 import com.arrupeteca.service.CategoriaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias - Should return active categories")
     void shouldReturnActiveCategories() throws Exception {
-        Page<CategoriaResumen> page = new PageImpl<>(List.of());
+        Page<CategoriaResponse> page = new PageImpl<>(List.of());
         when(categoriaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/categorias"))
@@ -46,8 +45,8 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias/{id} - Should return category by ID")
     void shouldReturnCategoryById() throws Exception {
-        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Existente", false, null, null, null, null, null);
-        when(categoriaService.obtenerPorIdActivo(1L)).thenReturn(detalle);
+        CategoriaResponse response = new CategoriaResponse(1L, "Existente", false);
+        when(categoriaService.obtenerPorIdActivo(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/categorias/1"))
                 .andExpect(status().isOk())
@@ -59,11 +58,10 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/categorias - Should create category")
     void shouldCreateCategory() throws Exception {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Nueva");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Nueva").build();
 
-        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Nueva", false, null, null, null, null, null);
-        when(categoriaService.crear(any())).thenReturn(detalle);
+        CategoriaResponse response = new CategoriaResponse(1L, "Nueva", false);
+        when(categoriaService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categorias")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,11 +74,10 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/categorias/{id} - Should update category")
     void shouldUpdateCategory() throws Exception {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Actualizada");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Actualizada").build();
 
-        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Actualizada", false, null, null, null, null, null);
-        when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(detalle);
+        CategoriaResponse response = new CategoriaResponse(1L, "Actualizada", false);
+        when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/categorias/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -112,7 +109,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias/admin - Should return all categories for admin")
     void shouldReturnAllCategoriesAdmin() throws Exception {
-        Page<CategoriaResumen> page = new PageImpl<>(List.of());
+        Page<CategoriaResponse> page = new PageImpl<>(List.of());
         when(categoriaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/categorias/admin"))
@@ -124,8 +121,8 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias/admin/{id} - Should return category by ID for admin")
     void shouldReturnCategoryByIdAdmin() throws Exception {
-        CategoriaDetalleResponse detalle = new CategoriaDetalleResponse(1L, "Existente", false, null, null, null, null, null);
-        when(categoriaService.obtenerPorId(1L)).thenReturn(detalle);
+        CategoriaResponse response = new CategoriaResponse(1L, "Existente", false);
+        when(categoriaService.obtenerPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/categorias/admin/1"))
                 .andExpect(status().isOk())

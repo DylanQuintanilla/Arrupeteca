@@ -1,8 +1,7 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
-import com.arrupeteca.dto.response.detail.CategoriaDetalleResponse;
-import com.arrupeteca.dto.response.summary.CategoriaResumen;
+import com.arrupeteca.dto.response.CategoriaResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.CategoriaMapper;
 import com.arrupeteca.persistence.entity.Categoria;
@@ -39,30 +38,30 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all active categories paginated")
     void shouldReturnAllActive() {
-        Categoria entity = new Categoria();
+        Categoria entity = Categoria.builder().build();
         Page<Categoria> expectedPage = new PageImpl<>(List.of(entity));
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        CategoriaResponse response = mock(CategoriaResponse.class);
 
         when(categoriaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
-        when(categoriaMapper.toResumen(entity)).thenReturn(resumen);
+        when(categoriaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<CategoriaResumen> result = categoriaService.obtenerTodosActivos(Pageable.unpaged());
+        Page<CategoriaResponse> result = categoriaService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result.getContent()).containsExactly(resumen);
+        assertThat(result.getContent()).containsExactly(response);
         verify(categoriaRepository).findByBorradoLogicoFalse(any(Pageable.class));
     }
 
     @Test
     @DisplayName("Should return category by ID and active")
     void shouldReturnByIdAndActive() {
-        Categoria entity = new Categoria();
-        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        Categoria entity = Categoria.builder().build();
+        CategoriaResponse response = mock(CategoriaResponse.class);
         when(categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(categoriaMapper.toDetalleResponse(entity)).thenReturn(detalle);
+        when(categoriaMapper.toResponse(entity)).thenReturn(response);
 
-        CategoriaDetalleResponse result = categoriaService.obtenerPorIdActivo(1L);
+        CategoriaResponse result = categoriaService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
@@ -78,29 +77,29 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all categories for admin")
     void shouldReturnAllAdmin() {
-        Categoria entity = new Categoria();
+        Categoria entity = Categoria.builder().build();
         Page<Categoria> expectedPage = new PageImpl<>(List.of(entity));
-        CategoriaResumen resumen = mock(CategoriaResumen.class);
+        CategoriaResponse response = mock(CategoriaResponse.class);
 
         when(categoriaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
-        when(categoriaMapper.toResumen(entity)).thenReturn(resumen);
+        when(categoriaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<CategoriaResumen> result = categoriaService.obtenerTodos(Pageable.unpaged());
+        Page<CategoriaResponse> result = categoriaService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result.getContent()).containsExactly(resumen);
+        assertThat(result.getContent()).containsExactly(response);
     }
 
     @Test
     @DisplayName("Should return category by ID")
     void shouldReturnById() {
-        Categoria entity = new Categoria();
-        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
+        Categoria entity = Categoria.builder().build();
+        CategoriaResponse response = mock(CategoriaResponse.class);
         when(categoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(categoriaMapper.toDetalleResponse(entity)).thenReturn(detalle);
+        when(categoriaMapper.toResponse(entity)).thenReturn(response);
 
-        CategoriaDetalleResponse result = categoriaService.obtenerPorId(1L);
+        CategoriaResponse result = categoriaService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
@@ -116,31 +115,29 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should create category when name is unique")
     void shouldCreateCategory() {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Nueva");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Nueva").build();
 
         when(categoriaRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
-        Categoria entity = new Categoria();
+        Categoria entity = Categoria.builder().build();
         when(categoriaMapper.toEntity(any())).thenReturn(entity);
         
-        Categoria saved = new Categoria();
+        Categoria saved = Categoria.builder().build();
         saved.setId(1L);
         when(categoriaRepository.save(any())).thenReturn(saved);
         
-        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
-        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
+        CategoriaResponse response = mock(CategoriaResponse.class);
+        when(categoriaMapper.toResponse(saved)).thenReturn(response);
 
-        CategoriaDetalleResponse result = categoriaService.crear(request);
+        CategoriaResponse result = categoriaService.crear(request);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
         verify(categoriaRepository).save(any());
     }
 
     @Test
     @DisplayName("Should throw exception when creating category with duplicate name")
     void shouldThrowWhenDuplicateName() {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Duplicada");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Duplicada").build();
 
         when(categoriaRepository.existsByNombreIgnoreCase("Duplicada")).thenReturn(true);
 
@@ -152,26 +149,25 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update category when name is unique or same")
     void shouldUpdateCategory() {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Actualizada");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Actualizada").build();
 
-        Categoria existing = new Categoria();
+        Categoria existing = Categoria.builder().build();
         existing.setId(1L);
         existing.setNombre("Antigua");
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(categoriaRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
         
-        Categoria saved = new Categoria();
+        Categoria saved = Categoria.builder().build();
         saved.setId(1L);
         when(categoriaRepository.save(any())).thenReturn(saved);
 
-        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
-        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
+        CategoriaResponse response = mock(CategoriaResponse.class);
+        when(categoriaMapper.toResponse(saved)).thenReturn(response);
 
-        CategoriaDetalleResponse result = categoriaService.actualizar(1L, request);
+        CategoriaResponse result = categoriaService.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
         verify(categoriaMapper).updateEntity(request, existing);
         verify(categoriaRepository).save(existing);
     }
@@ -179,10 +175,9 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when updating category and new name exists")
     void shouldThrowWhenUpdatingToExistingName() {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("Existente");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("Existente").build();
 
-        Categoria existing = new Categoria();
+        Categoria existing = Categoria.builder().build();
         existing.setId(1L);
         existing.setNombre("Antigua");
 
@@ -197,25 +192,24 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update category when name is same (ignore case)")
     void shouldUpdateWhenNameSame() {
-        CategoriaRequest request = new CategoriaRequest();
-        request.setNombre("CATEGORIA");
+        CategoriaRequest request = CategoriaRequest.builder().nombre("CATEGORIA").build();
 
-        Categoria existing = new Categoria();
+        Categoria existing = Categoria.builder().build();
         existing.setId(1L);
         existing.setNombre("categoria");
 
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(existing));
         
-        Categoria saved = new Categoria();
+        Categoria saved = Categoria.builder().build();
         saved.setId(1L);
         when(categoriaRepository.save(any())).thenReturn(saved);
 
-        CategoriaDetalleResponse detalle = mock(CategoriaDetalleResponse.class);
-        when(categoriaMapper.toDetalleResponse(saved)).thenReturn(detalle);
+        CategoriaResponse response = mock(CategoriaResponse.class);
+        when(categoriaMapper.toResponse(saved)).thenReturn(response);
 
-        CategoriaDetalleResponse result = categoriaService.actualizar(1L, request);
+        CategoriaResponse result = categoriaService.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
@@ -223,7 +217,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingNonExistent() {
         when(categoriaRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> categoriaService.actualizar(1L, new CategoriaRequest()))
+        assertThatThrownBy(() -> categoriaService.actualizar(1L, CategoriaRequest.builder().nombre("Nueva").build()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró una categoría con ID: 1");
     }
@@ -231,7 +225,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should deactivate category")
     void shouldDeactivate() {
-        when(categoriaRepository.existsById(1L)).thenReturn(true);
+        when(categoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         categoriaService.cambiarEstado(1L, false);
 
@@ -241,7 +235,7 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should activate category")
     void shouldActivate() {
-        when(categoriaRepository.existsById(1L)).thenReturn(true);
+        when(categoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         categoriaService.cambiarEstado(1L, true);
 
@@ -251,11 +245,10 @@ class CategoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw when changing state of non-existent category")
     void shouldThrowWhenChangingStateNonExistent() {
-        when(categoriaRepository.existsById(1L)).thenReturn(false);
+        when(categoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
 
         assertThatThrownBy(() -> categoriaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró una categoría con ID: 1");
     }
 }
-

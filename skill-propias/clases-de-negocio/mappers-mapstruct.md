@@ -37,6 +37,14 @@ Para evitar sobrescribir accidentalmente la versión de base de datos con `null`
     *   **Razón de arquitectura**: La auditoría debe ser inyectada exclusivamente por Spring Data JPA a través de sus Listeners (`@CreatedBy`, `@LastModifiedBy`, etc.). MapStruct los omitirá de forma limpia y segura gracias a la política global `unmappedTargetPolicy = ReportingPolicy.IGNORE` configurada en `CentralMapperConfig`.
 *   **Herencia de Configuración**: Usar `@InheritConfiguration` en `updateEntity` para reutilizar las reglas de ignorar campos técnicos que sí pertenezcan a la entidad (como `id`, `version` o `borradoLogico`).
 
+*   **Evitar Dependencias Circulares en `uses`**:
+    *   **Peligro**: Si el mapper A se relaciona con B y el mapper B se relaciona con A, poner a ambos en la propiedad `uses` del otro (`uses = { BMapper.class }` y `uses = { AMapper.class }`) causará una **dependencia circular de Beans en Spring** que impedirá compilar o arrancar el sistema.
+    *   **Solución**: Para romper el ciclo, **no** registres el mapper conflictivo en `uses`. En su lugar, escribe un método de mapeo local por defecto (`default`) o anotado con `@Named` dentro de la misma interfaz (ej: el método `obraToResumen` en `AutorMapper`), realizando la transformación de forma directa e independiente.
+    *   **Tres Reglas de Oro para decidir qué Mapper rompe el ciclo**:
+        1.  **Jerarquía (Fuerte vs. Débil)**: El mapper de la entidad de negocio (fuerte) registra al de catálogo (débil) en su `uses`. El de catálogo rompe el ciclo mapeando la entidad fuerte con un método `default` local.
+        2.  **Dirección (Padre vs. Hijo)**: El mapper principal (el que contiene la relación de colección más importante, ej. `Obra` que contiene muchos autores) usa `uses` para inyectar al hijo. El hijo usa un método `default` local para mapear su relación simple (ej. `Autor` mapeando su `obraCumbre`).
+        3.  **Simplicidad del DTO**: Se escribe el método `default` manual en el mapper que necesite transformar hacia el DTO **más simple** (el que tiene menos campos, ej. `ObraResumen` de 5 campos vs. `AutorResumenResponse` de 12 campos), haciendo el mantenimiento del código mucho más sencillo.
+
 ---
 
 ## 4. Ejemplo de Plantilla Completa

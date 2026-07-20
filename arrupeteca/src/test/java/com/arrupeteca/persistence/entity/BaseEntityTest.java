@@ -11,7 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Base class for entity validation tests.
+ * Base class for entity validation tests Tengo que elimarlo.
  */
 public abstract class BaseEntityTest {
 
