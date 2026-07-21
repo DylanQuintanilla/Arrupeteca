@@ -1,23 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
-import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.TipoAutoriaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface TipoAutoriaService {
 
-    Page<TipoAutoriaResumen> obtenerTodosActivos(Pageable pageable);
+    Page<TipoAutoriaResponse> obtenerTodosActivos(Pageable pageable);
 
-    TipoAutoriaResumen obtenerPorIdActivo(Long id);
+    TipoAutoriaResponse obtenerPorIdActivo(Long id);
 
-    Page<TipoAutoriaResumen> obtenerTodos(Pageable pageable);
+    Page<TipoAutoriaResponse> obtenerTodos(Pageable pageable);
 
-    TipoAutoriaResumen obtenerPorId(Long id);
+    TipoAutoriaResponse obtenerPorId(Long id);
 
-    TipoAutoriaResumen crear(TipoAutoriaRequest request);
+    TipoAutoriaResponse crear(TipoAutoriaRequest request);
 
-    TipoAutoriaResumen actualizar(Long id, TipoAutoriaRequest request);
+    TipoAutoriaResponse actualizar(Long id, TipoAutoriaRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

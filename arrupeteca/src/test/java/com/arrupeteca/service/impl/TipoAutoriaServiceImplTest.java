@@ -1,17 +1,15 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
-import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.TipoAutoriaResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.TipoAutoriaMapper;
 import com.arrupeteca.persistence.entity.TipoAutoria;
 import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -25,8 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class TipoAutoriaServiceImplTest {
+class TipoAutoriaServiceImplTest extends BaseServiceTest {
 
     @Mock
     private TipoAutoriaRepository tipoAutoriaRepository;
@@ -38,39 +35,39 @@ class TipoAutoriaServiceImplTest {
     private TipoAutoriaServiceImpl tipoAutoriaService;
 
     @Test
-    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    @DisplayName("obtenerTodosActivos - Should return page of TipoAutoriaResponse")
     void obtenerTodosActivos() {
         TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Test").build();
         Page<TipoAutoria> page = new PageImpl<>(List.of(entity));
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", false);
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
 
         when(tipoAutoriaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(tipoAutoriaMapper.toResumen(entity)).thenReturn(resumen);
+        when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<TipoAutoriaResumen> result = tipoAutoriaService.obtenerTodosActivos(Pageable.unpaged());
+        Page<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodosActivos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("obtenerPorIdActivo - Should return Resumen when found and active")
+    @DisplayName("obtenerPorIdActivo - Should return TipoAutoriaResponse when found and active")
     void obtenerPorIdActivoSuccess() {
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
         TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Test").build();
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", false);
         
-        when(tipoAutoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(tipoAutoriaMapper.toResumen(entity)).thenReturn(resumen);
+        when(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
 
-        TipoAutoriaResumen result = tipoAutoriaService.obtenerPorIdActivo(1L);
+        TipoAutoriaResponse result = tipoAutoriaService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
     void obtenerPorIdActivoNotFound() {
-        when(tipoAutoriaRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> tipoAutoriaService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -78,39 +75,39 @@ class TipoAutoriaServiceImplTest {
     }
 
     @Test
-    @DisplayName("obtenerTodos - Should return page of Resumen")
+    @DisplayName("obtenerTodos - Should return page of TipoAutoriaResponse")
     void obtenerTodos() {
         TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Test").build();
         Page<TipoAutoria> page = new PageImpl<>(List.of(entity));
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", false);
-        
-        when(tipoAutoriaRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        when(tipoAutoriaMapper.toResumen(entity)).thenReturn(resumen);
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
 
-        Page<TipoAutoriaResumen> result = tipoAutoriaService.obtenerTodos(Pageable.unpaged());
+        when(tipoAutoriaRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
+
+        Page<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("obtenerPorId - Should return Resumen when found")
+    @DisplayName("obtenerPorId - Should return TipoAutoriaResponse when found")
     void obtenerPorIdSuccess() {
         TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Test").build();
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", false);
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
         
-        when(tipoAutoriaRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(tipoAutoriaMapper.toResumen(entity)).thenReturn(resumen);
+        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
 
-        TipoAutoriaResumen result = tipoAutoriaService.obtenerPorId(1L);
+        TipoAutoriaResponse result = tipoAutoriaService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("obtenerPorId - Should throw exception when not found")
     void obtenerPorIdNotFound() {
-        when(tipoAutoriaRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> tipoAutoriaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -118,29 +115,27 @@ class TipoAutoriaServiceImplTest {
     }
 
     @Test
-    @DisplayName("crear - Should create and return Resumen")
+    @DisplayName("crear - Should create and return TipoAutoriaResponse")
     void crearSuccess() {
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Nuevo");
-        TipoAutoria entity = new TipoAutoria();
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Nuevo").build();
+        TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Nuevo").build();
         TipoAutoria savedEntity = TipoAutoria.builder().id(1L).nombre("Nuevo").build();
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Nuevo", false);
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Nuevo", false);
 
         when(tipoAutoriaRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
         when(tipoAutoriaMapper.toEntity(request)).thenReturn(entity);
         when(tipoAutoriaRepository.save(entity)).thenReturn(savedEntity);
-        when(tipoAutoriaMapper.toResumen(savedEntity)).thenReturn(resumen);
+        when(tipoAutoriaMapper.toResponse(savedEntity)).thenReturn(response);
 
-        TipoAutoriaResumen result = tipoAutoriaService.crear(request);
+        TipoAutoriaResponse result = tipoAutoriaService.crear(request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("crear - Should throw exception when name exists")
     void crearDuplicateName() {
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Existe");
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Existe").build();
 
         when(tipoAutoriaRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
 
@@ -150,29 +145,28 @@ class TipoAutoriaServiceImplTest {
     }
 
     @Test
-    @DisplayName("actualizar - Should update and return Resumen")
+    @DisplayName("actualizar - Should update and return TipoAutoriaResponse")
     void actualizarSuccess() {
         Long id = 1L;
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Actualizado");
-        TipoAutoria existingEntity = TipoAutoria.builder().id(id).nombre("Original").build();
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(id, "Actualizado", false);
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Actualizado").build();
+        TipoAutoria existingEntity = TipoAutoria.builder().id(1L).nombre("Original").build();
+        TipoAutoriaResponse response = new TipoAutoriaResponse(id, "Actualizado", false);
 
         when(tipoAutoriaRepository.findById(id)).thenReturn(Optional.of(existingEntity));
         when(tipoAutoriaRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
         when(tipoAutoriaRepository.save(existingEntity)).thenReturn(existingEntity);
-        when(tipoAutoriaMapper.toResumen(existingEntity)).thenReturn(resumen);
+        when(tipoAutoriaMapper.toResponse(existingEntity)).thenReturn(response);
 
-        TipoAutoriaResumen result = tipoAutoriaService.actualizar(id, request);
+        TipoAutoriaResponse result = tipoAutoriaService.actualizar(id, request);
 
-        assertThat(result).isEqualTo(resumen);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("actualizar - Should throw exception when not found")
     void actualizarNotFound() {
         Long id = 1L;
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Cualquiera").build();
 
         when(tipoAutoriaRepository.findById(id)).thenReturn(Optional.empty());
 
@@ -185,10 +179,8 @@ class TipoAutoriaServiceImplTest {
     @DisplayName("actualizar - Should throw exception when updating to existing name")
     void actualizarDuplicateName() {
         Long id = 1L;
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Existe");
-        TipoAutoria existingEntity = new TipoAutoria();
-        existingEntity.setNombre("Original");
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Existe").build();
+        TipoAutoria existingEntity = TipoAutoria.builder().id(1L).nombre("Original").build();
 
         when(tipoAutoriaRepository.findById(id)).thenReturn(Optional.of(existingEntity));
         when(tipoAutoriaRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
@@ -201,7 +193,7 @@ class TipoAutoriaServiceImplTest {
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(tipoAutoriaRepository.existsById(1L)).thenReturn(true);
+        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         tipoAutoriaService.cambiarEstado(1L, true);
 
@@ -211,7 +203,7 @@ class TipoAutoriaServiceImplTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(tipoAutoriaRepository.existsById(1L)).thenReturn(true);
+        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         tipoAutoriaService.cambiarEstado(1L, false);
 
@@ -221,7 +213,7 @@ class TipoAutoriaServiceImplTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(tipoAutoriaRepository.existsById(1L)).thenReturn(false);
+        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
 
         assertThatThrownBy(() -> tipoAutoriaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)

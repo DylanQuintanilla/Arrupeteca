@@ -1,18 +1,15 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.EdificioRequest;
-import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
-import com.arrupeteca.dto.response.summary.EdificioResumen;
+import com.arrupeteca.dto.response.EdificioResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EdificioMapper;
 import com.arrupeteca.persistence.entity.Edificio;
 import com.arrupeteca.persistence.repository.EdificioRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -27,8 +24,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class EdificioServiceImplTest {
+class EdificioServiceImplTest extends BaseServiceTest {
 
     @Mock
     private EdificioRepository repository;
@@ -44,49 +40,49 @@ class EdificioServiceImplTest {
     void shouldReturnActive() {
         Edificio entity = Edificio.builder().id(1L).nombre("Principal").build();
         Page<Edificio> page = new PageImpl<>(List.of(entity));
-        EdificioResumen resumen = new EdificioResumen(1L, "Principal", false);
+        EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
         when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(mapper.toResumen(entity)).thenReturn(resumen);
+        when(mapper.toResponse(entity)).thenReturn(response);
 
-        Page<EdificioResumen> result = service.obtenerTodosActivos(Pageable.unpaged());
+        Page<EdificioResponse> result = service.obtenerTodosActivos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
     @DisplayName("Should return building by ID when active")
     void shouldReturnByIdActive() {
         Edificio entity = Edificio.builder().id(1L).nombre("Principal").build();
-        EdificioDetalleResponse detail = new EdificioDetalleResponse(1L, "Principal", false, "admin", null, "admin", null);
+        EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(mapper.toDetalleResponse(entity)).thenReturn(detail);
+        when(repository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(mapper.toResponse(entity)).thenReturn(response);
 
-        EdificioDetalleResponse result = service.obtenerPorIdActivo(1L);
+        EdificioResponse result = service.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("Should return building by ID")
     void shouldReturnById() {
         Edificio entity = Edificio.builder().id(1L).nombre("Principal").build();
-        EdificioDetalleResponse detail = new EdificioDetalleResponse(1L, "Principal", false, "admin", null, "admin", null);
+        EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(mapper.toDetalleResponse(entity)).thenReturn(detail);
+        when(repository.findById(1L)).thenReturn(Optional.of(entity));
+        when(mapper.toResponse(entity)).thenReturn(response);
 
-        EdificioDetalleResponse result = service.obtenerPorId(1L);
+        EdificioResponse result = service.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("Should throw exception when active building not found")
     void shouldThrowWhenActiveNotFound() {
-        when(repository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(repository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -98,21 +94,21 @@ class EdificioServiceImplTest {
     void shouldReturnAllAdmin() {
         Edificio entity = Edificio.builder().id(1L).nombre("Principal").build();
         Page<Edificio> page = new PageImpl<>(List.of(entity));
-        EdificioResumen resumen = new EdificioResumen(1L, "Principal", false);
+        EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        when(mapper.toResumen(entity)).thenReturn(resumen);
+        when(repository.findAll(any(Pageable.class))).thenReturn(page);
+        when(mapper.toResponse(entity)).thenReturn(response);
 
-        Page<EdificioResumen> result = service.obtenerTodos(Pageable.unpaged());
+        Page<EdificioResponse> result = service.obtenerTodos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
     @DisplayName("Should throw exception when building not found")
     void shouldThrowWhenNotFound() {
-        when(repository.findProjectedById(1L)).thenReturn(Optional.empty());
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -122,28 +118,25 @@ class EdificioServiceImplTest {
     @Test
     @DisplayName("Should create building")
     void shouldCreate() {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Nuevo");
-
+        EdificioRequest request = EdificioRequest.builder().nombre("Nuevo").build();
         Edificio entity = Edificio.builder().id(1L).nombre("Nuevo").build();
-        EdificioDetalleResponse detail = new EdificioDetalleResponse(1L, "Nuevo", false, "admin", null, "admin", null);
+        EdificioResponse response = new EdificioResponse(1L, "Nuevo", false);
 
         when(repository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
         when(mapper.toEntity(request)).thenReturn(entity);
         when(repository.save(any(Edificio.class))).thenReturn(entity);
-        when(mapper.toDetalleResponse(entity)).thenReturn(detail);
+        when(mapper.toResponse(entity)).thenReturn(response);
 
-        EdificioDetalleResponse result = service.crear(request);
+        EdificioResponse result = service.crear(request);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
         verify(repository).save(any(Edificio.class));
     }
 
     @Test
     @DisplayName("Should throw exception when creating building with duplicate name")
     void shouldThrowOnCreateDuplicate() {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Existente");
+        EdificioRequest request = EdificioRequest.builder().nombre("Existente").build();
 
         when(repository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
 
@@ -155,48 +148,42 @@ class EdificioServiceImplTest {
     @Test
     @DisplayName("Should update building")
     void shouldUpdate() {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Actualizado");
-
+        EdificioRequest request = EdificioRequest.builder().nombre("Actualizado").build();
         Edificio existing = Edificio.builder().id(1L).nombre("Principal").build();
-        EdificioDetalleResponse detail = new EdificioDetalleResponse(1L, "Actualizado", false, "admin", null, "admin", null);
+        EdificioResponse response = new EdificioResponse(1L, "Actualizado", false);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
         when(repository.save(existing)).thenReturn(existing);
-        when(mapper.toDetalleResponse(existing)).thenReturn(detail);
+        when(mapper.toResponse(existing)).thenReturn(response);
 
-        EdificioDetalleResponse result = service.actualizar(1L, request);
+        EdificioResponse result = service.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
         verify(mapper).updateEntity(request, existing);
     }
 
     @Test
     @DisplayName("Should update building with same name")
     void shouldUpdateSameName() {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Principal");
-
+        EdificioRequest request = EdificioRequest.builder().nombre("Principal").build();
         Edificio existing = Edificio.builder().id(1L).nombre("Principal").build();
-        EdificioDetalleResponse detail = new EdificioDetalleResponse(1L, "Principal", false, "admin", null, "admin", null);
+        EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(repository.save(existing)).thenReturn(existing);
-        when(mapper.toDetalleResponse(existing)).thenReturn(detail);
+        when(mapper.toResponse(existing)).thenReturn(response);
 
-        EdificioDetalleResponse result = service.actualizar(1L, request);
+        EdificioResponse result = service.actualizar(1L, request);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
         verify(repository, never()).existsByNombreIgnoreCase(any());
     }
 
     @Test
     @DisplayName("Should throw when updating building to existing name")
     void shouldThrowOnUpdateDuplicate() {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Ocupado");
-
+        EdificioRequest request = EdificioRequest.builder().nombre("Ocupado").build();
         Edificio existing = Edificio.builder().id(1L).nombre("Principal").build();
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -212,7 +199,7 @@ class EdificioServiceImplTest {
     void shouldThrowOnUpdateNotFound() {
         when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.actualizar(1L, new EdificioRequest()))
+        assertThatThrownBy(() -> service.actualizar(1L, EdificioRequest.builder().nombre("Cualquiera").build()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró un edificio con ID: 1");
     }
@@ -220,7 +207,7 @@ class EdificioServiceImplTest {
     @Test
     @DisplayName("Should activate building")
     void shouldActivate() {
-        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.countByIdIncludeDeleted(1L)).thenReturn(1L);
         service.cambiarEstado(1L, true);
         verify(repository).activar(1L);
     }
@@ -228,7 +215,7 @@ class EdificioServiceImplTest {
     @Test
     @DisplayName("Should deactivate building")
     void shouldDeactivate() {
-        when(repository.existsById(1L)).thenReturn(true);
+        when(repository.countByIdIncludeDeleted(1L)).thenReturn(1L);
         service.cambiarEstado(1L, false);
         verify(repository).desactivar(1L);
     }
@@ -236,7 +223,7 @@ class EdificioServiceImplTest {
     @Test
     @DisplayName("Should throw exception when building not found on status change")
     void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.existsById(1L)).thenReturn(false);
+        when(repository.countByIdIncludeDeleted(1L)).thenReturn(0L);
         assertThatThrownBy(() -> service.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró un edificio con ID: 1");

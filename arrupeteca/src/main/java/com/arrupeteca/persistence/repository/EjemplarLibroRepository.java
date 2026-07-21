@@ -8,18 +8,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Long> {
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Page<EjemplarLibro> findByBorradoLogicoFalse(Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibro> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<EjemplarLibro> findByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
@@ -49,10 +47,10 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
     Page<EjemplarLibro> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibro> findAllProjectedBy(Pageable pageable);
+    Page<EjemplarLibro> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibro> findProjectedById(Long id);
+    Optional<EjemplarLibro> findById(Long id);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
@@ -97,13 +95,16 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
             Pageable pageable
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EjemplarLibro e SET e.borradoLogico = true WHERE e.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EjemplarLibro e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM ejemplar_libro WHERE id_ejemplar_libro = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 }

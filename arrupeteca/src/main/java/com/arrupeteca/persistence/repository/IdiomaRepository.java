@@ -7,28 +7,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface IdiomaRepository extends JpaRepository<Idioma, Long> {
 
     Page<Idioma> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<Idioma> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Idioma> findByIdAndBorradoLogicoFalse(Long id);
 
-    Page<Idioma> findAllProjectedBy(Pageable pageable);
-
-    Optional<Idioma> findProjectedById(Long id);
-
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Idioma i SET i.borradoLogico = true WHERE i.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Idioma i SET i.borradoLogico = false WHERE i.id = :id")
     void activar(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM idioma WHERE id_idioma = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 

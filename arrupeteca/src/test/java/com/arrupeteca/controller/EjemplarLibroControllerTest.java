@@ -58,10 +58,13 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/ejemplares - Should create ejemplar")
     void shouldCreate() throws Exception {
-        EjemplarLibroRequest request = new EjemplarLibroRequest();
-        request.setComentario("Nuevo");
-        request.setIdLibro(1L);
-        request.setIdMueble(1L);
+        EjemplarLibroRequest request = EjemplarLibroRequest.builder()
+                .comentario(org.openapitools.jackson.nullable.JsonNullable.of("Nuevo"))
+                .idLibro(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idMueble(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .estadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.EstadoFisico.BUEN_ESTADO))
+                .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.Disponibilidad.DISPONIBLE))
+                .build();
 
         EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Nuevo", false, "BUENO", "DISPONIBLE",
                 "admin", null, "admin", null, null, null, "Estante 1");
@@ -76,18 +79,21 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/ejemplares/{id} - Should update ejemplar")
+    @DisplayName("PATCH /api/v1/ejemplares/{id} - Should update ejemplar")
     void shouldUpdate() throws Exception {
-        EjemplarLibroRequest request = new EjemplarLibroRequest();
-        request.setComentario("Actualizado");
-        request.setIdLibro(1L);
-        request.setIdMueble(1L);
+        EjemplarLibroRequest request = EjemplarLibroRequest.builder()
+                .comentario(org.openapitools.jackson.nullable.JsonNullable.of("Actualizado"))
+                .idLibro(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idMueble(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .estadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.EstadoFisico.BUEN_ESTADO))
+                .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.Disponibilidad.DISPONIBLE))
+                .build();
 
         EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Actualizado", false, "BUENO", "DISPONIBLE",
                 "admin", null, "admin", null, null, null, "Estante 1");
         when(ejemplarLibroService.actualizar(any(Long.class), any(EjemplarLibroRequest.class))).thenReturn(detail);
 
-        mockMvc.perform(put("/api/v1/ejemplares/1")
+        mockMvc.perform(patch("/api/v1/ejemplares/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

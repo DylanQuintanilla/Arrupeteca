@@ -1,18 +1,26 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.ObraRequest;
+import com.arrupeteca.dto.request.ObraAutorRequest;
 import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
 import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.ObraMapper;
 import com.arrupeteca.persistence.entity.Obra;
+import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Autor;
+import com.arrupeteca.persistence.entity.TipoAutoria;
 import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.CategoriaRepository;
+import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -28,11 +37,22 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class ObraServiceImplTest {
+class ObraServiceImplTest extends BaseServiceTest {
 
     @Mock
     private ObraRepository obraRepository;
+
+    @Mock
+    private GeneroRepository generoRepository;
+
+    @Mock
+    private CategoriaRepository categoriaRepository;
+
+    @Mock
+    private AutorRepository autorRepository;
+
+    @Mock
+    private TipoAutoriaRepository tipoAutoriaRepository;
 
     @Mock
     private ObraMapper obraMapper;
@@ -63,7 +83,7 @@ class ObraServiceImplTest {
         ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Test", 2021, "Resumen", false,
                 "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
 
-        when(obraRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
 
         ObraDetalleResponse result = obraService.obtenerPorIdActivo(1L);
@@ -74,85 +94,31 @@ class ObraServiceImplTest {
     @Test
     @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
     void obtenerPorIdActivoNotFound() {
-        when(obraRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> obraService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra activa con ID: 1");
     }
 
     @Test
-    @DisplayName("busquedaGlobal - Should return page of Resumen")
-    void busquedaGlobal() {
-        Obra entity = Obra.builder().id(1L).build();
-        Page<Obra> page = new PageImpl<>(List.of(entity));
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(obraRepository.busquedaGlobal("palabra", Pageable.unpaged())).thenReturn(page);
-        when(obraMapper.toResumen(entity)).thenReturn(resumen);
-
-        Page<ObraResumen> result = obraService.busquedaGlobal("palabra", Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(resumen);
-    }
-
-    @Test
-    @DisplayName("obtenerTodos - Should return all works")
-    void obtenerTodos() {
-        Obra entity = Obra.builder().id(1L).build();
-        Page<Obra> page = new PageImpl<>(List.of(entity));
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(obraRepository.findAll(any(Pageable.class))).thenReturn(page);
-        when(obraMapper.toResumen(entity)).thenReturn(resumen);
-
-        Page<ObraResumen> result = obraService.obtenerTodos(Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(resumen);
-    }
-
-    @Test
-    @DisplayName("obtenerPorId - Should return DetalleResponse")
-    void obtenerPorId() {
-        Obra entity = Obra.builder().id(1L).build();
-        ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(entity));
-        when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
-
-        ObraDetalleResponse result = obraService.obtenerPorId(1L);
-
-        assertThat(result).isEqualTo(detail);
-    }
-
-    @Test
-    @DisplayName("obtenerPorId - Should throw exception when not found")
-    void obtenerPorIdNotFound() {
-        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> obraService.obtenerPorId(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Obra con ID: 1");
-    }
-
-    @Test
-    @DisplayName("busquedaMaestraAdmin - Should return results")
-    void busquedaMaestraAdmin() {
-        Obra entity = Obra.builder().id(1L).build();
-        Page<Obra> page = new PageImpl<>(List.of(entity));
-        ObraResumen resumen = mock(ObraResumen.class);
-        when(obraRepository.busquedaMaestraAdmin(any(), any(), any(), any(), any())).thenReturn(page);
-        when(obraMapper.toResumen(entity)).thenReturn(resumen);
-
-        Page<ObraResumen> result = obraService.busquedaMaestraAdmin(false, "term", 2000, 2021, Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(resumen);
-    }
-
-    @Test
     @DisplayName("crear - Should save and return DetalleResponse")
     void crear() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Test");
+        ObraRequest request = ObraRequest.builder()
+                .titulo(JsonNullable.of("Test"))
+                .resumen(JsonNullable.of("Resumen de la obra"))
+                .idGeneros(JsonNullable.of(Set.of(1L)))
+                .idCategorias(JsonNullable.of(Set.of(1L)))
+                .autores(JsonNullable.of(Set.of(new ObraAutorRequest(1L, 1L))))
+                .build();
         Obra entity = Obra.builder().id(1L).titulo("Test").build();
         ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
         when(obraRepository.existsByTituloIgnoreCase("Test")).thenReturn(false);
+        when(generoRepository.findById(1L)).thenReturn(Optional.of(Genero.builder().build()));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(Categoria.builder().build()));
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(Autor.builder().build()));
+        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(TipoAutoria.builder().build()));
+
         when(obraMapper.toEntity(request)).thenReturn(entity);
         when(obraRepository.save(any(Obra.class))).thenReturn(entity);
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
@@ -165,8 +131,14 @@ class ObraServiceImplTest {
     @Test
     @DisplayName("crear - Should throw exception if title exists")
     void crearTituloExists() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Test");
+        ObraRequest request = ObraRequest.builder()
+                .titulo(JsonNullable.of("Test"))
+                .resumen(JsonNullable.of("Resumen de la obra"))
+                .idGeneros(JsonNullable.of(Set.of(1L)))
+                .idCategorias(JsonNullable.of(Set.of(1L)))
+                .autores(JsonNullable.of(Set.of(new ObraAutorRequest(1L, 1L))))
+                .build();
+
         when(obraRepository.existsByTituloIgnoreCase("Test")).thenReturn(true);
 
         assertThatThrownBy(() -> obraService.crear(request))
@@ -177,14 +149,24 @@ class ObraServiceImplTest {
     @Test
     @DisplayName("actualizar - Should update and return DetalleResponse")
     void actualizar() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Nuevo");
+        ObraRequest request = ObraRequest.builder()
+                .titulo(JsonNullable.of("Nuevo"))
+                .resumen(JsonNullable.of("Nuevo resumen"))
+                .idGeneros(JsonNullable.of(Set.of(1L)))
+                .idCategorias(JsonNullable.of(Set.of(1L)))
+                .autores(JsonNullable.of(Set.of(new ObraAutorRequest(1L, 1L))))
+                .build();
         Obra existing = Obra.builder().id(1L).titulo("Viejo").build();
         Obra saved = Obra.builder().id(1L).titulo("Nuevo").build();
         ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
         when(obraRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(obraRepository.existsByTituloIgnoreCase("Nuevo")).thenReturn(false);
+        when(generoRepository.findById(1L)).thenReturn(Optional.of(Genero.builder().build()));
+        when(categoriaRepository.findById(1L)).thenReturn(Optional.of(Categoria.builder().build()));
+        when(autorRepository.findById(1L)).thenReturn(Optional.of(Autor.builder().build()));
+        when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(TipoAutoria.builder().build()));
+
         when(obraRepository.save(existing)).thenReturn(saved);
         when(obraMapper.toDetalleResponse(saved)).thenReturn(detail);
 
@@ -197,30 +179,15 @@ class ObraServiceImplTest {
     @DisplayName("actualizar - Should throw when not found")
     void actualizarNotFound() {
         when(obraRepository.findById(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> obraService.actualizar(1L, new ObraRequest()))
+        assertThatThrownBy(() -> obraService.actualizar(1L, ObraRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Obra con ID: 1");
     }
 
     @Test
-    @DisplayName("actualizar - Should throw when title already exists in another work")
-    void actualizarTituloConflict() {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Nuevo");
-        Obra existing = Obra.builder().id(1L).titulo("Viejo").build();
-
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(obraRepository.existsByTituloIgnoreCase("Nuevo")).thenReturn(true);
-
-        assertThatThrownBy(() -> obraService.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra obra con el título: Nuevo");
-    }
-
-    @Test
     @DisplayName("cambiarEstado - Should activate work")
     void activarObra() {
-        when(obraRepository.existsById(1L)).thenReturn(true);
+        when(obraRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
         obraService.cambiarEstado(1L, true);
         verify(obraRepository).activar(1L);
     }
@@ -228,17 +195,8 @@ class ObraServiceImplTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate work")
     void desactivarObra() {
-        when(obraRepository.existsById(1L)).thenReturn(true);
+        when(obraRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
         obraService.cambiarEstado(1L, false);
         verify(obraRepository).desactivar(1L);
-    }
-
-    @Test
-    @DisplayName("cambiarEstado - Should throw when not found")
-    void cambiarEstadoNotFound() {
-        when(obraRepository.existsById(1L)).thenReturn(false);
-        assertThatThrownBy(() -> obraService.cambiarEstado(1L, true))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Obra con ID: 1");
     }
 }

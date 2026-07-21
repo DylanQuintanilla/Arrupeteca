@@ -40,6 +40,7 @@ Este plan detalla las fases para el desarrollo de Arrupeteca, enfocado en un rob
     - [ ] Estandarización de Javadoc en clases de servicio y anotaciones OpenAPI/OpenAPI UI (Swagger) en controladores (incluyendo el uso de `@ParameterObject` y `@PageableDefault` para paginación).
     - [ ] Creación de la tabla de logs en la base de datos para auditoría y persistencia de trazas.
     - [ ] Configurar la IP directa del frontend en la anotación `@CrossOrigin` de los controladores en lugar del comodín (`*`).
+    - [ ] Configuración y exposición segura de endpoints de **Spring Boot Actuator** e integración con **Spring Boot Admin** para monitoreo en producción.
 
 
 

@@ -3,35 +3,37 @@ package com.arrupeteca.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class IdiomaTest extends BaseEntityTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("Idioma Entity Unit Tests")
+class IdiomaTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
+    @DisplayName("Should test getters and setters")
+    void shouldTestGettersAndSetters() {
         Idioma idioma = Idioma.builder()
+                .id(1L)
                 .nombre("Español")
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(idioma);
+        assertThat(idioma.getId()).isEqualTo(1L);
+        assertThat(idioma.getNombre()).isEqualTo("Español");
+        assertThat(idioma.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when name is blank")
-    void shouldFailWhenNameIsBlank() {
-        Idioma idioma = Idioma.builder()
-                .nombre("")
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsHashCode() {
+        Idioma i1 = Idioma.builder().id(1L).build();
+        Idioma i2 = Idioma.builder().id(1L).build();
+        Idioma i3 = Idioma.builder().id(2L).build();
 
-        assertHasViolation(idioma, "nombre", "El nombre no puede estar vacio");
-    }
-
-    @Test
-    @DisplayName("Should fail when name exceeds maximum length")
-    void shouldFailWhenNameTooLong() {
-        Idioma idioma = Idioma.builder()
-                .nombre("a".repeat(51))
-                .build();
-
-        assertHasViolation(idioma, "nombre", "El nombre no puede ser mayor de 50 caracteres");
+        assertThat(i1).isEqualTo(i1);
+        assertThat(i1).isEqualTo(i2);
+        assertThat(i1).isNotEqualTo(i3);
+        assertThat(i1).isNotEqualTo(null);
+        assertThat(i1).isNotEqualTo(new Object());
+        assertThat(i1.hashCode()).isEqualTo(i2.hashCode());
     }
 }

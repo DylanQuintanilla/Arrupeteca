@@ -3,67 +3,45 @@ package com.arrupeteca.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class EditorialTest extends BaseEntityTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("Editorial Entity Unit Tests")
+class EditorialTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
+    @DisplayName("Should test getters and setters")
+    void shouldTestGettersAndSetters() {
         Editorial editorial = Editorial.builder()
-                .nombre("Editorial Arrupe")
-                .direccion("Calle Falsa 123")
-                .correo("contacto@arrupe.com")
-                .personaContacto("Juan Perez")
-                .telefono("1234-5678")
+                .id(1L)
+                .nombre("Santillana")
+                .direccion("Calle 123")
+                .correo("contacto@santillana.com")
+                .telefono("2222-3333")
+                .personaContacto("Juan Pérez")
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(editorial);
+        assertThat(editorial.getId()).isEqualTo(1L);
+        assertThat(editorial.getNombre()).isEqualTo("Santillana");
+        assertThat(editorial.getDireccion()).isEqualTo("Calle 123");
+        assertThat(editorial.getCorreo()).isEqualTo("contacto@santillana.com");
+        assertThat(editorial.getTelefono()).isEqualTo("2222-3333");
+        assertThat(editorial.getPersonaContacto()).isEqualTo("Juan Pérez");
+        assertThat(editorial.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when required fields are blank")
-    void shouldFailWhenRequiredFieldsAreBlank() {
-        Editorial editorial = Editorial.builder()
-                .nombre("")
-                .correo("")
-                .personaContacto("")
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsHashCode() {
+        Editorial e1 = Editorial.builder().id(1L).build();
+        Editorial e2 = Editorial.builder().id(1L).build();
+        Editorial e3 = Editorial.builder().id(2L).build();
 
-        assertHasViolation(editorial, "nombre", "El nombre de la editorial no puede estar vacia");
-        assertHasViolation(editorial, "correo", "El correo de la editorial no puede estar vacia");
-        assertHasViolation(editorial, "personaContacto",
-                "El nombre de la persona de contacto no puede estar vacia");
+        assertThat(e1).isEqualTo(e1);
+        assertThat(e1).isEqualTo(e2);
+        assertThat(e1).isNotEqualTo(e3);
+        assertThat(e1).isNotEqualTo(null);
+        assertThat(e1).isNotEqualTo(new Object());
+        assertThat(e1.hashCode()).isEqualTo(e2.hashCode());
     }
-
-    @Test
-    @DisplayName("Should fail when email format is invalid")
-    void shouldFailWhenEmailIsInvalid() {
-        Editorial editorial = Editorial.builder()
-                .nombre("Editorial")
-                .correo("correo-invalido")
-                .personaContacto("Contacto")
-                .build();
-
-        assertHasViolation(editorial, "correo", "El formato del correo es inválido");
-    }
-
-    @Test
-    @DisplayName("Should fail when fields exceed maximum length")
-    void shouldFailWhenFieldsTooLong() {
-        Editorial editorial = Editorial.builder()
-                .nombre("a".repeat(101))
-                .direccion("a".repeat(151))
-                .correo("a".repeat(90) + "@test.com")
-                .personaContacto("a".repeat(101))
-                .telefono("1234-5678")
-                .build();
-
-        assertHasViolation(editorial, "nombre", "El nombre de la editorial no debe exceder los 100 caracteres");
-        assertHasViolation(editorial, "direccion",
-                "La direccion de la editorial no debe exceder los 150 caracteres");
-        editorial.setCorreo("a".repeat(101) + "@test.com");
-        assertHasViolation(editorial, "correo", "El correo de la editorial no debe exceder los 100 caracteres");
-        assertHasViolation(editorial, "personaContacto",
-                "El nombre de la persona de contacto no debe exceder los 100 caracteres");
-    }
-
 }

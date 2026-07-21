@@ -1,23 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.NacionalidadRequest;
-import com.arrupeteca.dto.response.summary.NacionalidadResumen;
+import com.arrupeteca.dto.response.NacionalidadResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface NacionalidadService {
 
-    Page<NacionalidadResumen> obtenerTodosActivos(Pageable pageable);
+    Page<NacionalidadResponse> obtenerTodosActivos(Pageable pageable);
 
-    NacionalidadResumen obtenerPorIdActivo(Long id);
+    NacionalidadResponse obtenerPorIdActivo(Long id);
 
-    Page<NacionalidadResumen> obtenerTodos(Pageable pageable);
+    Page<NacionalidadResponse> obtenerTodos(Pageable pageable);
 
-    NacionalidadResumen obtenerPorId(Long id);
+    NacionalidadResponse obtenerPorId(Long id);
 
-    NacionalidadResumen crear(NacionalidadRequest request);
+    NacionalidadResponse crear(NacionalidadRequest request);
 
-    NacionalidadResumen actualizar(Long id, NacionalidadRequest request);
+    NacionalidadResponse actualizar(Long id, NacionalidadRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

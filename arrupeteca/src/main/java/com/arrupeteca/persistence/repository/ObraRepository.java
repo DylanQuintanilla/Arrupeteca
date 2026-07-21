@@ -7,16 +7,14 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface ObraRepository extends JpaRepository<Obra, Long> {
 
     Page<Obra> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<Obra> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Obra> findByIdAndBorradoLogicoFalse(Long id);
 
     @Query(value = "SELECT o FROM Obra o WHERE o.borradoLogico = false " +
             "AND (:palabra IS NULL OR :palabra = '' OR " +
@@ -24,9 +22,9 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
             "LOWER(o.resumen) LIKE LOWER(CONCAT('%', :palabra, '%')))")
     Page<Obra> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
 
-    Page<Obra> findAllProjectedBy(Pageable pageable);
+    Page<Obra> findAll(Pageable pageable);
 
-    Optional<Obra> findProjectedById(Long id);
+    Optional<Obra> findById(Long id);
 
     @Query(value = "SELECT o FROM Obra o WHERE " +
             "(:esBorrado IS NULL OR o.borradoLogico = :esBorrado) " +
@@ -43,13 +41,16 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
             Pageable pageable
     );
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Obra o SET o.borradoLogico = true WHERE o.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Obra o SET o.borradoLogico = false WHERE o.id = :id")
     void activar(@Param("id") Long id);
+
+    @Query(value = "SELECT COUNT(*) FROM obra WHERE id_obra = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 

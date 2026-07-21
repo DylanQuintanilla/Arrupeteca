@@ -17,16 +17,23 @@ class FormatoRepositoryTest extends BaseRepositoryTest {
     @Test
     @DisplayName("Should save and find formato by ID")
     void shouldSaveAndFindById() {
-        Formato entity = Formato.builder().nombre("PDF").build();
+        Formato entity = Formato.builder().nombre("Impreso").build();
         Formato saved = formatoRepository.save(entity);
-        assertThat(formatoRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(formatoRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("Should find active with pagination")
-    void shouldFindActiveWithPagination() {
-        formatoRepository.save(Formato.builder().nombre("F1").borradoLogico(false).build());
+    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
+    void findByBorradoLogicoFalse() {
+        formatoRepository.save(Formato.builder().nombre("Test").build());
         Page<Formato> page = formatoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isGreaterThan(0);
+        assertThat(page.getContent()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Formato saved = formatoRepository.save(Formato.builder().nombre("Form3").borradoLogico(true).build());
+        assertThat(formatoRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

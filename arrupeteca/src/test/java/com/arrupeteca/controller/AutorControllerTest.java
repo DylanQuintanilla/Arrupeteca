@@ -101,7 +101,7 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/autores/{id} - Should update author")
+    @DisplayName("PATCH /api/v1/autores/{id} - Should update author")
     void shouldUpdate() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .nombre(JsonNullable.of("Actualizado"))
@@ -115,7 +115,7 @@ class AutorControllerTest extends BaseControllerTest {
                 .build();
         when(autorService.actualizar(any(Long.class), any(AutorRequest.class))).thenReturn(detalle);
 
-        mockMvc.perform(put("/api/v1/autores/1")
+        mockMvc.perform(patch("/api/v1/autores/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -211,13 +211,13 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/autores/{id} - Should return 400 Bad Request when request is invalid")
+    @DisplayName("PATCH /api/v1/autores/{id} - Should return 400 Bad Request when request is invalid")
     void shouldReturnBadRequestWhenUpdatingInvalid() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .anioNacimiento(JsonNullable.of(Year.now().plusYears(1))) // Año futuro
                 .build();
 
-        mockMvc.perform(put("/api/v1/autores/1")
+        mockMvc.perform(patch("/api/v1/autores/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())

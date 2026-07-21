@@ -3,36 +3,40 @@ package com.arrupeteca.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class MuebleTest extends BaseEntityTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("Mueble Entity Unit Tests")
+class MuebleTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
+    @DisplayName("Should test getters and setters")
+    void shouldTestGettersAndSetters() {
+        Salon salon = Salon.builder().id(1L).nombre("Salón A").build();
         Mueble mueble = Mueble.builder()
+                .id(1L)
                 .nombre("Estante 1")
-                .salon(new Salon())
+                .salon(salon)
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(mueble);
+        assertThat(mueble.getId()).isEqualTo(1L);
+        assertThat(mueble.getNombre()).isEqualTo("Estante 1");
+        assertThat(mueble.getSalon()).isEqualTo(salon);
+        assertThat(mueble.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when name is blank")
-    void shouldFailWhenNameIsBlank() {
-        Mueble mueble = Mueble.builder()
-                .nombre("")
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsHashCode() {
+        Mueble m1 = Mueble.builder().id(1L).build();
+        Mueble m2 = Mueble.builder().id(1L).build();
+        Mueble m3 = Mueble.builder().id(2L).build();
 
-        assertHasViolation(mueble, "nombre", "El nombre del mueble no puede estar vacío");
-    }
-
-    @Test
-    @DisplayName("Should fail when name too long")
-    void shouldFailWhenNameTooLong() {
-        Mueble mueble = Mueble.builder()
-                .nombre("a".repeat(51))
-                .build();
-
-        assertHasViolation(mueble, "nombre", "El nombre no puede exceder 50 caracteres");
+        assertThat(m1).isEqualTo(m1);
+        assertThat(m1).isEqualTo(m2);
+        assertThat(m1).isNotEqualTo(m3);
+        assertThat(m1).isNotEqualTo(null);
+        assertThat(m1).isNotEqualTo(new Object());
+        assertThat(m1.hashCode()).isEqualTo(m2.hashCode());
     }
 }

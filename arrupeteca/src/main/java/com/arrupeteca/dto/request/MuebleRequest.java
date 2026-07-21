@@ -4,23 +4,17 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MuebleRequest {
-
+public record MuebleRequest(
     @NotBlank(message = "El nombre del mueble no puede estar vacío")
-    @Size(max = 30, message = "El nombre no puede exceder 30 caracteres")
-    private String nombre;
+    @Size(max = 50, message = "El nombre no puede exceder 50 caracteres")
+    String nombre,
 
     @NotNull(message = "Se debe especificar el salon")
-    private Long idSalon;
-
-}
+    Long idSalon
+) {}

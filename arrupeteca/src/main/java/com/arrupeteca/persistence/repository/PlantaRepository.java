@@ -8,39 +8,38 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface PlantaRepository extends JpaRepository<Planta, Long> {
 
     @EntityGraph(attributePaths = {"edificio"})
     Page<Planta> findByBorradoLogicoFalse(Pageable pageable);
 
     @EntityGraph(attributePaths = {"edificio"})
-    Optional<Planta> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    Optional<Planta> findByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"edificio"})
     Page<Planta> findByEdificioIdAndBorradoLogicoFalse(Long idEdificio, Pageable pageable);
 
     @EntityGraph(attributePaths = {"edificio"})
-    Optional<Planta> findProjectedById(Long id);
+    Page<Planta> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"edificio"})
-    Page<Planta> findAllProjectedBy(Pageable pageable);
+    Optional<Planta> findById(Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Planta p SET p.borradoLogico = true WHERE p.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Planta p SET p.borradoLogico = false WHERE p.id = :id")
     void activar(@Param("id") Long id);
 
+    @Query(value = "SELECT COUNT(*) FROM planta WHERE id_planta = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
+
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
-    boolean existsByNombreIgnoreCase(String nombre);
-
-    boolean existsByNombreAndEdificioId(String nombre, Long edificioId);
+    boolean existsByNombreIgnoreCaseAndEdificioId(String nombre, Long idEdificio);
 }

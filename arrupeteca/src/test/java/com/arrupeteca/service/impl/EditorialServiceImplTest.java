@@ -1,18 +1,15 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.EditorialRequest;
-import com.arrupeteca.dto.response.detail.EditorialDetalleResponse;
-import com.arrupeteca.dto.response.summary.EditorialResumen;
+import com.arrupeteca.dto.response.EditorialResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EditorialMapper;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -23,13 +20,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class EditorialServiceImplTest {
+class EditorialServiceImplTest extends BaseServiceTest {
 
     @Mock
     private EditorialRepository editorialRepository;
@@ -41,37 +35,39 @@ class EditorialServiceImplTest {
     private EditorialServiceImpl editorialService;
 
     @Test
-    @DisplayName("Should return active editoriales")
-    void shouldReturnActive() {
-        Editorial entity = new Editorial();
-        Page<Editorial> expectedPage = new PageImpl<>(List.of(entity));
-        EditorialResumen resumen = mock(EditorialResumen.class);
+    @DisplayName("obtenerTodosActivos - Should return page of EditorialResponse")
+    void obtenerTodosActivos() {
+        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
+        Page<Editorial> page = new PageImpl<>(List.of(entity));
+        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
+
+        when(editorialRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(editorialMapper.toResponse(entity)).thenReturn(response);
+
+        Page<EditorialResponse> result = editorialService.obtenerTodosActivos(Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
+    }
+
+    @Test
+    @DisplayName("obtenerPorIdActivo - Should return EditorialResponse when found and active")
+    void obtenerPorIdActivoSuccess() {
+        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
+        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
         
-        when(editorialRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
-        when(editorialMapper.toResumen(entity)).thenReturn(resumen);
+        when(editorialRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        Page<EditorialResumen> result = editorialService.obtenerTodosActivos(Pageable.unpaged());
+        EditorialResponse result = editorialService.obtenerPorIdActivo(1L);
 
-        assertThat(result.getContent()).containsExactly(resumen);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should return editorial by ID when active")
-    void shouldReturnByIdActive() {
-        Editorial entity = new Editorial();
-        EditorialDetalleResponse detalle = mock(EditorialDetalleResponse.class);
-        when(editorialRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(editorialMapper.toDetalleResponse(entity)).thenReturn(detalle);
-
-        EditorialDetalleResponse result = editorialService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(detalle);
-    }
-
-    @Test
-    @DisplayName("Should throw exception when not found or inactive")
-    void shouldThrowWhenNotFoundOrInactive() {
-        when(editorialRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
+        when(editorialRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> editorialService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -79,37 +75,39 @@ class EditorialServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should return all for admin")
-    void shouldReturnAllAdmin() {
-        Editorial entity = new Editorial();
-        Page<Editorial> expectedPage = new PageImpl<>(List.of(entity));
-        EditorialResumen resumen = mock(EditorialResumen.class);
+    @DisplayName("obtenerTodos - Should return page of EditorialResponse")
+    void obtenerTodos() {
+        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
+        Page<Editorial> page = new PageImpl<>(List.of(entity));
+        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
         
-        when(editorialRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
-        when(editorialMapper.toResumen(entity)).thenReturn(resumen);
+        when(editorialRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        Page<EditorialResumen> result = editorialService.obtenerTodos(Pageable.unpaged());
+        Page<EditorialResponse> result = editorialService.obtenerTodos(Pageable.unpaged());
 
-        assertThat(result.getContent()).containsExactly(resumen);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should return editorial by ID for admin")
-    void shouldReturnById() {
-        Editorial entity = new Editorial();
-        EditorialDetalleResponse detalle = mock(EditorialDetalleResponse.class);
-        when(editorialRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(editorialMapper.toDetalleResponse(entity)).thenReturn(detalle);
+    @DisplayName("obtenerPorId - Should return EditorialResponse when found")
+    void obtenerPorIdSuccess() {
+        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
+        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
+        
+        when(editorialRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        EditorialDetalleResponse result = editorialService.obtenerPorId(1L);
+        EditorialResponse result = editorialService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw exception when not found")
-    void shouldThrowWhenNotFound() {
-        when(editorialRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(editorialRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> editorialService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -117,174 +115,128 @@ class EditorialServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should search for admin")
-    void shouldSearchAdmin() {
-        Editorial entity = new Editorial();
-        Page<Editorial> expectedPage = new PageImpl<>(List.of(entity));
-        EditorialResumen resumen = mock(EditorialResumen.class);
-        
-        when(editorialRepository.busquedaMaestraAdmin(any(), any(), any())).thenReturn(expectedPage);
-        when(editorialMapper.toResumen(entity)).thenReturn(resumen);
+    @DisplayName("busquedaMaestraAdmin - Should return page of EditorialResponse")
+    void busquedaMaestraAdmin() {
+        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
+        Page<Editorial> page = new PageImpl<>(List.of(entity));
+        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
 
-        Page<EditorialResumen> result = editorialService.busquedaMaestraAdmin(false, "term", Pageable.unpaged());
+        when(editorialRepository.busquedaMaestraAdmin(false, "term", Pageable.unpaged())).thenReturn(page);
+        when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        assertThat(result.getContent()).containsExactly(resumen);
+        Page<EditorialResponse> result = editorialService.busquedaMaestraAdmin(false, "term", Pageable.unpaged());
+
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should create editorial")
-    void shouldCreate() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Nueva");
-        request.setCorreo("test@test.com");
-        
-        Editorial entity = new Editorial();
-        EditorialDetalleResponse detail = mock(EditorialDetalleResponse.class);
+    @DisplayName("crear - Should create and return EditorialResponse")
+    void crearSuccess() {
+        EditorialRequest request = EditorialRequest.builder()
+                .nombre("Nuevo")
+                .correo("nuevo@editorial.com")
+                .telefono("1234-5678")
+                .personaContacto("Contacto")
+                .build();
+        Editorial entity = Editorial.builder().id(1L).nombre("Nuevo").build();
+        Editorial savedEntity = Editorial.builder().id(1L).nombre("Nuevo").build();
+        EditorialResponse response = new EditorialResponse(1L, "Nuevo", null, "nuevo@editorial.com", "1234-5678", "Contacto", false);
 
-        when(editorialRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
-        when(editorialRepository.existsByCorreoIgnoreCase("test@test.com")).thenReturn(false);
+        when(editorialRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
+        when(editorialRepository.existsByCorreoIgnoreCase("nuevo@editorial.com")).thenReturn(false);
         when(editorialMapper.toEntity(request)).thenReturn(entity);
-        when(editorialRepository.save(any(Editorial.class))).thenReturn(entity);
-        when(editorialMapper.toDetalleResponse(entity)).thenReturn(detail);
+        when(editorialRepository.save(entity)).thenReturn(savedEntity);
+        when(editorialMapper.toResponse(savedEntity)).thenReturn(response);
 
-        EditorialDetalleResponse result = editorialService.crear(request);
+        EditorialResponse result = editorialService.crear(request);
 
-        assertThat(result).isEqualTo(detail);
-        verify(editorialRepository).save(any(Editorial.class));
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw when creating with existing name")
-    void shouldThrowOnCreateExistingName() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Existente");
+    @DisplayName("crear - Should throw exception when name exists")
+    void crearDuplicateName() {
+        EditorialRequest request = EditorialRequest.builder().nombre("Existe").correo("nuevo@editorial.com").build();
 
-        when(editorialRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
+        when(editorialRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
 
         assertThatThrownBy(() -> editorialService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una editorial con el nombre: Existente");
+                .hasMessageContaining("Ya existe una editorial con el nombre: Existe");
     }
 
     @Test
-    @DisplayName("Should throw exception when creating with existing email")
-    void shouldThrowOnCreateExistingEmail() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Nueva");
-        request.setCorreo("existe@test.com");
+    @DisplayName("crear - Should throw exception when email exists")
+    void crearDuplicateCorreo() {
+        EditorialRequest request = EditorialRequest.builder().nombre("Nuevo").correo("existe@editorial.com").build();
 
-        when(editorialRepository.existsByNombreIgnoreCase("Nueva")).thenReturn(false);
-        when(editorialRepository.existsByCorreoIgnoreCase("existe@test.com")).thenReturn(true);
+        when(editorialRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
+        when(editorialRepository.existsByCorreoIgnoreCase("existe@editorial.com")).thenReturn(true);
 
         assertThatThrownBy(() -> editorialService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una editorial con el correo: existe@test.com");
+                .hasMessageContaining("Ya existe una editorial con el correo: existe@editorial.com");
     }
 
     @Test
-    @DisplayName("Should update editorial")
-    void shouldUpdate() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Actualizada");
-        request.setCorreo("test@test.com");
+    @DisplayName("actualizar - Should update and return EditorialResponse")
+    void actualizarSuccess() {
+        Long id = 1L;
+        EditorialRequest request = EditorialRequest.builder()
+                .nombre("Actualizado")
+                .correo("actualizado@editorial.com")
+                .build();
+        Editorial existingEntity = Editorial.builder()
+                .id(1L)
+                .nombre("Original")
+                .correo("original@editorial.com")
+                .build();
+        EditorialResponse response = new EditorialResponse(id, "Actualizado", null, "actualizado@editorial.com", null, null, false);
 
-        Editorial existing = new Editorial();
-        existing.setId(1L);
-        existing.setNombre("Antigua");
-        existing.setCorreo("antigua@test.com");
+        when(editorialRepository.findById(id)).thenReturn(Optional.of(existingEntity));
+        when(editorialRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
+        when(editorialRepository.existsByCorreoIgnoreCase("actualizado@editorial.com")).thenReturn(false);
+        when(editorialRepository.save(existingEntity)).thenReturn(existingEntity);
+        when(editorialMapper.toResponse(existingEntity)).thenReturn(response);
 
-        EditorialDetalleResponse detail = mock(EditorialDetalleResponse.class);
+        EditorialResponse result = editorialService.actualizar(id, request);
 
-        when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(editorialRepository.existsByNombreIgnoreCase("Actualizada")).thenReturn(false);
-        when(editorialRepository.existsByCorreoIgnoreCase("test@test.com")).thenReturn(false);
-        when(editorialRepository.save(existing)).thenReturn(existing);
-        when(editorialMapper.toDetalleResponse(existing)).thenReturn(detail);
-
-        EditorialDetalleResponse result = editorialService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(detail);
-        verify(editorialMapper).updateEntity(request, existing);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should update editorial with same name and email")
-    void shouldUpdateSameValues() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Mismo");
-        request.setCorreo("mismo@test.com");
+    @DisplayName("actualizar - Should throw exception when not found")
+    void actualizarNotFound() {
+        Long id = 1L;
+        EditorialRequest request = EditorialRequest.builder().nombre("Cualquiera").correo("c@test.com").build();
 
-        Editorial existing = new Editorial();
-        existing.setId(1L);
-        existing.setNombre("Mismo");
-        existing.setCorreo("mismo@test.com");
+        when(editorialRepository.findById(id)).thenReturn(Optional.empty());
 
-        EditorialDetalleResponse detail = mock(EditorialDetalleResponse.class);
-
-        when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(editorialRepository.save(existing)).thenReturn(existing);
-        when(editorialMapper.toDetalleResponse(existing)).thenReturn(detail);
-
-        EditorialDetalleResponse result = editorialService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(detail);
-        verify(editorialRepository, never()).existsByNombreIgnoreCase(any());
-        verify(editorialRepository, never()).existsByCorreoIgnoreCase(any());
-    }
-
-    @Test
-    @DisplayName("Should throw exception when updating to existing name")
-    void shouldThrowOnUpdateExistingName() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Ocupado");
-        request.setCorreo("test@test.com");
-
-        Editorial existing = new Editorial();
-        existing.setId(1L);
-        existing.setNombre("Antigua");
-
-        when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(editorialRepository.existsByNombreIgnoreCase("Ocupado")).thenReturn(true);
-
-        assertThatThrownBy(() -> editorialService.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra editorial con el nombre: Ocupado");
-    }
-
-    @Test
-    @DisplayName("Should throw exception when updating to existing email")
-    void shouldThrowOnUpdateExistingEmail() {
-        EditorialRequest request = new EditorialRequest();
-        request.setNombre("Actualizada");
-        request.setCorreo("ocupado@test.com");
-
-        Editorial existing = new Editorial();
-        existing.setId(1L);
-        existing.setNombre("Actualizada"); // Same name, different email
-        existing.setCorreo("antigua@test.com");
-
-        when(editorialRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(editorialRepository.existsByCorreoIgnoreCase("ocupado@test.com")).thenReturn(true);
-
-        assertThatThrownBy(() -> editorialService.actualizar(1L, request))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra editorial con el correo: ocupado@test.com");
-    }
-
-    @Test
-    @DisplayName("Should throw when updating non-existent")
-    void shouldThrowWhenUpdatingNonExistent() {
-        when(editorialRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> editorialService.actualizar(1L, new EditorialRequest()))
+        assertThatThrownBy(() -> editorialService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No se encontró Editorial con ID: 1");
     }
 
     @Test
-    @DisplayName("Should activate editorial")
-    void shouldActivate() {
-        when(editorialRepository.existsById(1L)).thenReturn(true);
+    @DisplayName("actualizar - Should throw exception when updating to existing name")
+    void actualizarDuplicateName() {
+        Long id = 1L;
+        EditorialRequest request = EditorialRequest.builder().nombre("Existe").correo("or@test.com").build();
+        Editorial existingEntity = Editorial.builder().id(1L).nombre("Original").correo("or@test.com").build();
+
+        when(editorialRepository.findById(id)).thenReturn(Optional.of(existingEntity));
+        when(editorialRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
+
+        assertThatThrownBy(() -> editorialService.actualizar(id, request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe otra editorial con el nombre: Existe");
+    }
+
+    @Test
+    @DisplayName("cambiarEstado - Should activate when state is true")
+    void cambiarEstadoActivar() {
+        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         editorialService.cambiarEstado(1L, true);
 
@@ -292,9 +244,9 @@ class EditorialServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should deactivate editorial")
-    void shouldDeactivate() {
-        when(editorialRepository.existsById(1L)).thenReturn(true);
+    @DisplayName("cambiarEstado - Should deactivate when state is false")
+    void cambiarEstadoDesactivar() {
+        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         editorialService.cambiarEstado(1L, false);
 
@@ -302,9 +254,9 @@ class EditorialServiceImplTest {
     }
 
     @Test
-    @DisplayName("Should throw when changing state of non-existent")
-    void shouldThrowWhenChangingStateNonExistent() {
-        when(editorialRepository.existsById(1L)).thenReturn(false);
+    @DisplayName("cambiarEstado - Should throw exception when not found")
+    void cambiarEstadoNotFound() {
+        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
 
         assertThatThrownBy(() -> editorialService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)

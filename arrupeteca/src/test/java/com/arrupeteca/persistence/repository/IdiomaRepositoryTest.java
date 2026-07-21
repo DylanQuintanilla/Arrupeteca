@@ -17,16 +17,23 @@ class IdiomaRepositoryTest extends BaseRepositoryTest {
     @Test
     @DisplayName("Should save and find idioma by ID")
     void shouldSaveAndFindById() {
-        Idioma entity = Idioma.builder().nombre("Francés").build();
+        Idioma entity = Idioma.builder().nombre("Español").build();
         Idioma saved = idiomaRepository.save(entity);
-        assertThat(idiomaRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(idiomaRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("Should find active with pagination")
-    void shouldFindActiveWithPagination() {
-        idiomaRepository.save(Idioma.builder().nombre("I1").borradoLogico(false).build());
+    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
+    void findByBorradoLogicoFalse() {
+        idiomaRepository.save(Idioma.builder().nombre("Test").build());
         Page<Idioma> page = idiomaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isGreaterThan(0);
+        assertThat(page.getContent()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Idioma saved = idiomaRepository.save(Idioma.builder().nombre("Idio3").borradoLogico(true).build());
+        assertThat(idiomaRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

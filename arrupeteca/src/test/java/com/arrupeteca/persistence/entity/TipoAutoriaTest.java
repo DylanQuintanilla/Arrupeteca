@@ -3,35 +3,37 @@ package com.arrupeteca.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class TipoAutoriaTest extends BaseEntityTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("TipoAutoria Entity Unit Tests")
+class TipoAutoriaTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
-        TipoAutoria tipo = TipoAutoria.builder()
+    @DisplayName("Should test getters and setters")
+    void shouldTestGettersAndSetters() {
+        TipoAutoria tipoAutoria = TipoAutoria.builder()
+                .id(1L)
                 .nombre("Autor Principal")
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(tipo);
+        assertThat(tipoAutoria.getId()).isEqualTo(1L);
+        assertThat(tipoAutoria.getNombre()).isEqualTo("Autor Principal");
+        assertThat(tipoAutoria.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when name is blank")
-    void shouldFailWhenNameIsBlank() {
-        TipoAutoria tipo = TipoAutoria.builder()
-                .nombre("")
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsHashCode() {
+        TipoAutoria t1 = TipoAutoria.builder().id(1L).build();
+        TipoAutoria t2 = TipoAutoria.builder().id(1L).build();
+        TipoAutoria t3 = TipoAutoria.builder().id(2L).build();
 
-        assertHasViolation(tipo, "nombre", "El nombre no puede estar vacío");
-    }
-
-    @Test
-    @DisplayName("Should fail when name exceeds maximum length")
-    void shouldFailWhenNameTooLong() {
-        TipoAutoria tipo = TipoAutoria.builder()
-                .nombre("a".repeat(26))
-                .build();
-
-        assertHasViolation(tipo, "nombre", "El nombre no puede exceder 25 caracteres");
+        assertThat(t1).isEqualTo(t1);
+        assertThat(t1).isEqualTo(t2);
+        assertThat(t1).isNotEqualTo(t3);
+        assertThat(t1).isNotEqualTo(null);
+        assertThat(t1).isNotEqualTo(new Object());
+        assertThat(t1.hashCode()).isEqualTo(t2.hashCode());
     }
 }

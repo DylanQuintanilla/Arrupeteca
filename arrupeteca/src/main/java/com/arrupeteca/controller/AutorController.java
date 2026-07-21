@@ -130,7 +130,7 @@ public class AutorController {
                 .body(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(
         summary = "Actualizar autor",
         description = "Actualiza los campos de un autor existente y valida su versión de bloqueo optimista."

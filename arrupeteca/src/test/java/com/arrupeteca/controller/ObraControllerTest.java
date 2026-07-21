@@ -104,12 +104,13 @@ class ObraControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/obras - Should create work")
     void shouldCreate() throws Exception {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Nueva");
-        request.setResumen("Resumen de la obra");
-        request.setIdGeneros(Collections.singleton(1L));
-        request.setIdCategorias(Collections.singleton(1L));
-        request.setAutores(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L)));
+        ObraRequest request = ObraRequest.builder()
+                .titulo(org.openapitools.jackson.nullable.JsonNullable.of("Nueva"))
+                .resumen(org.openapitools.jackson.nullable.JsonNullable.of("Resumen de la obra"))
+                .idGeneros(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .idCategorias(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .autores(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L))))
+                .build();
 
         ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Nueva", 2021, "Resumen", false,
                 "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
@@ -123,20 +124,21 @@ class ObraControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/obras/{id} - Should update work")
+    @DisplayName("PATCH /api/v1/obras/{id} - Should update work")
     void shouldUpdate() throws Exception {
-        ObraRequest request = new ObraRequest();
-        request.setTitulo("Actualizada");
-        request.setResumen("Nuevo resumen");
-        request.setIdGeneros(Collections.singleton(1L));
-        request.setIdCategorias(Collections.singleton(1L));
-        request.setAutores(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L)));
+        ObraRequest request = ObraRequest.builder()
+                .titulo(org.openapitools.jackson.nullable.JsonNullable.of("Actualizada"))
+                .resumen(org.openapitools.jackson.nullable.JsonNullable.of("Nuevo resumen"))
+                .idGeneros(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .idCategorias(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .autores(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L))))
+                .build();
 
         ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Actualizada", 2021, "Nuevo resumen", false,
                 "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
         when(obraService.actualizar(any(Long.class), any(ObraRequest.class))).thenReturn(detail);
 
-        mockMvc.perform(put("/api/v1/obras/1")
+        mockMvc.perform(patch("/api/v1/obras/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

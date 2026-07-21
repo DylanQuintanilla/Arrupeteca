@@ -1,18 +1,17 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.SalonRequest;
-import com.arrupeteca.dto.response.detail.SalonDetalleResponse;
-import com.arrupeteca.dto.response.summary.SalonResumen;
+import com.arrupeteca.dto.response.EdificioResponse;
+import com.arrupeteca.dto.response.PlantaResponse;
+import com.arrupeteca.dto.response.SalonResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.SalonMapper;
 import com.arrupeteca.persistence.entity.Salon;
 import com.arrupeteca.persistence.repository.SalonRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -23,12 +22,10 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
-class SalonServiceImplTest {
+class SalonServiceImplTest extends BaseServiceTest {
 
     @Mock
     private SalonRepository salonRepository;
@@ -40,39 +37,39 @@ class SalonServiceImplTest {
     private SalonServiceImpl salonService;
 
     @Test
-    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
+    @DisplayName("obtenerTodosActivos - Should return page of SalonResponse")
     void obtenerTodosActivos() {
-        Salon entity = Salon.builder().id(1L).nombre("Salon A").build();
+        Salon entity = Salon.builder().id(1L).nombre("Test").build();
         Page<Salon> page = new PageImpl<>(List.of(entity));
-        SalonResumen resumen = new SalonResumen(1L, "Salon A", false, "Planta 1");
+        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
         when(salonRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(salonMapper.toResumen(entity)).thenReturn(resumen);
+        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        Page<SalonResumen> result = salonService.obtenerTodosActivos(Pageable.unpaged());
+        Page<SalonResponse> result = salonService.obtenerTodosActivos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("obtenerPorIdActivo - Should return detail when exists and active")
+    @DisplayName("obtenerPorIdActivo - Should return SalonResponse when found and active")
     void obtenerPorIdActivoSuccess() {
-        Salon entity = Salon.builder().id(1L).nombre("Salon A").build();
-        SalonDetalleResponse detail = new SalonDetalleResponse(1L, "Salon A", false, null, null, null, null, null);
+        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
+        Salon entity = Salon.builder().id(1L).nombre("Test").build();
+        
+        when(salonRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        when(salonRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(salonMapper.toDetalleResponse(entity)).thenReturn(detail);
+        SalonResponse result = salonService.obtenerPorIdActivo(1L);
 
-        SalonDetalleResponse result = salonService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found or inactive")
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
     void obtenerPorIdActivoNotFound() {
-        when(salonRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(salonRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> salonService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -80,38 +77,39 @@ class SalonServiceImplTest {
     }
 
     @Test
-    @DisplayName("obtenerTodos - Should return all rooms")
+    @DisplayName("obtenerTodos - Should return page of SalonResponse")
     void obtenerTodos() {
-        Salon entity = Salon.builder().id(1L).nombre("Salon A").build();
+        Salon entity = Salon.builder().id(1L).nombre("Test").build();
         Page<Salon> page = new PageImpl<>(List.of(entity));
-        SalonResumen resumen = new SalonResumen(1L, "Salon A", false, "Planta 1");
+        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        when(salonRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(page);
-        when(salonMapper.toResumen(entity)).thenReturn(resumen);
+        when(salonRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        Page<SalonResumen> result = salonService.obtenerTodos(Pageable.unpaged());
+        Page<SalonResponse> result = salonService.obtenerTodos(Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("obtenerPorId - Should return detail when exists")
+    @DisplayName("obtenerPorId - Should return SalonResponse when found")
     void obtenerPorIdSuccess() {
-        Salon entity = Salon.builder().id(1L).nombre("Salon A").build();
-        SalonDetalleResponse detail = new SalonDetalleResponse(1L, "Salon A", false, null, null, null, null, null);
+        Salon entity = Salon.builder().id(1L).nombre("Test").build();
+        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
+        
+        when(salonRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        when(salonRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(salonMapper.toDetalleResponse(entity)).thenReturn(detail);
+        SalonResponse result = salonService.obtenerPorId(1L);
 
-        SalonDetalleResponse result = salonService.obtenerPorId(1L);
-
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
     @DisplayName("obtenerPorId - Should throw exception when not found")
     void obtenerPorIdNotFound() {
-        when(salonRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+        when(salonRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> salonService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -119,49 +117,45 @@ class SalonServiceImplTest {
     }
 
     @Test
-    @DisplayName("buscarPorPlantaId - Should return rooms for planta")
+    @DisplayName("buscarPorPlantaId - Should return page of SalonResponse")
     void buscarPorPlantaId() {
-        Salon entity = Salon.builder().id(1L).nombre("Salon A").build();
+        Salon entity = Salon.builder().id(1L).nombre("Test").build();
         Page<Salon> page = new PageImpl<>(List.of(entity));
-        SalonResumen resumen = new SalonResumen(1L, "Salon A", false, "Planta 1");
+        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        when(salonRepository.findByPlantaIdAndBorradoLogicoFalse(eq(1L), any(Pageable.class))).thenReturn(page);
-        when(salonMapper.toResumen(entity)).thenReturn(resumen);
+        when(salonRepository.findByPlantaIdAndBorradoLogicoFalse(1L, Pageable.unpaged())).thenReturn(page);
+        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        Page<SalonResumen> result = salonService.buscarPorPlantaId(1L, Pageable.unpaged());
+        Page<SalonResponse> result = salonService.buscarPorPlantaId(1L, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("crear - Should create room")
+    @DisplayName("crear - Should create and return SalonResponse")
     void crearSuccess() {
-        SalonRequest request = new SalonRequest();
-        request.setNombre("Nuevo");
-        request.setIdPlanta(1L);
+        SalonRequest request = SalonRequest.builder().nombre("Nuevo").idPlanta(1L).build();
+        Salon entity = Salon.builder().id(1L).nombre("Nuevo").build();
+        Salon savedEntity = Salon.builder().id(1L).nombre("Nuevo").build();
+        SalonResponse response = new SalonResponse(1L, "Nuevo", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        Salon entity = new Salon();
-        Salon saved = Salon.builder().id(1L).nombre("Nuevo").build();
-        SalonDetalleResponse detail = new SalonDetalleResponse(1L, "Nuevo", false, null, null, null, null, null);
-
-        when(salonRepository.existsByNombreAndPlantaId("Nuevo", 1L)).thenReturn(false);
+        when(salonRepository.existsByNombreIgnoreCaseAndPlantaId("Nuevo", 1L)).thenReturn(false);
         when(salonMapper.toEntity(request)).thenReturn(entity);
-        when(salonRepository.save(entity)).thenReturn(saved);
-        when(salonMapper.toDetalleResponse(saved)).thenReturn(detail);
+        when(salonRepository.save(entity)).thenReturn(savedEntity);
+        when(salonMapper.toResponse(savedEntity)).thenReturn(response);
 
-        SalonDetalleResponse result = salonService.crear(request);
+        SalonResponse result = salonService.crear(request);
 
-        assertThat(result).isEqualTo(detail);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("crear - Should throw exception when name exists in planta")
-    void crearDuplicate() {
-        SalonRequest request = new SalonRequest();
-        request.setNombre("Existente");
-        request.setIdPlanta(1L);
+    @DisplayName("crear - Should throw exception when name exists in plant")
+    void crearDuplicateName() {
+        SalonRequest request = SalonRequest.builder().nombre("Existe").idPlanta(1L).build();
 
-        when(salonRepository.existsByNombreAndPlantaId("Existente", 1L)).thenReturn(true);
+        when(salonRepository.existsByNombreIgnoreCaseAndPlantaId("Existe", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> salonService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -169,49 +163,45 @@ class SalonServiceImplTest {
     }
 
     @Test
-    @DisplayName("actualizar - Should update room")
+    @DisplayName("actualizar - Should update and return SalonResponse")
     void actualizarSuccess() {
         Long id = 1L;
-        SalonRequest request = new SalonRequest();
-        request.setNombre("Actualizado");
-        request.setIdPlanta(1L);
+        SalonRequest request = SalonRequest.builder().nombre("Actualizado").idPlanta(1L).build();
+        Salon existingEntity = Salon.builder().id(1L).nombre("Original").build();
+        SalonResponse response = new SalonResponse(id, "Actualizado", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        Salon existing = Salon.builder().id(id).nombre("Antiguo").build();
-        SalonDetalleResponse detail = new SalonDetalleResponse(id, "Actualizado", false, null, null, null, null, null);
+        when(salonRepository.findById(id)).thenReturn(Optional.of(existingEntity));
+        when(salonRepository.existsByNombreIgnoreCaseAndPlantaId("Actualizado", 1L)).thenReturn(false);
+        when(salonRepository.save(existingEntity)).thenReturn(existingEntity);
+        when(salonMapper.toResponse(existingEntity)).thenReturn(response);
 
-        when(salonRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(salonRepository.existsByNombreAndPlantaId("Actualizado", 1L)).thenReturn(false);
-        when(salonRepository.save(existing)).thenReturn(existing);
-        when(salonMapper.toDetalleResponse(existing)).thenReturn(detail);
+        SalonResponse result = salonService.actualizar(id, request);
 
-        SalonDetalleResponse result = salonService.actualizar(id, request);
-
-        assertThat(result).isEqualTo(detail);
-        verify(salonMapper).updateEntity(request, existing);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("actualizar - Should throw exception when room not found")
+    @DisplayName("actualizar - Should throw exception when not found")
     void actualizarNotFound() {
-        when(salonRepository.findById(1L)).thenReturn(Optional.empty());
+        Long id = 1L;
+        SalonRequest request = SalonRequest.builder().nombre("Cualquiera").idPlanta(1L).build();
 
-        assertThatThrownBy(() -> salonService.actualizar(1L, new SalonRequest()))
+        when(salonRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> salonService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("No existe un salón con el ID: 1");
     }
 
     @Test
-    @DisplayName("actualizar - Should throw exception when new name exists in planta")
-    void actualizarDuplicate() {
+    @DisplayName("actualizar - Should throw exception when updating to existing name in plant")
+    void actualizarDuplicateName() {
         Long id = 1L;
-        SalonRequest request = new SalonRequest();
-        request.setNombre("Existente");
-        request.setIdPlanta(1L);
+        SalonRequest request = SalonRequest.builder().nombre("Existe").idPlanta(1L).build();
+        Salon existingEntity = Salon.builder().id(1L).nombre("Original").build();
 
-        Salon existing = Salon.builder().id(id).nombre("Antiguo").build();
-
-        when(salonRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(salonRepository.existsByNombreAndPlantaId("Existente", 1L)).thenReturn(true);
+        when(salonRepository.findById(id)).thenReturn(Optional.of(existingEntity));
+        when(salonRepository.existsByNombreIgnoreCaseAndPlantaId("Existe", 1L)).thenReturn(true);
 
         assertThatThrownBy(() -> salonService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -219,9 +209,9 @@ class SalonServiceImplTest {
     }
 
     @Test
-    @DisplayName("cambiarEstado - Should activate room")
+    @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(salonRepository.existsById(1L)).thenReturn(true);
+        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         salonService.cambiarEstado(1L, true);
 
@@ -229,9 +219,9 @@ class SalonServiceImplTest {
     }
 
     @Test
-    @DisplayName("cambiarEstado - Should deactivate room")
+    @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(salonRepository.existsById(1L)).thenReturn(true);
+        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         salonService.cambiarEstado(1L, false);
 
@@ -241,7 +231,7 @@ class SalonServiceImplTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(salonRepository.existsById(1L)).thenReturn(false);
+        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
 
         assertThatThrownBy(() -> salonService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)

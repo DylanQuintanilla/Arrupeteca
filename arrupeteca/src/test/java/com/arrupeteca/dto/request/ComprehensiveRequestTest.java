@@ -57,18 +57,25 @@ class ComprehensiveRequestTest {
                 .build();
         verifyRequest(edit);
 
-        verifyRequest(new EjemplarLibroRequest("C", EstadoFisico.BUEN_ESTADO, Disponibilidad.DISPONIBLE, 1L, 1L));
+        verifyRequest(EjemplarLibroRequest.builder()
+                .comentario(org.openapitools.jackson.nullable.JsonNullable.of("C"))
+                .estadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(EstadoFisico.BUEN_ESTADO))
+                .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .idLibro(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idMueble(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .build());
         verifyRequest(new FormatoRequest("F"));
         verifyRequest(new GeneroRequest("G"));
         verifyRequest(new IdiomaRequest("I"));
         
-        LibroRequest libro = new LibroRequest();
-        libro.setIsbn("123");
-        libro.setAnioPublicacion(2021);
-        libro.setIdObra(1L);
-        libro.setIdFormato(1L);
-        libro.setIdEditorial(1L);
-        libro.setIdIdiomas(Collections.singleton(1L));
+        LibroRequest libro = LibroRequest.builder()
+                .isbn(org.openapitools.jackson.nullable.JsonNullable.of("123"))
+                .anioPublicacion(org.openapitools.jackson.nullable.JsonNullable.of(2021))
+                .idObra(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idFormato(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idEditorial(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .build();
         verifyRequest(libro);
 
         verifyRequest(new MuebleRequest("M", 1L));
@@ -76,12 +83,12 @@ class ComprehensiveRequestTest {
         verifyRequest(new ObraAutorRequest(1L, 1L));
         
         ObraRequest obra = ObraRequest.builder()
-                .titulo("T")
-                .anioCreacion(2020)
-                .resumen("R")
-                .idGeneros(Collections.singleton(1L))
-                .idCategorias(Collections.singleton(1L))
-                .autores(Collections.singleton(new ObraAutorRequest(1L, 1L)))
+                .titulo(org.openapitools.jackson.nullable.JsonNullable.of("T"))
+                .anioCreacion(org.openapitools.jackson.nullable.JsonNullable.of(2020))
+                .resumen(org.openapitools.jackson.nullable.JsonNullable.of("R"))
+                .idGeneros(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .idCategorias(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .autores(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(new ObraAutorRequest(1L, 1L))))
                 .build();
         verifyRequest(obra);
 

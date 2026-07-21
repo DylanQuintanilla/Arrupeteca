@@ -27,7 +27,7 @@ Los controladores deben implementar la arquitectura REST de forma estricta, mape
 | **GET** | `/admin` | Obtener historial completo (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]ResumenResponse>>` |
 | **GET** | `/admin/{id}` | Obtener detalle (Admin). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
 | **POST** | `/` | Crear nuevo registro. | `201 Created`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **PUT** | `/{id}` | Actualizar registro. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
+| **PATCH** | `/{id}` | Actualizar registro (Parcial con JsonNullable). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
 | **DELETE** | `/{id}` | Desactivar (Borrado lógico). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
 | **PATCH** | `/{id}/activar` | Activar registro desactivado. | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
 
@@ -174,7 +174,7 @@ public class AutorController {
                 .body(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @Operation(
         summary = "Actualizar autor",
         description = "Actualiza los campos de un autor existente y valida su versión de bloqueo optimista."

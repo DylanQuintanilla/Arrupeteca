@@ -162,10 +162,10 @@ class AutorServiceImplTest extends BaseServiceTest {
                 .build();
 
         when(autorRepository.existsByNombreIgnoreCase(any())).thenReturn(false);
-        when(paisRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Pais()));
-        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Nacionalidad()));
-        when(generoRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Genero()));
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(new com.arrupeteca.persistence.entity.Obra()));
+        when(paisRepository.findById(1L)).thenReturn(Optional.of(com.arrupeteca.persistence.entity.Pais.builder().build()));
+        when(nacionalidadRepository.findById(1L)).thenReturn(Optional.of(com.arrupeteca.persistence.entity.Nacionalidad.builder().build()));
+        when(generoRepository.findById(1L)).thenReturn(Optional.of(com.arrupeteca.persistence.entity.Genero.builder().build()));
+        when(obraRepository.findById(1L)).thenReturn(Optional.of(com.arrupeteca.persistence.entity.Obra.builder().build()));
         
         Autor autorEntity = Autor.builder().build();
         when(autorMapper.toEntity(any())).thenReturn(autorEntity);

@@ -1,43 +1,39 @@
 package com.arrupeteca.dto.request;
 
 import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
+import org.openapitools.jackson.nullable.JsonNullable;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ObraRequest {
+public record ObraRequest(
+    JsonNullable<String> titulo,
+    JsonNullable<Integer> anioCreacion,
+    JsonNullable<String> resumen,
+    JsonNullable<Set<Long>> idGeneros,
+    JsonNullable<Set<Long>> idCategorias,
+    JsonNullable<Set<ObraAutorRequest>> autores,
+    Long version
+) {
+    public ObraRequest {}
 
-    @NotBlank(message = "El título no puede estar vacío")
-    @Size(max = 100, message = "El título debe tener un máximo de 100 caracteres")
-    private String titulo;
+    @AssertTrue(message = "El título debe tener un máximo de 100 caracteres")
+    public boolean isTituloValido() {
+        if (titulo == null || !titulo.isPresent() || titulo.get() == null) {
+            return true;
+        }
+        return titulo.get().length() <= 100;
+    }
 
-    @Max(value = 9999, message = "El año no puede tener más de 4 dígitos")
-    private Integer anioCreacion;
-
-    @NotBlank(message = "Se debe de agregar un resumen")
-    private String resumen;
-
-    @NotEmpty(message = "La obra debe tener al menos un género")
-    private Set<Long> idGeneros;
-
-    @NotEmpty(message = "Favor de elegir al menos una categoría para la obra")
-    private Set<Long> idCategorias;
-
-    @NotEmpty(message = "La obra debe tener al menos un autor asociado")
-    @Valid
-    private Set<ObraAutorRequest> autores;
-
+    @AssertTrue(message = "El año de creación no puede tener más de 4 dígitos")
+    public boolean isAnioCreacionValido() {
+        if (anioCreacion == null || !anioCreacion.isPresent() || anioCreacion.get() == null) {
+            return true;
+        }
+        return anioCreacion.get() <= 9999;
+    }
 }

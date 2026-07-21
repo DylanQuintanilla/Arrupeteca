@@ -1,24 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.FormatoRequest;
-import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
-import com.arrupeteca.dto.response.summary.FormatoResumen;
+import com.arrupeteca.dto.response.FormatoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface FormatoService {
 
-    Page<FormatoResumen> obtenerTodosActivos(Pageable pageable);
+    Page<FormatoResponse> obtenerTodosActivos(Pageable pageable);
 
-    FormatoDetalleResponse obtenerPorIdActivo(Long id);
+    FormatoResponse obtenerPorIdActivo(Long id);
 
-    Page<FormatoResumen> obtenerTodos(Pageable pageable);
+    Page<FormatoResponse> obtenerTodos(Pageable pageable);
 
-    FormatoDetalleResponse obtenerPorId(Long id);
+    FormatoResponse obtenerPorId(Long id);
 
-    FormatoDetalleResponse crear(FormatoRequest request);
+    FormatoResponse crear(FormatoRequest request);
 
-    FormatoDetalleResponse actualizar(Long id, FormatoRequest request);
+    FormatoResponse actualizar(Long id, FormatoRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

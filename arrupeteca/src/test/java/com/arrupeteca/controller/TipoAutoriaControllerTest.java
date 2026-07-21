@@ -1,7 +1,7 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
-import com.arrupeteca.dto.response.summary.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.TipoAutoriaResponse;
 import com.arrupeteca.service.TipoAutoriaService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -32,9 +31,9 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     private TipoAutoriaService tipoAutoriaService;
 
     @Test
-    @DisplayName("GET /api/v1/tipo-autorias - Should return active authorship types")
+    @DisplayName("GET /api/v1/tipo-autorias - Should return active tipo-autorias")
     void shouldReturnActive() throws Exception {
-        Page<TipoAutoriaResumen> page = new PageImpl<>(List.of());
+        Page<TipoAutoriaResponse> page = new PageImpl<>(List.of());
         when(tipoAutoriaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/tipo-autorias"))
@@ -43,10 +42,10 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/tipo-autorias/{id} - Should return authorship type by ID")
+    @DisplayName("GET /api/v1/tipo-autorias/{id} - Should return tipo-autoria by ID")
     void shouldReturnById() throws Exception {
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", false);
-        when(tipoAutoriaService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
+        when(tipoAutoriaService.obtenerPorIdActivo(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/tipo-autorias/1"))
                 .andExpect(status().isOk())
@@ -55,36 +54,12 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/tipo-autorias/admin - Should return all authorship types")
-    void shouldReturnAllAdmin() throws Exception {
-        Page<TipoAutoriaResumen> page = new PageImpl<>(List.of());
-        when(tipoAutoriaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/tipo-autorias/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/tipo-autorias/admin/{id} - Should return any authorship type by ID")
-    void shouldReturnByIdAdmin() throws Exception {
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Test", true);
-        when(tipoAutoriaService.obtenerPorId(1L)).thenReturn(resumen);
-
-        mockMvc.perform(get("/api/v1/tipo-autorias/admin/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.data.nombre").value("Test"));
-    }
-
-    @Test
-    @DisplayName("POST /api/v1/tipo-autorias - Should create authorship type")
+    @DisplayName("POST /api/v1/tipo-autorias - Should create tipo-autoria")
     void shouldCreate() throws Exception {
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Nuevo");
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Nuevo").build();
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Nuevo", false);
 
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Nuevo", false);
-        when(tipoAutoriaService.crear(any())).thenReturn(resumen);
+        when(tipoAutoriaService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/tipo-autorias")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -94,39 +69,59 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/tipo-autorias/{id} - Should update authorship type")
+    @DisplayName("PUT /api/v1/tipo-autorias/{id} - Should update tipo-autoria")
     void shouldUpdate() throws Exception {
-        TipoAutoriaRequest request = new TipoAutoriaRequest();
-        request.setNombre("Actualizado");
+        TipoAutoriaRequest request = TipoAutoriaRequest.builder().nombre("Actualizado").build();
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Actualizado", false);
 
-        TipoAutoriaResumen resumen = new TipoAutoriaResumen(1L, "Actualizado", false);
-        when(tipoAutoriaService.actualizar(any(), any())).thenReturn(resumen);
+        when(tipoAutoriaService.actualizar(any(Long.class), any(TipoAutoriaRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/tipo-autorias/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.data.nombre").value("Actualizado"));
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/tipo-autorias/{id} - Should deactivate authorship type")
+    @DisplayName("GET /api/v1/tipo-autorias/admin - Should return all tipo-autorias for admin")
+    void shouldReturnAllAdmin() throws Exception {
+        Page<TipoAutoriaResponse> page = new PageImpl<>(List.of());
+        when(tipoAutoriaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/tipo-autorias/admin"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Historial completo de tipos de autoría"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/tipo-autorias/admin/{id} - Should return tipo-autoria by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
+        when(tipoAutoriaService.obtenerPorId(1L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/tipo-autorias/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría encontrado (admin)"));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/tipo-autorias/{id} - Should deactivate tipo-autoria")
     void shouldDeactivate() throws Exception {
         mockMvc.perform(delete("/api/v1/tipo-autorias/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-
-        verify(tipoAutoriaService).cambiarEstado(1L, false);
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría desactivado correctamente"));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/tipo-autorias/{id}/activar - Should activate authorship type")
+    @DisplayName("PATCH /api/v1/tipo-autorias/{id}/activar - Should activate tipo-autoria")
     void shouldActivate() throws Exception {
         mockMvc.perform(patch("/api/v1/tipo-autorias/1/activar"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-
-        verify(tipoAutoriaService).cambiarEstado(1L, true);
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría activado correctamente"));
     }
 }

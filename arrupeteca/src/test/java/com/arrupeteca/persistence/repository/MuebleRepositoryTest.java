@@ -4,20 +4,15 @@ import com.arrupeteca.persistence.entity.Edificio;
 import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.entity.Planta;
 import com.arrupeteca.persistence.entity.Salon;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-class MuebleRepositoryTest {
+class MuebleRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private MuebleRepository muebleRepository;
@@ -31,30 +26,35 @@ class MuebleRepositoryTest {
     @Autowired
     private EdificioRepository edificioRepository;
 
-    private Salon salon;
-
-    @BeforeEach
-    void setUp() {
-        Edificio ed = edificioRepository.save(Edificio.builder().nombre("Edificio A").build());
-        Planta p = plantaRepository.save(Planta.builder().nombre("Planta 1").edificio(ed).build());
-        salon = salonRepository.save(Salon.builder().nombre("Salon A").planta(p).build());
+    @Test
+    @DisplayName("Should save and find mueble by ID")
+    void shouldSaveAndFindById() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif1").build());
+        Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 1").edificio(edif).build());
+        Salon salon = salonRepository.save(Salon.builder().nombre("Salon 1").planta(planta).build());
+        Mueble entity = Mueble.builder().nombre("Mueble 1").salon(salon).build();
+        Mueble saved = muebleRepository.save(entity);
+        assertThat(muebleRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByNombreContainingIgnoreCase - Should find furniture by name")
-    void findByNombre() {
-        muebleRepository.save(Mueble.builder().nombre("Especial").salon(salon).build());
-        Page<Mueble> page = muebleRepository.findByNombreContainingIgnoreCase("Especial", PageRequest.of(0, 10));
+    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
+    void findByBorradoLogicoFalse() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif2").build());
+        Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 2").edificio(edif).build());
+        Salon salon = salonRepository.save(Salon.builder().nombre("Salon 2").planta(planta).build());
+        muebleRepository.save(Mueble.builder().nombre("Test").salon(salon).build());
+        Page<Mueble> page = muebleRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getContent()).isNotEmpty();
-        assertThat(page.getContent().get(0).getNombre()).isEqualTo("Especial");
     }
 
     @Test
-    @DisplayName("findProjectedByIdAndBorradoLogicoFalse - Should return optional entity")
-    void findProjectedById() {
-        Mueble saved = muebleRepository.save(Mueble.builder().nombre("Mueble 1").salon(salon).build());
-        Optional<Mueble> found = muebleRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId());
-        assertThat(found).isPresent();
-        assertThat(found.get().getNombre()).isEqualTo("Mueble 1");
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif3").build());
+        Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 3").edificio(edif).build());
+        Salon salon = salonRepository.save(Salon.builder().nombre("Salon 3").planta(planta).build());
+        Mueble saved = muebleRepository.save(Mueble.builder().nombre("Mueble3").salon(salon).borradoLogico(true).build());
+        assertThat(muebleRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

@@ -60,13 +60,14 @@ class LibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/libros - Should create book")
     void shouldCreate() throws Exception {
-        LibroRequest request = new LibroRequest();
-        request.setIsbn("9780596520687");
-        request.setAnioPublicacion(2021);
-        request.setIdObra(1L);
-        request.setIdFormato(1L);
-        request.setIdEditorial(1L);
-        request.setIdIdiomas(Collections.singleton(1L));
+        LibroRequest request = LibroRequest.builder()
+                .isbn(org.openapitools.jackson.nullable.JsonNullable.of("9780596520687"))
+                .anioPublicacion(org.openapitools.jackson.nullable.JsonNullable.of(2021))
+                .idObra(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idFormato(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idEditorial(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .build();
 
         LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
                 false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
@@ -80,21 +81,22 @@ class LibroControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/libros/{id} - Should update book")
+    @DisplayName("PATCH /api/v1/libros/{id} - Should update book")
     void shouldUpdate() throws Exception {
-        LibroRequest request = new LibroRequest();
-        request.setIsbn("9780596520687");
-        request.setAnioPublicacion(2021);
-        request.setIdObra(1L);
-        request.setIdFormato(1L);
-        request.setIdEditorial(1L);
-        request.setIdIdiomas(Collections.singleton(1L));
+        LibroRequest request = LibroRequest.builder()
+                .isbn(org.openapitools.jackson.nullable.JsonNullable.of("9780596520687"))
+                .anioPublicacion(org.openapitools.jackson.nullable.JsonNullable.of(2021))
+                .idObra(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idFormato(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idEditorial(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .build();
 
         LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
                 false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
         when(libroService.actualizar(any(Long.class), any(LibroRequest.class))).thenReturn(detail);
 
-        mockMvc.perform(put("/api/v1/libros/1")
+        mockMvc.perform(patch("/api/v1/libros/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())

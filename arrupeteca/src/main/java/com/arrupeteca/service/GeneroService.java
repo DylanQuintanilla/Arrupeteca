@@ -1,24 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.GeneroRequest;
-import com.arrupeteca.dto.response.detail.GeneroDetalleResponse;
-import com.arrupeteca.dto.response.summary.GeneroResumen;
+import com.arrupeteca.dto.response.GeneroResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface GeneroService {
 
-    Page<GeneroResumen> obtenerTodosActivos(Pageable pageable);
+    Page<GeneroResponse> obtenerTodosActivos(Pageable pageable);
 
-    GeneroDetalleResponse obtenerPorIdActivo(Long id);
+    GeneroResponse obtenerPorIdActivo(Long id);
 
-    Page<GeneroResumen> obtenerTodos(Pageable pageable);
+    Page<GeneroResponse> obtenerTodos(Pageable pageable);
 
-    GeneroDetalleResponse obtenerPorId(Long id);
+    GeneroResponse obtenerPorId(Long id);
 
-    GeneroDetalleResponse crear(GeneroRequest request);
+    GeneroResponse crear(GeneroRequest request);
 
-    GeneroDetalleResponse actualizar(Long id, GeneroRequest request);
+    GeneroResponse actualizar(Long id, GeneroRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

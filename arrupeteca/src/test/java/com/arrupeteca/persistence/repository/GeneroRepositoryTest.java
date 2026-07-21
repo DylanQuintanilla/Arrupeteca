@@ -19,7 +19,7 @@ class GeneroRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Genero entity = Genero.builder().nombre("Drama").build();
         Genero saved = generoRepository.save(entity);
-        assertThat(generoRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(generoRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
     }
 
     @Test
@@ -28,5 +28,12 @@ class GeneroRepositoryTest extends BaseRepositoryTest {
         generoRepository.save(Genero.builder().nombre("G1").borradoLogico(false).build());
         Page<Genero> page = generoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Genero saved = generoRepository.save(Genero.builder().nombre("G3").borradoLogico(true).build());
+        assertThat(generoRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

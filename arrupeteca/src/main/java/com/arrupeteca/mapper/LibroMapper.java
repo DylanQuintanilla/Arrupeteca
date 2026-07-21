@@ -1,20 +1,31 @@
 package com.arrupeteca.mapper;
 
+import com.arrupeteca.config.CentralMapperConfig;
 import com.arrupeteca.dto.request.LibroRequest;
 import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
 import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.persistence.entity.Libro;
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = {ObraMapper.class, EditorialMapper.class, FormatoMapper.class, IdiomaMapper.class})
+@Mapper(
+    config = CentralMapperConfig.class,
+    uses = {ObraMapper.class, EditorialMapper.class, FormatoMapper.class, IdiomaMapper.class}
+)
 public interface LibroMapper {
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "borradoLogico", ignore = true)
+    @Mapping(target = "obra", ignore = true)
+    @Mapping(target = "editorial", ignore = true)
+    @Mapping(target = "formato", ignore = true)
+    @Mapping(target = "idiomas", ignore = true)
+    @Mapping(target = "version", ignore = true)
     Libro toEntity(LibroRequest request);
 
+    @InheritConfiguration(name = "toEntity")
     void updateEntity(LibroRequest request, @MappingTarget Libro libro);
 
     @Mapping(target = "tituloObra", source = "obra.titulo")
@@ -23,5 +34,4 @@ public interface LibroMapper {
     LibroResumen toResumen(Libro libro);
 
     LibroDetalleResponse toDetalleResponse(Libro libro);
-
 }

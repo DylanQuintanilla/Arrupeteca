@@ -8,39 +8,38 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
-@Repository
 public interface SalonRepository extends JpaRepository<Salon, Long> {
 
-    @EntityGraph(attributePaths = {"planta.edificio"})
+    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
     Page<Salon> findByBorradoLogicoFalse(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"planta.edificio"})
-    Optional<Salon> findProjectedByIdAndBorradoLogicoFalse(Long id);
+    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    Optional<Salon> findByIdAndBorradoLogicoFalse(Long id);
 
-    @EntityGraph(attributePaths = {"planta.edificio"})
+    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
     Page<Salon> findByPlantaIdAndBorradoLogicoFalse(Long idPlanta, Pageable pageable);
 
-    @EntityGraph(attributePaths = {"planta.edificio"})
-    Page<Salon> findAllProjectedBy(Pageable pageable);
+    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    Page<Salon> findAll(Pageable pageable);
 
-    @EntityGraph(attributePaths = {"planta.edificio"})
-    Optional<Salon> findProjectedById(Long id);
+    @EntityGraph(attributePaths = {"planta", "planta.edificio"})
+    Optional<Salon> findById(Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Salon s SET s.borradoLogico = true WHERE s.id = :id")
     void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Salon s SET s.borradoLogico = false WHERE s.id = :id")
     void activar(@Param("id") Long id);
 
+    @Query(value = "SELECT COUNT(*) FROM salon WHERE id_salon = :id", nativeQuery = true)
+    long countByIdIncludeDeleted(@Param("id") Long id);
+
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
-    boolean existsByNombreIgnoreCase(String nombre);
-
-    boolean existsByNombreAndPlantaId(String nombre, Long plantaId);
+    boolean existsByNombreIgnoreCaseAndPlantaId(String nombre, Long idPlanta);
 }

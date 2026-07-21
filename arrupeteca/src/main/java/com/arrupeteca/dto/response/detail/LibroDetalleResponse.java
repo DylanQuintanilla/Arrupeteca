@@ -1,8 +1,8 @@
 package com.arrupeteca.dto.response.detail;
 
-import com.arrupeteca.dto.response.summary.EditorialResumen;
-import com.arrupeteca.dto.response.summary.FormatoResumen;
-import com.arrupeteca.dto.response.summary.IdiomaResumen;
+import com.arrupeteca.dto.response.EditorialResponse;
+import com.arrupeteca.dto.response.FormatoResponse;
+import com.arrupeteca.dto.response.IdiomaResponse;
 import com.arrupeteca.dto.response.summary.ObraResumen;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -23,7 +23,7 @@ public record LibroDetalleResponse(
     String modificadoPor,
     LocalDateTime fechaModificacion,
     ObraResumen obra,
-    EditorialResumen editorial,
-    FormatoResumen formato,
-    Set<IdiomaResumen> idiomas
+    EditorialResponse editorial,
+    FormatoResponse formato,
+    Set<IdiomaResponse> idiomas
 ) { }

@@ -1,7 +1,7 @@
 package com.arrupeteca.dto.response.detail;
 
+import com.arrupeteca.dto.response.MuebleResponse;
 import com.arrupeteca.dto.response.summary.LibroResumen;
-import com.arrupeteca.dto.response.summary.MuebleResumen;
 import java.time.LocalDateTime;
 
 public record EjemplarLibroDetalleResponse(
@@ -15,6 +15,6 @@ public record EjemplarLibroDetalleResponse(
     String modificadoPor,
     LocalDateTime fechaModificacion,
     LibroResumen libro,
-    MuebleResumen mueble,
+    MuebleResponse mueble,
     String ubicacion
 ) { }

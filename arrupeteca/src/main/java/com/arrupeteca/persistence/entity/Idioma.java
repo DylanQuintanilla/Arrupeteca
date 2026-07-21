@@ -11,9 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -21,36 +20,37 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@ToString(onlyExplicitlyIncluded = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@ToString
 @Entity
 @Table(name = "idioma")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@SQLDelete(sql = "UPDATE idioma SET borrado_logico = 1 WHERE id_idioma = ?")
 public class Idioma {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_idioma")
     @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
-    @Size(max = 50, message = "El nombre no puede ser mayor de 50 caracteres")
-    @NotBlank(message = "El nombre no puede estar vacio")
     @Column(length = 50, unique = true, nullable = false)
+    @ToString.Include
     private String nombre;
 
     @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
+    @ToString.Include
     private boolean borradoLogico = false;
 
-    @ToString.Exclude
     @ManyToMany(mappedBy = "idiomas", fetch = FetchType.LAZY)
     @Builder.Default
     private Set<Libro> libros = new HashSet<>();
-
 }

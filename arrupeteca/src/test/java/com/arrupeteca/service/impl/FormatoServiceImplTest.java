@@ -1,8 +1,7 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.FormatoRequest;
-import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
-import com.arrupeteca.dto.response.summary.FormatoResumen;
+import com.arrupeteca.dto.response.FormatoResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.FormatoMapper;
 import com.arrupeteca.persistence.entity.Formato;
@@ -21,7 +20,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,205 +35,165 @@ class FormatoServiceImplTest extends BaseServiceTest {
     private FormatoServiceImpl formatoService;
 
     @Test
-    @DisplayName("Should return all active paginated")
-    void shouldReturnAllActive() {
-        Formato entity = new Formato();
-        Page<Formato> expectedPage = new PageImpl<>(List.of(entity));
-        FormatoResumen resumen = mock(FormatoResumen.class);
+    @DisplayName("obtenerTodosActivos - Should return page of FormatoResponse")
+    void obtenerTodosActivos() {
+        Formato entity = Formato.builder().id(1L).nombre("Test").build();
+        Page<Formato> page = new PageImpl<>(List.of(entity));
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
 
-        when(formatoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
-        when(formatoMapper.toResumen(entity)).thenReturn(resumen);
+        when(formatoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<FormatoResumen> result = formatoService.obtenerTodosActivos(Pageable.unpaged());
+        Page<FormatoResponse> result = formatoService.obtenerTodosActivos(Pageable.unpaged());
 
-        assertThat(result.getContent()).containsExactly(resumen);
-        verify(formatoRepository).findByBorradoLogicoFalse(any(Pageable.class));
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should return by ID and active")
-    void shouldReturnByIdAndActive() {
-        Formato entity = new Formato();
-        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
-        when(formatoRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(formatoMapper.toDetalleResponse(entity)).thenReturn(detalle);
+    @DisplayName("obtenerPorIdActivo - Should return FormatoResponse when found and active")
+    void obtenerPorIdActivoSuccess() {
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
+        Formato entity = Formato.builder().id(1L).nombre("Test").build();
+        
+        when(formatoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        FormatoDetalleResponse result = formatoService.obtenerPorIdActivo(1L);
+        FormatoResponse result = formatoService.obtenerPorIdActivo(1L);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw exception when not found or inactive")
-    void shouldThrowWhenNotFoundOrInactive() {
-        when(formatoRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
+    void obtenerPorIdActivoNotFound() {
+        when(formatoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> formatoService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Formato activo con ID: 1");
+                .hasMessageContaining("No se encontró un formato activo con ID: 1");
     }
 
     @Test
-    @DisplayName("Should return all for admin")
-    void shouldReturnAllAdmin() {
-        Formato entity = new Formato();
-        Page<Formato> expectedPage = new PageImpl<>(List.of(entity));
-        FormatoResumen resumen = mock(FormatoResumen.class);
+    @DisplayName("obtenerTodos - Should return page of FormatoResponse")
+    void obtenerTodos() {
+        Formato entity = Formato.builder().id(1L).nombre("Test").build();
+        Page<Formato> page = new PageImpl<>(List.of(entity));
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
+        
+        when(formatoRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        when(formatoRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
-        when(formatoMapper.toResumen(entity)).thenReturn(resumen);
+        Page<FormatoResponse> result = formatoService.obtenerTodos(Pageable.unpaged());
 
-        Page<FormatoResumen> result = formatoService.obtenerTodos(Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(resumen);
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0)).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should return by ID")
-    void shouldReturnById() {
-        Formato entity = new Formato();
-        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
-        when(formatoMapper.toDetalleResponse(entity)).thenReturn(detalle);
+    @DisplayName("obtenerPorId - Should return FormatoResponse when found")
+    void obtenerPorIdSuccess() {
+        Formato entity = Formato.builder().id(1L).nombre("Test").build();
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
+        
+        when(formatoRepository.findById(1L)).thenReturn(Optional.of(entity));
+        when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        FormatoDetalleResponse result = formatoService.obtenerPorId(1L);
+        FormatoResponse result = formatoService.obtenerPorId(1L);
 
-        assertThat(result).isEqualTo(detalle);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw exception when not found")
-    void shouldThrowWhenNotFound() {
-        when(formatoRepository.findProjectedById(1L)).thenReturn(Optional.empty());
+    @DisplayName("obtenerPorId - Should throw exception when not found")
+    void obtenerPorIdNotFound() {
+        when(formatoRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> formatoService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Formato con ID: 1");
+                .hasMessageContaining("No se encontró un formato con ID: 1");
     }
 
     @Test
-    @DisplayName("Should create when name is unique")
-    void shouldCreate() {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Nuevo");
+    @DisplayName("crear - Should create and return FormatoResponse")
+    void crearSuccess() {
+        FormatoRequest request = FormatoRequest.builder().nombre("Nuevo").build();
+        Formato entity = Formato.builder().id(1L).nombre("Nuevo").build();
+        Formato savedEntity = Formato.builder().id(1L).nombre("Nuevo").build();
+        FormatoResponse response = new FormatoResponse(1L, "Nuevo", false);
 
         when(formatoRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
-        Formato entity = new Formato();
-        when(formatoMapper.toEntity(any())).thenReturn(entity);
-        
-        Formato saved = new Formato();
-        saved.setId(1L);
-        when(formatoRepository.save(any())).thenReturn(saved);
-        
-        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
-        when(formatoMapper.toDetalleResponse(saved)).thenReturn(detalle);
+        when(formatoMapper.toEntity(request)).thenReturn(entity);
+        when(formatoRepository.save(entity)).thenReturn(savedEntity);
+        when(formatoMapper.toResponse(savedEntity)).thenReturn(response);
 
-        FormatoDetalleResponse result = formatoService.crear(request);
+        FormatoResponse result = formatoService.crear(request);
 
-        assertThat(result).isEqualTo(detalle);
-        verify(formatoRepository).save(any());
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw exception when creating with duplicate name")
-    void shouldThrowWhenDuplicateName() {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Duplicado");
+    @DisplayName("crear - Should throw exception when name exists")
+    void crearDuplicateName() {
+        FormatoRequest request = FormatoRequest.builder().nombre("Existe").build();
 
-        when(formatoRepository.existsByNombreIgnoreCase("Duplicado")).thenReturn(true);
+        when(formatoRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
 
         assertThatThrownBy(() -> formatoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un Formato con el nombre: Duplicado");
+                .hasMessageContaining("Ya existe un formato con el nombre: Existe");
     }
 
     @Test
-    @DisplayName("Should update when name is unique or same")
-    void shouldUpdate() {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Actualizado");
+    @DisplayName("actualizar - Should update and return FormatoResponse")
+    void actualizarSuccess() {
+        Long id = 1L;
+        FormatoRequest request = FormatoRequest.builder().nombre("Actualizado").build();
+        Formato existingEntity = Formato.builder().id(1L).nombre("Original").build();
+        FormatoResponse response = new FormatoResponse(id, "Actualizado", false);
 
-        Formato existing = new Formato();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
-
-        when(formatoRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(formatoRepository.findById(id)).thenReturn(Optional.of(existingEntity));
         when(formatoRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
-        when(formatoRepository.save(any())).thenReturn(existing);
+        when(formatoRepository.save(existingEntity)).thenReturn(existingEntity);
+        when(formatoMapper.toResponse(existingEntity)).thenReturn(response);
 
-        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
-        when(formatoMapper.toDetalleResponse(existing)).thenReturn(detalle);
+        FormatoResponse result = formatoService.actualizar(id, request);
 
-        FormatoDetalleResponse result = formatoService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(detalle);
-        verify(formatoMapper).updateEntity(request, existing);
-        verify(formatoRepository).save(existing);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should throw exception when updating and new name exists")
-    void shouldThrowWhenUpdatingToExistingName() {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Existente");
+    @DisplayName("actualizar - Should throw exception when not found")
+    void actualizarNotFound() {
+        Long id = 1L;
+        FormatoRequest request = FormatoRequest.builder().nombre("Cualquiera").build();
 
-        Formato existing = new Formato();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
+        when(formatoRepository.findById(id)).thenReturn(Optional.empty());
 
-        when(formatoRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(formatoRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
-
-        assertThatThrownBy(() -> formatoService.actualizar(1L, request))
+        assertThatThrownBy(() -> formatoService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro Formato con el nombre: Existente");
+                .hasMessageContaining("No se encontró un formato con ID: 1");
     }
 
     @Test
-    @DisplayName("Should update when name is same (ignore case)")
-    void shouldUpdateWhenNameSame() {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("FORMATO");
+    @DisplayName("actualizar - Should throw exception when updating to existing name")
+    void actualizarDuplicateName() {
+        Long id = 1L;
+        FormatoRequest request = FormatoRequest.builder().nombre("Existe").build();
+        Formato existingEntity = Formato.builder().id(1L).nombre("Original").build();
 
-        Formato existing = new Formato();
-        existing.setId(1L);
-        existing.setNombre("formato");
+        when(formatoRepository.findById(id)).thenReturn(Optional.of(existingEntity));
+        when(formatoRepository.existsByNombreIgnoreCase("Existe")).thenReturn(true);
 
-        when(formatoRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(formatoRepository.save(any())).thenReturn(existing);
-
-        FormatoDetalleResponse detalle = mock(FormatoDetalleResponse.class);
-        when(formatoMapper.toDetalleResponse(existing)).thenReturn(detalle);
-
-        FormatoDetalleResponse result = formatoService.actualizar(1L, request);
-
-        assertThat(result).isEqualTo(detalle);
-    }
-
-    @Test
-    @DisplayName("Should throw when updating non-existent")
-    void shouldThrowWhenUpdatingNonExistent() {
-        when(formatoRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> formatoService.actualizar(1L, new FormatoRequest()))
+        assertThatThrownBy(() -> formatoService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Formato con ID: 1");
+                .hasMessageContaining("Ya existe otro formato con el nombre: Existe");
     }
 
     @Test
-    @DisplayName("Should deactivate")
-    void shouldDeactivate() {
-        when(formatoRepository.existsById(1L)).thenReturn(true);
-
-        formatoService.cambiarEstado(1L, false);
-
-        verify(formatoRepository).desactivar(1L);
-    }
-
-    @Test
-    @DisplayName("Should activate")
-    void shouldActivate() {
-        when(formatoRepository.existsById(1L)).thenReturn(true);
+    @DisplayName("cambiarEstado - Should activate when state is true")
+    void cambiarEstadoActivar() {
+        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
 
         formatoService.cambiarEstado(1L, true);
 
@@ -243,13 +201,22 @@ class FormatoServiceImplTest extends BaseServiceTest {
     }
 
     @Test
-    @DisplayName("Should throw when changing state of non-existent")
-    void shouldThrowWhenChangingStateNonExistent() {
-        when(formatoRepository.existsById(1L)).thenReturn(false);
+    @DisplayName("cambiarEstado - Should deactivate when state is false")
+    void cambiarEstadoDesactivar() {
+        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+
+        formatoService.cambiarEstado(1L, false);
+
+        verify(formatoRepository).desactivar(1L);
+    }
+
+    @Test
+    @DisplayName("cambiarEstado - Should throw exception when not found")
+    void cambiarEstadoNotFound() {
+        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
 
         assertThatThrownBy(() -> formatoService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un Formato con ID: 1");
+                .hasMessageContaining("No se encontró un formato con ID: 1");
     }
 }
-

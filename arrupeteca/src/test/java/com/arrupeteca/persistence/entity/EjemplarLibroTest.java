@@ -4,34 +4,44 @@ import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.assertj.core.api.Assertions.assertThat;
 
-class EjemplarLibroTest extends BaseEntityTest {
+@DisplayName("EjemplarLibro Entity Unit Tests")
+class EjemplarLibroTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
+    @DisplayName("Should test getters, setters and builder")
+    void shouldTestGettersSettersAndBuilder() {
         EjemplarLibro ejemplar = EjemplarLibro.builder()
+                .id(1L)
                 .comentario("Buen estado")
-                .libro(new Libro())
-                .mueble(new Mueble())
+                .libro(Libro.builder().build())
+                .mueble(Mueble.builder().build())
                 .estadoFisico(EstadoFisico.BUEN_ESTADO)
                 .disponibilidad(Disponibilidad.DISPONIBLE)
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(ejemplar);
+        assertThat(ejemplar.getId()).isEqualTo(1L);
+        assertThat(ejemplar.getComentario()).isEqualTo("Buen estado");
+        assertThat(ejemplar.getLibro()).isNotNull();
+        assertThat(ejemplar.getMueble()).isNotNull();
+        assertThat(ejemplar.getEstadoFisico()).isEqualTo(EstadoFisico.BUEN_ESTADO);
+        assertThat(ejemplar.getDisponibilidad()).isEqualTo(Disponibilidad.DISPONIBLE);
+        assertThat(ejemplar.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when comentario too long")
-    void shouldFailWhenComentarioTooLong() {
-        EjemplarLibro ejemplar = EjemplarLibro.builder()
-                .comentario("a".repeat(256))
-                .libro(new Libro())
-                .mueble(new Mueble())
-                .estadoFisico(EstadoFisico.BUEN_ESTADO)
-                .disponibilidad(Disponibilidad.DISPONIBLE)
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsAndHashCode() {
+        EjemplarLibro e1 = EjemplarLibro.builder().id(1L).build();
+        EjemplarLibro e2 = EjemplarLibro.builder().id(1L).build();
+        EjemplarLibro e3 = EjemplarLibro.builder().id(2L).build();
 
-        assertHasViolation(ejemplar, "comentario", "El comentario no puede exceder los 255 caracteres");
+        assertThat(e1).isEqualTo(e1);
+        assertThat(e1).isEqualTo(e2);
+        assertThat(e1).isNotEqualTo(e3);
+        assertThat(e1).isNotEqualTo(null);
+        assertThat(e1.hashCode()).isEqualTo(e2.hashCode());
     }
 }

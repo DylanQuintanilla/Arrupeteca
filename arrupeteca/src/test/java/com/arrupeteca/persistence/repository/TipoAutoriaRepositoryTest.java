@@ -4,24 +4,36 @@ import com.arrupeteca.persistence.entity.TipoAutoria;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-class TipoAutoriaRepositoryTest {
+class TipoAutoriaRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private TipoAutoriaRepository tipoAutoriaRepository;
 
     @Test
+    @DisplayName("Should save and find tipoAutoria by ID")
+    void shouldSaveAndFindById() {
+        TipoAutoria entity = TipoAutoria.builder().nombre("Principal").build();
+        TipoAutoria saved = tipoAutoriaRepository.save(entity);
+        assertThat(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+    }
+
+    @Test
     @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
     void findByBorradoLogicoFalse() {
-        tipoAutoriaRepository.save(TipoAutoria.builder().nombre("Test").build());
+        tipoAutoriaRepository.save(TipoAutoria.builder().nombre("Coautor").build());
         Page<TipoAutoria> page = tipoAutoriaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getContent()).isNotEmpty();
-        assertThat(page.getContent().get(0).getNombre()).isEqualTo("Test");
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        TipoAutoria saved = tipoAutoriaRepository.save(TipoAutoria.builder().nombre("Traductor").borradoLogico(true).build());
+        assertThat(tipoAutoriaRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

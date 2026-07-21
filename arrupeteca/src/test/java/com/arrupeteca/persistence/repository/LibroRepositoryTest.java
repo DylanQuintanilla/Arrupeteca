@@ -50,6 +50,13 @@ class LibroRepositoryTest extends BaseRepositoryTest {
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Libro saved = libroRepository.save(createValidLibro("9781107004639"));
+        assertThat(libroRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+    }
+
     private Libro createValidLibro(String isbn) {
         Genero genero = generoRepository.save(Genero.builder().nombre("Genero Test " + isbn).build());
         Categoria categoria = categoriaRepository.save(Categoria.builder().nombre("Categoria Test " + isbn).build());

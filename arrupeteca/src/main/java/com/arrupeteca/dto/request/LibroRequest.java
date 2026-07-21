@@ -2,55 +2,74 @@ package com.arrupeteca.dto.request;
 
 import java.math.BigDecimal;
 import java.util.Set;
-
 import com.arrupeteca.persistence.enums.Ciclo;
 import com.arrupeteca.persistence.enums.Grado;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.AssertTrue;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.hibernate.validator.constraints.ISBN;
+import lombok.extern.jackson.Jacksonized;
+import org.openapitools.jackson.nullable.JsonNullable;
 
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class LibroRequest {
+public record LibroRequest(
+    JsonNullable<String> isbn,
+    JsonNullable<Integer> anioPublicacion,
+    JsonNullable<BigDecimal> precio,
+    JsonNullable<String> urlImagen,
+    JsonNullable<BigDecimal> mora,
+    JsonNullable<Grado> grado,
+    JsonNullable<Ciclo> ciclo,
+    JsonNullable<Long> idObra,
+    JsonNullable<Long> idFormato,
+    JsonNullable<Long> idEditorial,
+    JsonNullable<Set<Long>> idIdiomas,
+    Long version
+) {
+    public LibroRequest {}
 
-    @ISBN(message = "El ISBN no es válido")
-    @Size(max = 20, message = "El ISBN no puede contener más de 20 dígitos")
-    private String isbn;
+    @AssertTrue(message = "El ISBN no es válido")
+    public boolean isIsbnValido() {
+        if (isbn == null || !isbn.isPresent() || isbn.get() == null || isbn.get().isBlank()) {
+            return true;
+        }
+        String val = isbn.get().replaceAll("[-\\s]", "");
+        if (val.length() != 10 && val.length() != 13) {
+            return false;
+        }
+        return val.matches("^[0-9xX]+$");
+    }
 
-    @NotNull(message = "El año de publicación no puede estar vacío")
-    @Max(value = 9999, message = "El año de publicación no puede tener más de 4 dígitos")
-    private Integer anioPublicacion;
+    @AssertTrue(message = "El ISBN no puede contener más de 20 caracteres")
+    public boolean isIsbnLongitudValida() {
+        if (isbn == null || !isbn.isPresent() || isbn.get() == null) {
+            return true;
+        }
+        return isbn.get().length() <= 20;
+    }
 
-    private BigDecimal precio;
+    @AssertTrue(message = "El año de publicación no puede tener más de 4 dígitos")
+    public boolean isAnioPublicacionValido() {
+        if (anioPublicacion == null || !anioPublicacion.isPresent() || anioPublicacion.get() == null) {
+            return true;
+        }
+        return anioPublicacion.get() <= 9999;
+    }
 
-    private String urlImagen;
+    @AssertTrue(message = "El precio no puede ser negativo")
+    public boolean isPrecioValido() {
+        if (precio == null || !precio.isPresent() || precio.get() == null) {
+            return true;
+        }
+        return precio.get().compareTo(BigDecimal.ZERO) >= 0;
+    }
 
-    private BigDecimal mora;
-
-    private Grado grado;
-
-    private Ciclo ciclo;
-
-    @NotNull(message = "Debe elegir una obra para el libro")
-    private Long idObra;
-
-    @NotNull(message = "El libro debe pertenecer a un formato")
-    private Long idFormato;
-
-    @NotNull(message = "El libro debe pertenecer a una editorial")
-    private Long idEditorial;
-
-    @NotEmpty(message = "Debe elegir al menos un idioma para el libro")
-    private Set<Long> idIdiomas;
-
+    @AssertTrue(message = "La mora no puede ser negativa")
+    public boolean isMoraValida() {
+        if (mora == null || !mora.isPresent() || mora.get() == null) {
+            return true;
+        }
+        return mora.get().compareTo(BigDecimal.ZERO) >= 0;
+    }
 }

@@ -3,7 +3,7 @@ package com.arrupeteca.controller;
 import java.util.List;
 
 import com.arrupeteca.dto.request.EdificioRequest;
-import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
+import com.arrupeteca.dto.response.EdificioResponse;
 import com.arrupeteca.service.EdificioService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,9 +45,9 @@ class EdificioControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/edificios/{id} - Should return building when active")
     void obtenerPorId() throws Exception {
-        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Test", false, null, null, null, null);
+        EdificioResponse response = new EdificioResponse(1L, "Edificio Test", false);
         when(edificioService.obtenerPorIdActivo(1L))
-                .thenReturn(detalle);
+                .thenReturn(response);
 
         mockMvc.perform(get("/api/v1/edificios/1"))
                 .andExpect(status().isOk())
@@ -58,11 +58,10 @@ class EdificioControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/edificios - Should create building")
     void crear() throws Exception {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Edificio Central");
+        EdificioRequest request = EdificioRequest.builder().nombre("Edificio Central").build();
+        EdificioResponse response = new EdificioResponse(1L, "Edificio Central", false);
 
-        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Central", false, null, null, null, null);
-        when(edificioService.crear(any(EdificioRequest.class))).thenReturn(detalle);
+        when(edificioService.crear(any(EdificioRequest.class))).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/edificios")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,11 +74,10 @@ class EdificioControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/edificios/{id} - Should update building")
     void actualizar() throws Exception {
-        EdificioRequest request = new EdificioRequest();
-        request.setNombre("Edificio Norte");
+        EdificioRequest request = EdificioRequest.builder().nombre("Edificio Norte").build();
+        EdificioResponse response = new EdificioResponse(1L, "Edificio Norte", false);
 
-        EdificioDetalleResponse detalle = new EdificioDetalleResponse(1L, "Edificio Norte", false, null, null, null, null);
-        when(edificioService.actualizar(eq(1L), any(EdificioRequest.class))).thenReturn(detalle);
+        when(edificioService.actualizar(eq(1L), any(EdificioRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/edificios/1")
                 .contentType(MediaType.APPLICATION_JSON)

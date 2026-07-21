@@ -1,14 +1,15 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.EditorialRequest;
-import com.arrupeteca.dto.response.detail.EditorialDetalleResponse;
-import com.arrupeteca.dto.response.summary.EditorialResumen;
+import com.arrupeteca.dto.response.EditorialResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EditorialMapper;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.service.EditorialService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,85 +17,85 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EditorialServiceImpl implements EditorialService {
 
     private final EditorialRepository editorialRepository;
     private final EditorialMapper editorialMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> obtenerTodosActivos(Pageable pageable) {
+    @Cacheable(value = "editoriales-activas")
+    public Page<EditorialResponse> obtenerTodosActivos(Pageable pageable) {
         return editorialRepository.findByBorradoLogicoFalse(pageable)
-                .map(editorialMapper::toResumen);
+                .map(editorialMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public EditorialDetalleResponse obtenerPorIdActivo(Long id) {
-        return editorialRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .map(editorialMapper::toDetalleResponse)
+    public EditorialResponse obtenerPorIdActivo(Long id) {
+        return editorialRepository.findByIdAndBorradoLogicoFalse(id)
+                .map(editorialMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Editorial activa con ID: " + id));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> obtenerTodos(Pageable pageable) {
-        return editorialRepository.findAllProjectedBy(pageable)
-                .map(editorialMapper::toResumen);
+    public Page<EditorialResponse> obtenerTodos(Pageable pageable) {
+        return editorialRepository.findAll(pageable)
+                .map(editorialMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public EditorialDetalleResponse obtenerPorId(Long id) {
-        return editorialRepository.findProjectedById(id)
-                .map(editorialMapper::toDetalleResponse)
+    public EditorialResponse obtenerPorId(Long id) {
+        return editorialRepository.findById(id)
+                .map(editorialMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Editorial con ID: " + id));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, Pageable pageable) {
+    public Page<EditorialResponse> busquedaMaestraAdmin(Boolean esBorrado, String termino, Pageable pageable) {
         return editorialRepository.busquedaMaestraAdmin(esBorrado, termino, pageable)
-                .map(editorialMapper::toResumen);
+                .map(editorialMapper::toResponse);
     }
 
     @Override
     @Transactional
-    public EditorialDetalleResponse crear(EditorialRequest request) {
-        if (editorialRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe una editorial con el nombre: " + request.getNombre());
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
+    public EditorialResponse crear(EditorialRequest request) {
+        if (editorialRepository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new ValidacionNegocioException("Ya existe una editorial con el nombre: " + request.nombre());
         }
-        if (editorialRepository.existsByCorreoIgnoreCase(request.getCorreo())) {
-            throw new ValidacionNegocioException("Ya existe una editorial con el correo: " + request.getCorreo());
+        if (editorialRepository.existsByCorreoIgnoreCase(request.correo())) {
+            throw new ValidacionNegocioException("Ya existe una editorial con el correo: " + request.correo());
         }
         Editorial editorial = editorialMapper.toEntity(request);
-        return editorialMapper.toDetalleResponse(editorialRepository.save(editorial));
+        return editorialMapper.toResponse(editorialRepository.save(editorial));
     }
 
     @Override
     @Transactional
-    public EditorialDetalleResponse actualizar(Long id, EditorialRequest request) {
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
+    public EditorialResponse actualizar(Long id, EditorialRequest request) {
         Editorial editorialExistente = editorialRepository.findById(id)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Editorial con ID: " + id));
 
-        if (!editorialExistente.getNombre().equalsIgnoreCase(request.getNombre())
-                && editorialRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new ValidacionNegocioException("Ya existe otra editorial con el nombre: " + request.getNombre());
+        if (!editorialExistente.getNombre().equalsIgnoreCase(request.nombre())
+                && editorialRepository.existsByNombreIgnoreCase(request.nombre())) {
+            throw new ValidacionNegocioException("Ya existe otra editorial con el nombre: " + request.nombre());
         }
 
-        if (!editorialExistente.getCorreo().equalsIgnoreCase(request.getCorreo())
-                && editorialRepository.existsByCorreoIgnoreCase(request.getCorreo())) {
-            throw new ValidacionNegocioException("Ya existe otra editorial con el correo: " + request.getCorreo());
+        if (!editorialExistente.getCorreo().equalsIgnoreCase(request.correo())
+                && editorialRepository.existsByCorreoIgnoreCase(request.correo())) {
+            throw new ValidacionNegocioException("Ya existe otra editorial con el correo: " + request.correo());
         }
 
         editorialMapper.updateEntity(request, editorialExistente);
-        return editorialMapper.toDetalleResponse(editorialRepository.save(editorialExistente));
+        return editorialMapper.toResponse(editorialRepository.save(editorialExistente));
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (!editorialRepository.existsById(id)) {
+        if (editorialRepository.countByIdIncludeDeleted(id) == 0) {
             throw new ValidacionNegocioException("No se encontró Editorial con ID: " + id);
         }
         if (estado) {

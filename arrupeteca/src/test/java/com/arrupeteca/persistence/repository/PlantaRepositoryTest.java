@@ -5,14 +5,12 @@ import com.arrupeteca.persistence.entity.Planta;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest
-class PlantaRepositoryTest {
+class PlantaRepositoryTest extends BaseRepositoryTest {
 
     @Autowired
     private PlantaRepository plantaRepository;
@@ -21,12 +19,28 @@ class PlantaRepositoryTest {
     private EdificioRepository edificioRepository;
 
     @Test
-    @DisplayName("findByEdificioIdAndBorradoLogicoFalse - Should return page of entities")
-    void findByEdificioIdAndBorradoLogicoFalse() {
-        Edificio ed = edificioRepository.save(Edificio.builder().nombre("Edificio A").build());
-        plantaRepository.save(Planta.builder().nombre("Planta 1").edificio(ed).build());
-        Page<Planta> page = plantaRepository.findByEdificioIdAndBorradoLogicoFalse(ed.getId(), PageRequest.of(0, 10));
+    @DisplayName("Should save and find planta by ID")
+    void shouldSaveAndFindById() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif1").build());
+        Planta entity = Planta.builder().nombre("Planta 1").edificio(edif).build();
+        Planta saved = plantaRepository.save(entity);
+        assertThat(plantaRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
+    void findByBorradoLogicoFalse() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif2").build());
+        plantaRepository.save(Planta.builder().nombre("Test").edificio(edif).build());
+        Page<Planta> page = plantaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
         assertThat(page.getContent()).isNotEmpty();
-        assertThat(page.getContent().get(0).getNombre()).isEqualTo("Planta 1");
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif3").build());
+        Planta saved = plantaRepository.save(Planta.builder().nombre("Planta3").edificio(edif).borradoLogico(true).build());
+        assertThat(plantaRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 }

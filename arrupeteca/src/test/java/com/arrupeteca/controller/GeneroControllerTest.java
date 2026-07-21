@@ -1,8 +1,7 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.GeneroRequest;
-import com.arrupeteca.dto.response.detail.GeneroDetalleResponse;
-import com.arrupeteca.dto.response.summary.GeneroResumen;
+import com.arrupeteca.dto.response.GeneroResponse;
 import com.arrupeteca.service.GeneroService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,7 +12,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -35,7 +33,7 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/generos - Should return active genres")
     void shouldReturnActive() throws Exception {
-        Page<GeneroResumen> page = new PageImpl<>(List.of());
+        Page<GeneroResponse> page = new PageImpl<>(List.of());
         when(generoService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/generos"))
@@ -46,9 +44,8 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/generos/{id} - Should return genre by ID")
     void shouldReturnById() throws Exception {
-        GeneroDetalleResponse detail = new GeneroDetalleResponse(
-                1L, "Genero Test", false, "admin", null, "admin", null, Collections.emptySet());
-        when(generoService.obtenerPorIdActivo(1L)).thenReturn(detail);
+        GeneroResponse response = new GeneroResponse(1L, "Genero Test", false);
+        when(generoService.obtenerPorIdActivo(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/generos/1"))
                 .andExpect(status().isOk())
@@ -59,12 +56,10 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/generos - Should create genre")
     void shouldCreate() throws Exception {
-        GeneroRequest request = new GeneroRequest();
-        request.setNombre("Nuevo");
+        GeneroRequest request = GeneroRequest.builder().nombre("Nuevo").build();
+        GeneroResponse response = new GeneroResponse(1L, "Nuevo", false);
 
-        GeneroDetalleResponse detail = new GeneroDetalleResponse(
-                1L, "Nuevo", false, "admin", null, "admin", null, Collections.emptySet());
-        when(generoService.crear(any())).thenReturn(detail);
+        when(generoService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/generos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -76,12 +71,10 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/generos/{id} - Should update genre")
     void shouldUpdate() throws Exception {
-        GeneroRequest request = new GeneroRequest();
-        request.setNombre("Actualizado");
+        GeneroRequest request = GeneroRequest.builder().nombre("Actualizado").build();
+        GeneroResponse response = new GeneroResponse(1L, "Actualizado", false);
 
-        GeneroDetalleResponse detail = new GeneroDetalleResponse(
-                1L, "Actualizado", false, "admin", null, "admin", null, Collections.emptySet());
-        when(generoService.actualizar(any(Long.class), any(GeneroRequest.class))).thenReturn(detail);
+        when(generoService.actualizar(any(Long.class), any(GeneroRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/generos/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -93,7 +86,7 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/generos/admin - Should return all genres for admin")
     void shouldReturnAllAdmin() throws Exception {
-        Page<GeneroResumen> page = new PageImpl<>(List.of());
+        Page<GeneroResponse> page = new PageImpl<>(List.of());
         when(generoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/generos/admin"))
@@ -105,9 +98,8 @@ class GeneroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/generos/admin/{id} - Should return genre by ID for admin")
     void shouldReturnByIdAdmin() throws Exception {
-        GeneroDetalleResponse detail = new GeneroDetalleResponse(
-                1L, "Genero Test", false, "admin", null, "admin", null, Collections.emptySet());
-        when(generoService.obtenerPorId(1L)).thenReturn(detail);
+        GeneroResponse response = new GeneroResponse(1L, "Genero Test", false);
+        when(generoService.obtenerPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/generos/admin/1"))
                 .andExpect(status().isOk())

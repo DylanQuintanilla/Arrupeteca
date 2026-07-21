@@ -56,7 +56,15 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFind() {
         EjemplarLibro entity = createValidEjemplar("Test");
         EjemplarLibro saved = ejemplarLibroRepository.save(entity);
-        assertThat(ejemplarLibroRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(ejemplarLibroRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+    }
+
+    @Test
+    @DisplayName("Should count physical entries including deleted")
+    void shouldCountByIdIncludeDeleted() {
+        EjemplarLibro entity = createValidEjemplar("Count");
+        EjemplarLibro saved = ejemplarLibroRepository.save(entity);
+        assertThat(ejemplarLibroRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
     }
 
     @Test

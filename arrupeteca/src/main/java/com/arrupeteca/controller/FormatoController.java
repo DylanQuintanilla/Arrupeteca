@@ -2,13 +2,16 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.FormatoRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
-import com.arrupeteca.dto.response.summary.FormatoResumen;
+import com.arrupeteca.dto.response.FormatoResponse;
 import com.arrupeteca.service.FormatoService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -23,55 +26,96 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/formatos")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
+@RequestMapping("/api/v1/formatos")
+@Tag(name = "Formatos", description = "Endpoints para la gestión del catálogo de formatos de libros")
 public class FormatoController {
 
     private final FormatoService formatoService;
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<FormatoResumen>>> obtenerTodosActivos(Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos activos", formatoService.obtenerTodosActivos(pageable)));
+    @Operation(
+        summary = "Obtener formatos activos paginados",
+        description = "Retorna una lista paginada de todos los formatos activos en el sistema."
+    )
+    public ResponseEntity<ApiResponse<Page<FormatoResponse>>> obtenerTodosActivos(
+            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        Page<FormatoResponse> pagina = formatoService.obtenerTodosActivos(pageable);
+        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos activos", pagina));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<FormatoDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado", formatoService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<FormatoResumen>>> obtenerTodos(Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    public ResponseEntity<ApiResponse<FormatoDetalleResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado (admin)", formatoService.obtenerPorId(id)));
+    @Operation(
+        summary = "Obtener formato activo por ID",
+        description = "Busca y retorna un formato activo por su identificador único."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> obtenerPorId(@PathVariable Long id) {
+        FormatoResponse formato = formatoService.obtenerPorIdActivo(id);
+        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado", formato));
     }
 
     @PostMapping
-    public ResponseEntity<ApiResponse<FormatoDetalleResponse>> crear(@Valid @RequestBody FormatoRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Formato creado exitosamente",
-                formatoService.crear(request)), HttpStatus.CREATED);
+    @Operation(
+        summary = "Crear nuevo formato",
+        description = "Crea un nuevo formato validando la unicidad del nombre."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> crear(@Valid @RequestBody FormatoRequest request) {
+        FormatoResponse nuevo = formatoService.crear(request);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Formato creado exitosamente", nuevo));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<FormatoDetalleResponse>> actualizar(
-            @PathVariable Long id, @Valid @RequestBody FormatoRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Formato actualizado correctamente",
-                formatoService.actualizar(id, request)));
+    @Operation(
+        summary = "Actualizar formato",
+        description = "Actualiza los datos de un formato existente."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> actualizar(@PathVariable Long id,
+                                                                   @Valid @RequestBody FormatoRequest request) {
+        FormatoResponse actualizado = formatoService.actualizar(id, request);
+        return ResponseEntity.ok(ApiResponse.exito("Formato actualizado correctamente", actualizado));
     }
 
     @DeleteMapping("/{id}")
+    @Operation(
+        summary = "Desactivar formato",
+        description = "Realiza el borrado lógico de un formato en el sistema."
+    )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         formatoService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Formato desactivado correctamente"));
     }
 
     @PatchMapping("/{id}/activar")
+    @Operation(
+        summary = "Activar formato",
+        description = "Reactiva un formato previamente desactivado."
+    )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         formatoService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Formato activado correctamente"));
+    }
+
+    @GetMapping("/admin")
+    @Operation(
+        summary = "Obtener todos los formatos (Admin)",
+        description = "Retorna el historial completo de formatos (activos e inactivos) para administradores."
+    )
+    public ResponseEntity<ApiResponse<Page<FormatoResponse>>> obtenerTodosAdmin(
+            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(
+                ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable))
+        );
+    }
+
+    @GetMapping("/admin/{id}")
+    @Operation(
+        summary = "Obtener formato por ID (Admin)",
+        description = "Busca y retorna cualquier formato (activo o inactivo) por su identificador único para administradores."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> obtenerPorIdAdmin(@PathVariable Long id) {
+        FormatoResponse formato = formatoService.obtenerPorId(id);
+        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado (admin)", formato));
     }
 }

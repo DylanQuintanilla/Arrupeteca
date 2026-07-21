@@ -3,35 +3,37 @@ package com.arrupeteca.persistence.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-class PaisTest extends BaseEntityTest {
+import static org.assertj.core.api.Assertions.assertThat;
+
+@DisplayName("Pais Entity Unit Tests")
+class PaisTest {
 
     @Test
-    @DisplayName("Should pass validation with valid data")
-    void shouldPassValidation() {
+    @DisplayName("Should test getters and setters")
+    void shouldTestGettersAndSetters() {
         Pais pais = Pais.builder()
+                .id(1L)
                 .nombre("El Salvador")
+                .borradoLogico(true)
                 .build();
 
-        assertNoViolations(pais);
+        assertThat(pais.getId()).isEqualTo(1L);
+        assertThat(pais.getNombre()).isEqualTo("El Salvador");
+        assertThat(pais.isBorradoLogico()).isTrue();
     }
 
     @Test
-    @DisplayName("Should fail when name is blank")
-    void shouldFailWhenNameIsBlank() {
-        Pais pais = Pais.builder()
-                .nombre("")
-                .build();
+    @DisplayName("Should test equals and hashCode")
+    void shouldTestEqualsHashCode() {
+        Pais p1 = Pais.builder().id(1L).build();
+        Pais p2 = Pais.builder().id(1L).build();
+        Pais p3 = Pais.builder().id(2L).build();
 
-        assertHasViolation(pais, "nombre", "El nombre no puede estar vacio");
-    }
-
-    @Test
-    @DisplayName("Should fail when name exceeds maximum length")
-    void shouldFailWhenNameTooLong() {
-        Pais pais = Pais.builder()
-                .nombre("a".repeat(51))
-                .build();
-
-        assertHasViolation(pais, "nombre", "El nombre no puede exceder los 50 caracteres");
+        assertThat(p1).isEqualTo(p1);
+        assertThat(p1).isEqualTo(p2);
+        assertThat(p1).isNotEqualTo(p3);
+        assertThat(p1).isNotEqualTo(null);
+        assertThat(p1).isNotEqualTo(new Object());
+        assertThat(p1.hashCode()).isEqualTo(p2.hashCode());
     }
 }

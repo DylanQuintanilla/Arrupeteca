@@ -2,11 +2,13 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.EdificioRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.dto.response.detail.EdificioDetalleResponse;
-import com.arrupeteca.dto.response.summary.EdificioResumen;
+import com.arrupeteca.dto.response.EdificioResponse;
 import com.arrupeteca.service.EdificioService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -27,61 +29,81 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 @RequestMapping("/api/v1/edificios")
+@Tag(name = "Edificios", description = "Endpoints para la gestión del catálogo de edificios")
 public class EdificioController {
 
     private final EdificioService edificioService;
 
-    // GET: Obtener todos los activos
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<EdificioResumen>>> obtenerTodosActivos(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<EdificioResumen> pagina = edificioService.obtenerTodosActivos(pageable);
+    @Operation(
+        summary = "Obtener edificios activos paginados",
+        description = "Retorna una lista paginada de todos los edificios activos en el sistema."
+    )
+    public ResponseEntity<ApiResponse<Page<EdificioResponse>>> obtenerTodosActivos(
+            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+        Page<EdificioResponse> pagina = edificioService.obtenerTodosActivos(pageable);
         return ResponseEntity.ok(ApiResponse.exito("Lista de edificios activos", pagina));
     }
 
-    // GET: Obtener uno por ID
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> obtenerPorId(@PathVariable Long id) {
-        EdificioDetalleResponse edificio = edificioService.obtenerPorIdActivo(id);
+    @Operation(
+        summary = "Obtener edificio activo por ID",
+        description = "Busca y retorna un edificio activo por su identificador único."
+    )
+    public ResponseEntity<ApiResponse<EdificioResponse>> obtenerPorId(@PathVariable Long id) {
+        EdificioResponse edificio = edificioService.obtenerPorIdActivo(id);
         return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado", edificio));
     }
 
-    // POST: Crear nuevo
     @PostMapping
-    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> crear(@Valid @RequestBody EdificioRequest request) {
-        EdificioDetalleResponse nuevo = edificioService.crear(request);
+    @Operation(
+        summary = "Crear nuevo edificio",
+        description = "Crea un nuevo edificio validando la unicidad del nombre."
+    )
+    public ResponseEntity<ApiResponse<EdificioResponse>> crear(@Valid @RequestBody EdificioRequest request) {
+        EdificioResponse nuevo = edificioService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.exito("Edificio creado exitosamente", nuevo));
     }
 
-    // PUT: Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EdificioDetalleResponse>> actualizar(@PathVariable Long id,
-                                                                   @Valid @RequestBody EdificioRequest request) {
-        EdificioDetalleResponse actualizado = edificioService.actualizar(id, request);
+    @Operation(
+        summary = "Actualizar edificio",
+        description = "Actualiza los datos de un edificio existente."
+    )
+    public ResponseEntity<ApiResponse<EdificioResponse>> actualizar(@PathVariable Long id,
+                                                                    @Valid @RequestBody EdificioRequest request) {
+        EdificioResponse actualizado = edificioService.actualizar(id, request);
         return ResponseEntity.ok(ApiResponse.exito("Edificio actualizado correctamente", actualizado));
     }
 
-    // DELETE: Desactivar
     @DeleteMapping("/{id}")
+    @Operation(
+        summary = "Desactivar edificio",
+        description = "Realiza el borrado lógico de un edificio en el sistema."
+    )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         edificioService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Edificio desactivado correctamente"));
     }
 
-    // PATCH: activar
     @PatchMapping("/{id}/activar")
+    @Operation(
+        summary = "Activar edificio",
+        description = "Reactiva un edificio previamente desactivado."
+    )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         edificioService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Edificio activado correctamente"));
     }
 
-    // ADMIN
-
-    // GET: Ver TODOS (incluso borrados)
     @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<EdificioResumen>>> obtenerTodosAdmin(
-            @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
+    @Operation(
+        summary = "Obtener todos los edificios (Admin)",
+        description = "Retorna el historial completo de edificios (activos e inactivos) para administradores."
+    )
+    public ResponseEntity<ApiResponse<Page<EdificioResponse>>> obtenerTodosAdmin(
+            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(
                 ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos(pageable))
         );

@@ -1,5 +1,6 @@
 package com.arrupeteca.mapper;
 
+import com.arrupeteca.config.CentralMapperConfig;
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
 import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
 import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
@@ -7,16 +8,25 @@ import com.arrupeteca.persistence.entity.EjemplarLibro;
 import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.entity.Salon;
 import com.arrupeteca.persistence.entity.Planta;
+import org.mapstruct.InheritConfiguration;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = {LibroMapper.class, MuebleMapper.class})
+@Mapper(
+    config = CentralMapperConfig.class,
+    uses = {LibroMapper.class, MuebleMapper.class}
+)
 public interface EjemplarLibroMapper {
 
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "borradoLogico", ignore = true)
+    @Mapping(target = "libro", ignore = true)
+    @Mapping(target = "mueble", ignore = true)
+    @Mapping(target = "version", ignore = true)
     EjemplarLibro toEntity(EjemplarLibroRequest request);
 
+    @InheritConfiguration(name = "toEntity")
     void updateEntity(EjemplarLibroRequest request, @MappingTarget EjemplarLibro ejemplarLibro);
 
     @Mapping(target = "tituloLibro", source = "libro.obra.titulo")
@@ -41,5 +51,4 @@ public interface EjemplarLibroMapper {
         }
         return sb.toString();
     }
-
 }

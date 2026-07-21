@@ -1,8 +1,7 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.FormatoRequest;
-import com.arrupeteca.dto.response.detail.FormatoDetalleResponse;
-import com.arrupeteca.dto.response.summary.FormatoResumen;
+import com.arrupeteca.dto.response.FormatoResponse;
 import com.arrupeteca.service.FormatoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -34,7 +33,7 @@ class FormatoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/formatos - Should return active formats")
     void shouldReturnActive() throws Exception {
-        Page<FormatoResumen> page = new PageImpl<>(List.of());
+        Page<FormatoResponse> page = new PageImpl<>(List.of());
         when(formatoService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/formatos"))
@@ -45,23 +44,22 @@ class FormatoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/formatos/{id} - Should return format by ID")
     void shouldReturnById() throws Exception {
-        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Format Test", false, "admin", null, "admin", null);
-        when(formatoService.obtenerPorIdActivo(1L)).thenReturn(detail);
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
+        when(formatoService.obtenerPorIdActivo(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/formatos/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.data.nombre").value("Format Test"));
+                .andExpect(jsonPath("$.data.nombre").value("Test"));
     }
 
     @Test
     @DisplayName("POST /api/v1/formatos - Should create format")
     void shouldCreate() throws Exception {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Nuevo");
+        FormatoRequest request = FormatoRequest.builder().nombre("Nuevo").build();
+        FormatoResponse response = new FormatoResponse(1L, "Nuevo", false);
 
-        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Nuevo", false, "admin", null, "admin", null);
-        when(formatoService.crear(any())).thenReturn(detail);
+        when(formatoService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/formatos")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -73,11 +71,10 @@ class FormatoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/formatos/{id} - Should update format")
     void shouldUpdate() throws Exception {
-        FormatoRequest request = new FormatoRequest();
-        request.setNombre("Actualizado");
+        FormatoRequest request = FormatoRequest.builder().nombre("Actualizado").build();
+        FormatoResponse response = new FormatoResponse(1L, "Actualizado", false);
 
-        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Actualizado", false, "admin", null, "admin", null);
-        when(formatoService.actualizar(any(Long.class), any(FormatoRequest.class))).thenReturn(detail);
+        when(formatoService.actualizar(any(Long.class), any(FormatoRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/formatos/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -89,7 +86,7 @@ class FormatoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/formatos/admin - Should return all formats for admin")
     void shouldReturnAllAdmin() throws Exception {
-        Page<FormatoResumen> page = new PageImpl<>(List.of());
+        Page<FormatoResponse> page = new PageImpl<>(List.of());
         when(formatoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/formatos/admin"))
@@ -101,8 +98,8 @@ class FormatoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/formatos/admin/{id} - Should return format by ID for admin")
     void shouldReturnByIdAdmin() throws Exception {
-        FormatoDetalleResponse detail = new FormatoDetalleResponse(1L, "Format Test", false, "admin", null, "admin", null);
-        when(formatoService.obtenerPorId(1L)).thenReturn(detail);
+        FormatoResponse response = new FormatoResponse(1L, "Test", false);
+        when(formatoService.obtenerPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/formatos/admin/1"))
                 .andExpect(status().isOk())

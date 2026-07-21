@@ -1,7 +1,7 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.PaisRequest;
-import com.arrupeteca.dto.response.summary.PaisResumen;
+import com.arrupeteca.dto.response.PaisResponse;
 import com.arrupeteca.service.PaisService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,7 +33,7 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/paises - Should return active countries")
     void shouldReturnActive() throws Exception {
-        Page<PaisResumen> page = new PageImpl<>(List.of());
+        Page<PaisResponse> page = new PageImpl<>(List.of());
         when(paisService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/paises"))
@@ -44,8 +44,8 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/paises/{id} - Should return country by ID")
     void shouldReturnById() throws Exception {
-        PaisResumen resumen = new PaisResumen(1L, "Test", false);
-        when(paisService.obtenerPorIdActivo(1L)).thenReturn(resumen);
+        PaisResponse response = new PaisResponse(1L, "Test", false);
+        when(paisService.obtenerPorIdActivo(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/paises/1"))
                 .andExpect(status().isOk())
@@ -56,11 +56,10 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("POST /api/v1/paises - Should create country")
     void shouldCreate() throws Exception {
-        PaisRequest request = new PaisRequest();
-        request.setNombre("Nuevo");
+        PaisRequest request = PaisRequest.builder().nombre("Nuevo").build();
+        PaisResponse response = new PaisResponse(1L, "Nuevo", false);
 
-        PaisResumen resumen = new PaisResumen(1L, "Nuevo", false);
-        when(paisService.crear(any())).thenReturn(resumen);
+        when(paisService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/paises")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -72,11 +71,10 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PUT /api/v1/paises/{id} - Should update country")
     void shouldUpdate() throws Exception {
-        PaisRequest request = new PaisRequest();
-        request.setNombre("Actualizado");
+        PaisRequest request = PaisRequest.builder().nombre("Actualizado").build();
+        PaisResponse response = new PaisResponse(1L, "Actualizado", false);
 
-        PaisResumen resumen = new PaisResumen(1L, "Actualizado", false);
-        when(paisService.actualizar(any(Long.class), any(PaisRequest.class))).thenReturn(resumen);
+        when(paisService.actualizar(any(Long.class), any(PaisRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/paises/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +86,7 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/paises/admin - Should return all countries for admin")
     void shouldReturnAllAdmin() throws Exception {
-        Page<PaisResumen> page = new PageImpl<>(List.of());
+        Page<PaisResponse> page = new PageImpl<>(List.of());
         when(paisService.obtenerTodos(any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/paises/admin"))
@@ -100,8 +98,8 @@ class PaisControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/paises/admin/{id} - Should return country by ID for admin")
     void shouldReturnByIdAdmin() throws Exception {
-        PaisResumen resumen = new PaisResumen(1L, "Test", false);
-        when(paisService.obtenerPorId(1L)).thenReturn(resumen);
+        PaisResponse response = new PaisResponse(1L, "Test", false);
+        when(paisService.obtenerPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/paises/admin/1"))
                 .andExpect(status().isOk())
