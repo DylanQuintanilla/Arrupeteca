@@ -12,14 +12,14 @@ public interface EjemplarLibroService {
 
     EjemplarLibroDetalleResponse obtenerPorIdActivo(Long id);
 
-    Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Pageable pageable);
+    Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable);
 
     Page<EjemplarLibroResumen> obtenerTodos(Pageable pageable);
 
     EjemplarLibroDetalleResponse obtenerPorId(Long id);
 
     Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idMueble, Object estadoFisico,
+            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Object estadoFisico,
             Object disponibilidad, String termino, Pageable pageable);
 
     EjemplarLibroDetalleResponse crear(EjemplarLibroRequest request);

@@ -211,10 +211,11 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update author")
     void shouldUpdateAuthor() {
-        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Nuevo Nombre")).build();
+        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Nuevo Nombre")).version(0L).build();
 
         Autor existing = Autor.builder().build();
         existing.setId(1L);
+        existing.setVersion(0L);
         existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(autorRepository.existsByNombreIgnoreCase("Nuevo Nombre")).thenReturn(false);
@@ -276,10 +277,11 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should update author with same name")
     void shouldUpdateAuthorSameName() {
-        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Mismo")).build();
+        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Mismo")).version(0L).build();
 
         Autor existing = Autor.builder().build();
         existing.setId(1L);
+        existing.setVersion(0L);
         existing.setNombre("Mismo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
         
@@ -298,10 +300,11 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw when updating author with name that already exists")
     void shouldThrowWhenUpdateNameExists() {
-        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Existente")).build();
+        AutorRequest request = AutorRequest.builder().nombre(JsonNullable.of("Existente")).version(0L).build();
 
         Autor existing = Autor.builder().build();
         existing.setId(1L);
+        existing.setVersion(0L);
         existing.setNombre("Viejo");
         when(autorRepository.findById(1L)).thenReturn(Optional.of(existing));
         when(autorRepository.existsByNombreIgnoreCase("Existente")).thenReturn(true);
@@ -386,6 +389,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingWithEmptyName() {
         AutorRequest request = AutorRequest.builder()
                 .nombre(JsonNullable.of(""))
+                .version(1L)
                 .build();
 
         Autor existing = Autor.builder().build();
@@ -403,6 +407,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingWithEmptyPseudonym() {
         AutorRequest request = AutorRequest.builder()
                 .seudonimo(JsonNullable.of(""))
+                .version(1L)
                 .build();
 
         Autor existing = Autor.builder().build();
@@ -420,6 +425,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingWithEmptyBiography() {
         AutorRequest request = AutorRequest.builder()
                 .biografia(JsonNullable.of(""))
+                .version(1L)
                 .build();
 
         Autor existing = Autor.builder().build();
@@ -435,7 +441,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when update results in both empty name and pseudonym")
     void shouldThrowWhenUpdatingResultsInEmptyIdentity() {
-        AutorRequest request = AutorRequest.builder().build(); // No fields sent
+        AutorRequest request = AutorRequest.builder().version(1L).build(); // No fields sent
 
         Autor existing = Autor.builder().build();
         existing.setId(1L);
@@ -454,6 +460,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     void shouldThrowWhenUpdatingWithBirthYearAfterDeathYear() {
         AutorRequest request = AutorRequest.builder()
                 .anioNacimiento(JsonNullable.of(Year.of(2010)))
+                .version(1L)
                 .build();
 
         Autor existing = Autor.builder()

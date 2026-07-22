@@ -52,9 +52,9 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     }
 
     @Override
-    public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        log.debug("Búsqueda global de ejemplares por '{}' paginados: {}", palabra, pageable);
-        return ejemplarLibroRepository.busquedaGlobal(palabra, pageable)
+    public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
+        log.debug("Búsqueda global de ejemplares por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
+        return ejemplarLibroRepository.busquedaGlobal(palabra, idGenero, idCategoria, pageable)
                 .map(ejemplarLibroMapper::toResumen);
     }
 
@@ -75,7 +75,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     @Override
     public Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idMueble, Object estadoFisicoStr,
+            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Object estadoFisicoStr,
             Object disponibilidadStr, String termino, Pageable pageable) {
 
         log.debug("Búsqueda maestra de ejemplares para admin");
@@ -85,7 +85,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         Disponibilidad disponibilidad = (disponibilidadStr instanceof String s && !s.isEmpty())
                 ? Disponibilidad.valueOf(s) : (disponibilidadStr instanceof Disponibilidad d ? d : null);
 
-        return ejemplarLibroRepository.busquedaMaestraAdmin(esBorrado, idLibro, idMueble, estadoFisico,
+        return ejemplarLibroRepository.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, estadoFisico,
                         disponibilidad, termino, pageable)
                 .map(ejemplarLibroMapper::toResumen);
     }
@@ -158,7 +158,8 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     private void validarActualizacion(EjemplarLibroRequest request, EjemplarLibro existente) {
         // Bloqueo optimista
-        if (request.version() != null && !request.version().equals(existente.getVersion())) {
+        Long vExistente = existente.getVersion() != null ? existente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
             throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 

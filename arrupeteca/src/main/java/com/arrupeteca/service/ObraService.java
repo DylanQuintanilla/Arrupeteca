@@ -19,7 +19,7 @@ public interface ObraService {
     ObraDetalleResponse obtenerPorId(Long id);
 
     Page<ObraResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin,
+            Boolean esBorrado, Long idGenero, Long idCategoria, String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable);
 
     ObraDetalleResponse crear(ObraRequest request);

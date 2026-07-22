@@ -47,8 +47,10 @@ class LibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/libros/{id} - Should return book by ID")
     void shouldReturnById() throws Exception {
-        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "1234567890", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
-                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        LibroDetalleResponse detail = LibroDetalleResponse.builder()
+                .id(1L).isbn("1234567890").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .idiomas(Collections.emptySet()).build();
         when(libroService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/libros/1"))
@@ -69,8 +71,10 @@ class LibroControllerTest extends BaseControllerTest {
                 .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
                 .build();
 
-        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
-                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        LibroDetalleResponse detail = LibroDetalleResponse.builder()
+                .id(1L).isbn("9780596520687").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .idiomas(Collections.emptySet()).build();
         when(libroService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/libros")
@@ -90,10 +94,13 @@ class LibroControllerTest extends BaseControllerTest {
                 .idFormato(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idEditorial(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .version(0L)
                 .build();
 
-        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "9780596520687", 2021, BigDecimal.TEN, "url", BigDecimal.ONE,
-                false, "Grado", "Ciclo", "admin", null, "admin", null, null, null, null, Collections.emptySet());
+        LibroDetalleResponse detail = LibroDetalleResponse.builder()
+                .id(1L).isbn("9780596520687").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .idiomas(Collections.emptySet()).build();
         when(libroService.actualizar(any(Long.class), any(LibroRequest.class))).thenReturn(detail);
 
         mockMvc.perform(patch("/api/v1/libros/1")
@@ -107,7 +114,7 @@ class LibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/libros/global - Should perform global search")
     void shouldPerformGlobalSearch() throws Exception {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaGlobal(any(), any())).thenReturn(page);
+        when(libroService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros/global").param("palabra", "test"))
                 .andExpect(status().isOk())
@@ -128,8 +135,10 @@ class LibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/libros/admin/{id} - Should return book by ID for admin")
     void shouldReturnByIdForAdmin() throws Exception {
-        LibroDetalleResponse detail = new LibroDetalleResponse(1L, "123", 2021, BigDecimal.TEN, "U", BigDecimal.ONE,
-                false, "G", "C", "A", null, "A", null, null, null, null, Collections.emptySet());
+        LibroDetalleResponse detail = LibroDetalleResponse.builder()
+                .id(1L).isbn("123").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(false).grado("G").ciclo("C").creadoPor("A").modificadoPor("A")
+                .idiomas(Collections.emptySet()).build();
         when(libroService.obtenerPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/libros/admin/1"))
@@ -141,7 +150,7 @@ class LibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/libros/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(libroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros/admin/busqueda-maestra"))
                 .andExpect(status().isOk())

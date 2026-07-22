@@ -105,10 +105,10 @@ class LibroServiceImplTest extends BaseServiceTest {
         Libro entity = Libro.builder().id(1L).build();
         Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(libroRepository.busquedaGlobal("palabra", Pageable.unpaged())).thenReturn(page);
+        when(libroRepository.busquedaGlobal("palabra", null, null, Pageable.unpaged())).thenReturn(page);
         when(libroMapper.toResumen(entity)).thenReturn(resumen);
 
-        Page<LibroResumen> result = libroService.busquedaGlobal("palabra", Pageable.unpaged());
+        Page<LibroResumen> result = libroService.busquedaGlobal("palabra", null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(resumen);
     }
@@ -223,8 +223,9 @@ class LibroServiceImplTest extends BaseServiceTest {
                 .idFormato(JsonNullable.of(1L))
                 .idEditorial(JsonNullable.of(1L))
                 .idIdiomas(JsonNullable.of(Set.of(1L)))
+                .version(0L)
                 .build();
-        Libro existing = Libro.builder().id(1L).isbn("123").build();
+        Libro existing = Libro.builder().id(1L).isbn("123").version(0L).build();
         Libro saved = Libro.builder().id(1L).isbn("456").build();
         LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
 
@@ -254,8 +255,9 @@ class LibroServiceImplTest extends BaseServiceTest {
                 .idFormato(JsonNullable.of(1L))
                 .idEditorial(JsonNullable.of(1L))
                 .idIdiomas(JsonNullable.of(Set.of(1L)))
+                .version(0L)
                 .build();
-        Libro existing = Libro.builder().id(1L).isbn("123").build();
+        Libro existing = Libro.builder().id(1L).isbn("123").version(0L).build();
         LibroDetalleResponse detail = mock(LibroDetalleResponse.class);
 
         when(libroRepository.findById(1L)).thenReturn(Optional.of(existing));

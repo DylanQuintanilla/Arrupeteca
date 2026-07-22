@@ -62,9 +62,9 @@ public class LibroServiceImpl implements LibroService {
     }
 
     @Override
-    public Page<LibroResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        log.debug("Búsqueda global de libros por '{}' paginados: {}", palabra, pageable);
-        return libroRepository.busquedaGlobal(palabra, pageable)
+    public Page<LibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
+        log.debug("Búsqueda global de libros por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
+        return libroRepository.busquedaGlobal(palabra, idGenero, idCategoria, pageable)
                 .map(libroMapper::toResumen);
     }
 
@@ -85,7 +85,7 @@ public class LibroServiceImpl implements LibroService {
 
     @Override
     public Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idEditorial, Long idFormato,
+            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEditorial, Long idFormato,
             Object gradoStr, Object cicloStr, String termino,
             Integer anioInicio, Integer anioFin, Pageable pageable) {
 
@@ -96,7 +96,7 @@ public class LibroServiceImpl implements LibroService {
         Ciclo ciclo = (cicloStr instanceof String s && !s.isEmpty())
                 ? Ciclo.valueOf(s) : (cicloStr instanceof Ciclo c ? c : null);
 
-        return libroRepository.busquedaMaestraAdmin(esBorrado, idObra, idEditorial, idFormato,
+        return libroRepository.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
                         grado, ciclo, termino, anioInicio, anioFin, pageable)
                 .map(libroMapper::toResumen);
     }
@@ -185,7 +185,8 @@ public class LibroServiceImpl implements LibroService {
 
     private void validarActualizacion(LibroRequest request, Libro existente) {
         // Bloqueo optimista
-        if (request.version() != null && !request.version().equals(existente.getVersion())) {
+        Long vExistente = existente.getVersion() != null ? existente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
             throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 

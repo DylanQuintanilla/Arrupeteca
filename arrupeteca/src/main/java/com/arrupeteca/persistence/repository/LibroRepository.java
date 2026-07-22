@@ -21,8 +21,12 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
 
     @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     @Query(value = """
-        SELECT l FROM Libro l
+        SELECT DISTINCT l FROM Libro l
+        LEFT JOIN l.obra.generos g
+        LEFT JOIN l.obra.categorias c
         WHERE l.borradoLogico = false
+        AND (:idGenero IS NULL OR g.id = :idGenero)
+        AND (:idCategoria IS NULL OR c.id = :idCategoria)
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
@@ -34,8 +38,12 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
         )
     """,
             countQuery = """
-        SELECT COUNT(l) FROM Libro l
+        SELECT COUNT(DISTINCT l) FROM Libro l
+        LEFT JOIN l.obra.generos g
+        LEFT JOIN l.obra.categorias c
         WHERE l.borradoLogico = false
+        AND (:idGenero IS NULL OR g.id = :idGenero)
+        AND (:idCategoria IS NULL OR c.id = :idCategoria)
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
@@ -46,7 +54,12 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
             )
         )
     """)
-    Page<Libro> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
+    Page<Libro> busquedaGlobal(
+            @Param("palabra") String palabra,
+            @Param("idGenero") Long idGenero,
+            @Param("idCategoria") Long idCategoria,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Page<Libro> findAll(Pageable pageable);
@@ -56,10 +69,14 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
 
     @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     @Query(value = """
-        SELECT l FROM Libro l
+        SELECT DISTINCT l FROM Libro l
+        LEFT JOIN l.obra.generos g
+        LEFT JOIN l.obra.categorias c
         WHERE
             ( :esBorrado IS NULL OR l.borradoLogico = :esBorrado )
             AND ( :idObra IS NULL OR l.obra.id = :idObra )
+            AND ( :idGenero IS NULL OR g.id = :idGenero )
+            AND ( :idCategoria IS NULL OR c.id = :idCategoria )
             AND ( :idEditorial IS NULL OR l.editorial.id = :idEditorial )
             AND ( :idFormato IS NULL OR l.formato.id = :idFormato )
             AND ( :grado IS NULL OR l.grado = :grado )
@@ -75,10 +92,14 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
             AND ( :anioFin IS NULL OR l.anioPublicacion <= :anioFin )
     """,
             countQuery = """
-        SELECT COUNT(l) FROM Libro l
+        SELECT COUNT(DISTINCT l) FROM Libro l
+        LEFT JOIN l.obra.generos g
+        LEFT JOIN l.obra.categorias c
         WHERE
             ( :esBorrado IS NULL OR l.borradoLogico = :esBorrado )
             AND ( :idObra IS NULL OR l.obra.id = :idObra )
+            AND ( :idGenero IS NULL OR g.id = :idGenero )
+            AND ( :idCategoria IS NULL OR c.id = :idCategoria )
             AND ( :idEditorial IS NULL OR l.editorial.id = :idEditorial )
             AND ( :idFormato IS NULL OR l.formato.id = :idFormato )
             AND ( :grado IS NULL OR l.grado = :grado )
@@ -96,6 +117,8 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     Page<Libro> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("idObra") Long idObra,
+            @Param("idGenero") Long idGenero,
+            @Param("idCategoria") Long idCategoria,
             @Param("idEditorial") Long idEditorial,
             @Param("idFormato") Long idFormato,
             @Param("grado") Object grado,

@@ -46,8 +46,10 @@ class ObraControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/obras/{id} - Should return work by ID")
     void shouldReturnById() throws Exception {
-        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Obra Test", 2021, "Resumen", false,
-                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse detail = ObraDetalleResponse.builder()
+                .id(1L).titulo("Obra Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
+                .creadoPor("admin").modificadoPor("admin")
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/obras/1"))
@@ -81,8 +83,10 @@ class ObraControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/obras/admin/{id} - Should return work by ID for admin")
     void shouldReturnByIdForAdmin() throws Exception {
-        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Test", 2021, "Resumen", false,
-                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse detail = ObraDetalleResponse.builder()
+                .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
+                .creadoPor("admin").modificadoPor("admin")
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.obtenerPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/obras/admin/1"))
@@ -94,7 +98,7 @@ class ObraControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/obras/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.busquedaMaestraAdmin(any(), any(), any(), any(), any())).thenReturn(page);
+        when(obraService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/obras/admin/busqueda-maestra"))
                 .andExpect(status().isOk())
@@ -112,8 +116,10 @@ class ObraControllerTest extends BaseControllerTest {
                 .autores(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L))))
                 .build();
 
-        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Nueva", 2021, "Resumen", false,
-                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse detail = ObraDetalleResponse.builder()
+                .id(1L).titulo("Nueva").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
+                .creadoPor("admin").modificadoPor("admin")
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/obras")
@@ -132,10 +138,13 @@ class ObraControllerTest extends BaseControllerTest {
                 .idGeneros(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
                 .idCategorias(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
                 .autores(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(new com.arrupeteca.dto.request.ObraAutorRequest(1L, 1L))))
+                .version(0L)
                 .build();
 
-        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Actualizada", 2021, "Nuevo resumen", false,
-                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse detail = ObraDetalleResponse.builder()
+                .id(1L).titulo("Actualizada").anioCreacion(2021).resumen("Nuevo resumen").version(0L).borradoLogico(false)
+                .creadoPor("admin").modificadoPor("admin")
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.actualizar(any(Long.class), any(ObraRequest.class))).thenReturn(detail);
 
         mockMvc.perform(patch("/api/v1/obras/1")

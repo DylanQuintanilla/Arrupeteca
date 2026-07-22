@@ -107,13 +107,18 @@ class RecordSerializationTest {
                 .actualizadoPor("U")
                 .fechaActualizacion(now)
                 .build();
-        EjemplarLibroDetalleResponse ejem = new EjemplarLibroDetalleResponse(1L, "C", true, "U", "U", "U", now, "U", now,
-                null, null, "S");
-        LibroDetalleResponse libro = new LibroDetalleResponse(1L, "I", 2021, BigDecimal.TEN, "U", BigDecimal.ONE, true,
-                "G", "C", "U", now, "U", now, null, null, null, Collections.emptySet());
+        EjemplarLibroDetalleResponse ejem = EjemplarLibroDetalleResponse.builder()
+                .id(1L).comentario("C").version(0L).borradoLogico(true).estadoFisico("U").disponibilidad("U")
+                .creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now).ubicacion("S").build();
+        LibroDetalleResponse libro = LibroDetalleResponse.builder()
+                .id(1L).isbn("I").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(true).grado("G").ciclo("C").creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now)
+                .idiomas(Collections.emptySet()).build();
         ObraAutorDetalleResponse obraAut = new ObraAutorDetalleResponse(1L, null, null);
-        ObraDetalleResponse obra = new ObraDetalleResponse(1L, "T", 2020, "D", true, "U", now, "U", now,
-                Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse obra = ObraDetalleResponse.builder()
+                .id(1L).titulo("T").anioCreacion(2020).resumen("D").version(0L).borradoLogico(true)
+                .creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now)
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
         verifySerialization(autor);
         verifySerialization(ejem);
         verifySerialization(libro);

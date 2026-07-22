@@ -21,8 +21,12 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
-        SELECT e FROM EjemplarLibro e
+        SELECT DISTINCT e FROM EjemplarLibro e
+        LEFT JOIN e.libro.obra.generos g
+        LEFT JOIN e.libro.obra.categorias c
         WHERE e.borradoLogico = false
+        AND (:idGenero IS NULL OR g.id = :idGenero)
+        AND (:idCategoria IS NULL OR c.id = :idCategoria)
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
@@ -33,8 +37,12 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
         )
     """,
             countQuery = """
-        SELECT COUNT(e) FROM EjemplarLibro e
+        SELECT COUNT(DISTINCT e) FROM EjemplarLibro e
+        LEFT JOIN e.libro.obra.generos g
+        LEFT JOIN e.libro.obra.categorias c
         WHERE e.borradoLogico = false
+        AND (:idGenero IS NULL OR g.id = :idGenero)
+        AND (:idCategoria IS NULL OR c.id = :idCategoria)
         AND (
             :palabra IS NULL OR :palabra = '' OR
             (
@@ -44,7 +52,12 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
             )
         )
     """)
-    Page<EjemplarLibro> busquedaGlobal(@Param("palabra") String palabra, Pageable pageable);
+    Page<EjemplarLibro> busquedaGlobal(
+            @Param("palabra") String palabra,
+            @Param("idGenero") Long idGenero,
+            @Param("idCategoria") Long idCategoria,
+            Pageable pageable
+    );
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Page<EjemplarLibro> findAll(Pageable pageable);
@@ -54,10 +67,14 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     @Query(value = """
-        SELECT e FROM EjemplarLibro e
+        SELECT DISTINCT e FROM EjemplarLibro e
+        LEFT JOIN e.libro.obra.generos g
+        LEFT JOIN e.libro.obra.categorias c
         WHERE
             ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
             AND ( :idLibro IS NULL OR e.libro.id = :idLibro )
+            AND ( :idGenero IS NULL OR g.id = :idGenero )
+            AND ( :idCategoria IS NULL OR c.id = :idCategoria )
             AND ( :idMueble IS NULL OR e.mueble.id = :idMueble )
             AND ( :estadoFisico IS NULL OR e.estadoFisico = :estadoFisico )
             AND ( :disponibilidad IS NULL OR e.disponibilidad = :disponibilidad )
@@ -70,10 +87,14 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
             )
     """,
             countQuery = """
-        SELECT COUNT(e) FROM EjemplarLibro e
+        SELECT COUNT(DISTINCT e) FROM EjemplarLibro e
+        LEFT JOIN e.libro.obra.generos g
+        LEFT JOIN e.libro.obra.categorias c
         WHERE
             ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
             AND ( :idLibro IS NULL OR e.libro.id = :idLibro )
+            AND ( :idGenero IS NULL OR g.id = :idGenero )
+            AND ( :idCategoria IS NULL OR c.id = :idCategoria )
             AND ( :idMueble IS NULL OR e.mueble.id = :idMueble )
             AND ( :estadoFisico IS NULL OR e.estadoFisico = :estadoFisico )
             AND ( :disponibilidad IS NULL OR e.disponibilidad = :disponibilidad )
@@ -88,6 +109,8 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
     Page<EjemplarLibro> busquedaMaestraAdmin(
             @Param("esBorrado") Boolean esBorrado,
             @Param("idLibro") Long idLibro,
+            @Param("idGenero") Long idGenero,
+            @Param("idCategoria") Long idCategoria,
             @Param("idMueble") Long idMueble,
             @Param("estadoFisico") Object estadoFisico,
             @Param("disponibilidad") Object disponibilidad,

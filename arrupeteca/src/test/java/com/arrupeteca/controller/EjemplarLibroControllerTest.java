@@ -45,8 +45,9 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/ejemplares/{id} - Should return ejemplar by ID")
     void shouldReturnById() throws Exception {
-        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Comentario", false, "BUENO", "DISPONIBLE",
-                "admin", null, "admin", null, null, null, "Estante 1 - Salon A - Planta 1");
+        EjemplarLibroDetalleResponse detail = EjemplarLibroDetalleResponse.builder()
+                .id(1L).comentario("Comentario").version(0L).borradoLogico(false).estadoFisico("BUENO").disponibilidad("DISPONIBLE")
+                .creadoPor("admin").modificadoPor("admin").ubicacion("Estante 1 - Salon A - Planta 1").build();
         when(ejemplarLibroService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/ejemplares/1"))
@@ -66,8 +67,9 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
                 .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.Disponibilidad.DISPONIBLE))
                 .build();
 
-        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Nuevo", false, "BUENO", "DISPONIBLE",
-                "admin", null, "admin", null, null, null, "Estante 1");
+        EjemplarLibroDetalleResponse detail = EjemplarLibroDetalleResponse.builder()
+                .id(1L).comentario("Nuevo").version(0L).borradoLogico(false).estadoFisico("BUENO").disponibilidad("DISPONIBLE")
+                .creadoPor("admin").modificadoPor("admin").ubicacion("Estante 1").build();
         when(ejemplarLibroService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/ejemplares")
@@ -87,10 +89,12 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
                 .idMueble(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .estadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.EstadoFisico.BUEN_ESTADO))
                 .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(com.arrupeteca.persistence.enums.Disponibilidad.DISPONIBLE))
+                .version(0L)
                 .build();
 
-        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Actualizado", false, "BUENO", "DISPONIBLE",
-                "admin", null, "admin", null, null, null, "Estante 1");
+        EjemplarLibroDetalleResponse detail = EjemplarLibroDetalleResponse.builder()
+                .id(1L).comentario("Actualizado").version(0L).borradoLogico(false).estadoFisico("BUENO").disponibilidad("DISPONIBLE")
+                .creadoPor("admin").modificadoPor("admin").ubicacion("Estante 1").build();
         when(ejemplarLibroService.actualizar(any(Long.class), any(EjemplarLibroRequest.class))).thenReturn(detail);
 
         mockMvc.perform(patch("/api/v1/ejemplares/1")
@@ -105,7 +109,7 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/ejemplares/global - Should perform global search")
     void shouldPerformGlobalSearch() throws Exception {
         Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
-        when(ejemplarLibroService.busquedaGlobal(any(), any())).thenReturn(page);
+        when(ejemplarLibroService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/ejemplares/global").param("palabra", "test"))
                 .andExpect(status().isOk())
@@ -126,8 +130,9 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/ejemplares/admin/{id} - Should return by ID for admin")
     void shouldReturnByIdAdmin() throws Exception {
-        EjemplarLibroDetalleResponse detail = new EjemplarLibroDetalleResponse(1L, "Test", false, "BUENO", "DISPONIBLE",
-                "admin", null, "admin", null, null, null, "Ubicacion");
+        EjemplarLibroDetalleResponse detail = EjemplarLibroDetalleResponse.builder()
+                .id(1L).comentario("Test").version(0L).borradoLogico(false).estadoFisico("BUENO").disponibilidad("DISPONIBLE")
+                .creadoPor("admin").modificadoPor("admin").ubicacion("Ubicacion").build();
         when(ejemplarLibroService.obtenerPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/ejemplares/admin/1"))
@@ -139,7 +144,7 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/ejemplares/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
-        when(ejemplarLibroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(ejemplarLibroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/ejemplares/admin/busqueda-maestra"))
                 .andExpect(status().isOk())

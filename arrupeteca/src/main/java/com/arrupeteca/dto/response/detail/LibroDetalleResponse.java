@@ -7,7 +7,11 @@ import com.arrupeteca.dto.response.summary.ObraResumen;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Set;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
+@Builder
+@Jacksonized
 public record LibroDetalleResponse(
     Long id,
     String isbn,
@@ -15,6 +19,7 @@ public record LibroDetalleResponse(
     BigDecimal precio,
     String urlImagen,
     BigDecimal mora,
+    Long version,
     boolean borradoLogico,
     String grado,
     String ciclo,

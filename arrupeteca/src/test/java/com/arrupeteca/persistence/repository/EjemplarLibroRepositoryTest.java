@@ -71,7 +71,7 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should perform global search")
     void shouldSearchGlobal() {
         ejemplarLibroRepository.save(createValidEjemplar("Especial"));
-        Page<EjemplarLibro> page = ejemplarLibroRepository.busquedaGlobal("Especial", PageRequest.of(0, 10));
+        Page<EjemplarLibro> page = ejemplarLibroRepository.busquedaGlobal("Especial", null, null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

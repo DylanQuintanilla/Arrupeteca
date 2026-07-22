@@ -85,10 +85,10 @@ public class ObraServiceImpl implements ObraService {
 
     @Override
     public Page<ObraResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin,
+            Boolean esBorrado, Long idGenero, Long idCategoria, String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable) {
-        log.debug("Búsqueda maestra de obras: {}, '{}', {} - {}", esBorrado, termino, anioInicio, anioFin);
-        return obraRepository.busquedaMaestraAdmin(esBorrado, termino, anioInicio, anioFin, pageable)
+        log.debug("Búsqueda maestra de obras: {}, género: {}, categoría: {}, '{}', {} - {}", esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin);
+        return obraRepository.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin, pageable)
                 .map(obraMapper::toResumen);
     }
 
@@ -167,7 +167,8 @@ public class ObraServiceImpl implements ObraService {
 
     private void validarActualizacion(ObraRequest request, Obra existente) {
         // Bloqueo optimista
-        if (request.version() != null && !request.version().equals(existente.getVersion())) {
+        Long vExistente = existente.getVersion() != null ? existente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
             throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 

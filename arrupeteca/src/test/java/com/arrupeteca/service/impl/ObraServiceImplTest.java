@@ -80,8 +80,10 @@ class ObraServiceImplTest extends BaseServiceTest {
     @DisplayName("obtenerPorIdActivo - Should return DetalleResponse")
     void obtenerPorIdActivo() {
         Obra entity = Obra.builder().id(1L).titulo("Test").build();
-        ObraDetalleResponse detail = new ObraDetalleResponse(1L, "Test", 2021, "Resumen", false,
-                "admin", null, "admin", null, Collections.emptySet(), Collections.emptySet(), Collections.emptySet());
+        ObraDetalleResponse detail = ObraDetalleResponse.builder()
+                .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
+                .creadoPor("admin").modificadoPor("admin")
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
 
         when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
@@ -155,8 +157,9 @@ class ObraServiceImplTest extends BaseServiceTest {
                 .idGeneros(JsonNullable.of(Set.of(1L)))
                 .idCategorias(JsonNullable.of(Set.of(1L)))
                 .autores(JsonNullable.of(Set.of(new ObraAutorRequest(1L, 1L))))
+                .version(0L)
                 .build();
-        Obra existing = Obra.builder().id(1L).titulo("Viejo").build();
+        Obra existing = Obra.builder().id(1L).titulo("Viejo").version(0L).build();
         Obra saved = Obra.builder().id(1L).titulo("Nuevo").build();
         ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 

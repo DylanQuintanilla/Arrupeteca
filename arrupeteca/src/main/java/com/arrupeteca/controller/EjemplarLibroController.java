@@ -58,12 +58,14 @@ public class EjemplarLibroController {
     @GetMapping("/global")
     @Operation(
         summary = "Búsqueda global de ejemplares",
-        description = "Busca ejemplares por coincidencias en el ISBN del libro, el título de la obra o el comentario del ejemplar."
+        description = "Busca ejemplares por coincidencias en el ISBN del libro, el título de la obra o el comentario del ejemplar, filtrando opcionalmente por género y categoría."
     )
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaGlobal(
-            @RequestParam String palabra,
+            @RequestParam(required = false) String palabra,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idCategoria,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", ejemplarLibroService.busquedaGlobal(palabra, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", ejemplarLibroService.busquedaGlobal(palabra, idGenero, idCategoria, pageable)));
     }
 
     @GetMapping("/admin")
@@ -88,18 +90,20 @@ public class EjemplarLibroController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada multi-filtro (Admin)",
-        description = "Búsqueda avanzada de ejemplares usando filtros por estado, libro, mueble, estado físico y disponibilidad (solo admin)."
+        description = "Búsqueda avanzada de ejemplares usando filtros por estado, libro, género, categoría, mueble, estado físico y disponibilidad (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idLibro,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idCategoria,
             @RequestParam(required = false) Long idMueble,
             @RequestParam(required = false) Object estadoFisico,
             @RequestParam(required = false) Object disponibilidad,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                ejemplarLibroService.busquedaMaestraAdmin(esBorrado, idLibro, idMueble,
+                ejemplarLibroService.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble,
                         estadoFisico, disponibilidad, termino, pageable)));
     }
 

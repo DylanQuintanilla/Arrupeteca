@@ -156,7 +156,8 @@ public class AutorServiceImpl implements AutorService {
 
     private void validarDatosActualizacion(AutorRequest request, Autor autorExistente) {
         // Validación manual de Bloqueo Optimista
-        if (request.version() != null && !request.version().equals(autorExistente.getVersion())) {
+        Long vExistente = autorExistente.getVersion() != null ? autorExistente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
             throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 

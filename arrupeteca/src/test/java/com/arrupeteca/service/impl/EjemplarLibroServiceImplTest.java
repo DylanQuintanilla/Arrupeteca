@@ -84,10 +84,10 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
         Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        when(repository.busquedaGlobal(eq("term"), any(Pageable.class))).thenReturn(page);
+        when(repository.busquedaGlobal(eq("term"), eq(1L), eq(1L), any(Pageable.class))).thenReturn(page);
         when(mapper.toResumen(any())).thenReturn(summary);
 
-        Page<EjemplarLibroResumen> result = service.busquedaGlobal("term", Pageable.unpaged());
+        Page<EjemplarLibroResumen> result = service.busquedaGlobal("term", 1L, 1L, Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(summary);
     }
@@ -127,22 +127,22 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
         
-        when(repository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), 
+        when(repository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), eq(1L), 
                 eq(EstadoFisico.BUEN_ESTADO), eq(Disponibilidad.DISPONIBLE), eq("term"), any(Pageable.class)))
                 .thenReturn(page);
         when(mapper.toResumen(any())).thenReturn(summary);
 
         // String param types
-        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, "BUEN_ESTADO", "DISPONIBLE", "term", Pageable.unpaged());
+        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "BUEN_ESTADO", "DISPONIBLE", "term", Pageable.unpaged());
         assertThat(result.getContent()).containsExactly(summary);
 
         // Enum param types
-        service.busquedaMaestraAdmin(false, 1L, 1L, EstadoFisico.BUEN_ESTADO, Disponibilidad.DISPONIBLE, "term", Pageable.unpaged());
+        service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, EstadoFisico.BUEN_ESTADO, Disponibilidad.DISPONIBLE, "term", Pageable.unpaged());
 
         // Invalid String for valueOf
-        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, "INVALID", "DISPONIBLE", "term", Pageable.unpaged()))
+        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "INVALID", "DISPONIBLE", "term", Pageable.unpaged()))
                 .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, "BUEN_ESTADO", "INVALID", "term", Pageable.unpaged()))
+        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "BUEN_ESTADO", "INVALID", "term", Pageable.unpaged()))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -173,12 +173,13 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("actualizar - Success and NotFound")
     void shouldUpdate() {
-        EjemplarLibro existing = EjemplarLibro.builder().id(1L).build();
+        EjemplarLibro existing = EjemplarLibro.builder().id(1L).version(0L).build();
         EjemplarLibroRequest request = EjemplarLibroRequest.builder()
                 .idLibro(JsonNullable.of(1L))
                 .idMueble(JsonNullable.of(2L))
                 .estadoFisico(JsonNullable.of(EstadoFisico.BUEN_ESTADO))
                 .disponibilidad(JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .version(0L)
                 .build();
 
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
@@ -209,12 +210,13 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("asignarRelaciones - Exception branches")
     void shouldThrowWhenRelationNotFound() {
-        EjemplarLibro existing = EjemplarLibro.builder().id(1L).build();
+        EjemplarLibro existing = EjemplarLibro.builder().id(1L).version(0L).build();
         when(repository.findById(1L)).thenReturn(Optional.of(existing));
         when(libroRepository.findById(2L)).thenReturn(Optional.empty());
 
         EjemplarLibroRequest reqLibro = EjemplarLibroRequest.builder()
                 .idLibro(JsonNullable.of(2L))
+                .version(0L)
                 .build();
 
         assertThatThrownBy(() -> service.actualizar(1L, reqLibro))
@@ -230,6 +232,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         EjemplarLibroRequest reqMueble = EjemplarLibroRequest.builder()
                 .idLibro(JsonNullable.of(2L))
                 .idMueble(JsonNullable.of(3L))
+                .version(0L)
                 .build();
 
         assertThatThrownBy(() -> service.actualizar(1L, reqMueble))
