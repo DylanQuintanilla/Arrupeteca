@@ -15,7 +15,10 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.springframework.test.context.ActiveProfiles;
+
 @DataJpaTest
+@ActiveProfiles("test")
 class ObraRepositoryTest {
 
     @Autowired

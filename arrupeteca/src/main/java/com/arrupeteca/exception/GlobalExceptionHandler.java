@@ -27,6 +27,30 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * MANEJO DE CREDENCIALES INVÁLIDAS (Login fallido).
+     */
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleBadCredentials(
+            org.springframework.security.authentication.BadCredentialsException ex) {
+        log.warn("Intento de autenticación fallido: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error("Credenciales inválidas. Verifique su correo y contraseña."));
+    }
+
+    /**
+     * MANEJO DE ACCESO DENEGADO (Sin permisos suficientes).
+     */
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(
+            org.springframework.security.access.AccessDeniedException ex) {
+        log.warn("Acceso denegado: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error("No tiene permisos suficientes para acceder a este recurso."));
+    }
+
+    /**
      * 1. MANEJO DE NUESTRAS EXCEPCIONES MANUALES (Reglas de negocio).
      */
     @ExceptionHandler(RuntimeException.class)

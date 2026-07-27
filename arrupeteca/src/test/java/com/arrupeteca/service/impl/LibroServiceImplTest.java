@@ -105,7 +105,7 @@ class LibroServiceImplTest extends BaseServiceTest {
         Libro entity = Libro.builder().id(1L).build();
         Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(libroRepository.busquedaGlobal("palabra", null, null, Pageable.unpaged())).thenReturn(page);
+        when(libroRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
         when(libroMapper.toResumen(entity)).thenReturn(resumen);
 
         Page<LibroResumen> result = libroService.busquedaGlobal("palabra", null, null, Pageable.unpaged());

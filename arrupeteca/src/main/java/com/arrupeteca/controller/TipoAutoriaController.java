@@ -14,7 +14,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,9 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/tipo-autorias")
+@RequestMapping("/api/v1/tipos-autoria")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Tipos de Autoría", description = "Endpoints para la gestión del catálogo de tipos de autoría")
 public class TipoAutoriaController {
 

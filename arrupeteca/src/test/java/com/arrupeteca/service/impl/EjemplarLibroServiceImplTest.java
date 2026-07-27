@@ -84,7 +84,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
         Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        when(repository.busquedaGlobal(eq("term"), eq(1L), eq(1L), any(Pageable.class))).thenReturn(page);
+        when(repository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
         when(mapper.toResumen(any())).thenReturn(summary);
 
         Page<EjemplarLibroResumen> result = service.busquedaGlobal("term", 1L, 1L, Pageable.unpaged());
@@ -127,8 +127,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
         
-        when(repository.busquedaMaestraAdmin(eq(false), eq(1L), eq(1L), eq(1L), eq(1L), 
-                eq(EstadoFisico.BUEN_ESTADO), eq(Disponibilidad.DISPONIBLE), eq("term"), any(Pageable.class)))
+        when(repository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
                 .thenReturn(page);
         when(mapper.toResumen(any())).thenReturn(summary);
 

@@ -17,6 +17,7 @@ import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.CategoriaRepository;
 import com.arrupeteca.persistence.repository.AutorRepository;
 import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
+import com.arrupeteca.persistence.specification.ObraSpecification;
 import com.arrupeteca.service.ObraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,7 @@ public class ObraServiceImpl implements ObraService {
     @Override
     public Page<ObraResumen> busquedaGlobal(String palabra, Pageable pageable) {
         log.debug("Búsqueda global de obras por '{}' con paginación: {}", palabra, pageable);
-        return obraRepository.busquedaGlobal(palabra, pageable)
+        return obraRepository.findAll(ObraSpecification.busquedaGlobal(palabra), pageable)
                 .map(obraMapper::toResumen);
     }
 
@@ -88,7 +89,9 @@ public class ObraServiceImpl implements ObraService {
             Boolean esBorrado, Long idGenero, Long idCategoria, String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable) {
         log.debug("Búsqueda maestra de obras: {}, género: {}, categoría: {}, '{}', {} - {}", esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin);
-        return obraRepository.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin, pageable)
+        return obraRepository.findAll(
+                        ObraSpecification.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin),
+                        pageable)
                 .map(obraMapper::toResumen);
     }
 

@@ -17,6 +17,7 @@ import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.persistence.repository.FormatoRepository;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
+import com.arrupeteca.persistence.specification.LibroSpecification;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +65,7 @@ public class LibroServiceImpl implements LibroService {
     @Override
     public Page<LibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
         log.debug("Búsqueda global de libros por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return libroRepository.busquedaGlobal(palabra, idGenero, idCategoria, pageable)
+        return libroRepository.findAll(LibroSpecification.busquedaGlobal(palabra, idGenero, idCategoria), pageable)
                 .map(libroMapper::toResumen);
     }
 
@@ -96,8 +97,10 @@ public class LibroServiceImpl implements LibroService {
         Ciclo ciclo = (cicloStr instanceof String s && !s.isEmpty())
                 ? Ciclo.valueOf(s) : (cicloStr instanceof Ciclo c ? c : null);
 
-        return libroRepository.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
-                        grado, ciclo, termino, anioInicio, anioFin, pageable)
+        return libroRepository.findAll(
+                        LibroSpecification.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
+                                grado, ciclo, termino, anioInicio, anioFin),
+                        pageable)
                 .map(libroMapper::toResumen);
     }
 

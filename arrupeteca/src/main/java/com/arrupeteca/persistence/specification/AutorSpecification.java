@@ -99,6 +99,20 @@ public class AutorSpecification {
         };
     }
 
+    public static Specification<Autor> excluirId(Long idExcluir) {
+        return (root, query, cb) -> {
+            if (idExcluir == null) {
+                return null;
+            }
+            return cb.notEqual(root.get("id"), idExcluir);
+        };
+    }
+
+    public static Specification<Autor> posiblesDuplicados(String termino, Long idExcluir) {
+        return Specification.where(contieneTermino(termino))
+                .and(excluirId(idExcluir));
+    }
+
     /**
      * Búsqueda avanzada por palabra clave en múltiples campos.
      * Importante: Se utiliza query.distinct(true) para evitar duplicados y JoinType.LEFT

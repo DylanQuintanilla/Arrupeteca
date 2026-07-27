@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.Year;
@@ -146,17 +147,17 @@ class AutorRepositoryTest extends BaseRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should find duplicate authors using native search")
+    @DisplayName("Should find duplicate authors using specification search")
     void shouldFindDuplicates() {
         Autor gabriel1 = Autor.builder().nombre("Gabriel Garcia").seudonimo("Gabo").biografia("Bio").build();
         Autor gabriel2 = Autor.builder().nombre("Gabriel Garcia Marquez").biografia("Bio").build();
         autorRepository.saveAll(List.of(gabriel1, gabriel2));
 
-        List<Autor> duplicates = autorRepository.buscarPosiblesDuplicados("Gabriel", null);
+        List<Autor> duplicates = autorRepository.findAll(AutorSpecification.posiblesDuplicados("Gabriel", null), Sort.by("nombre"));
         assertThat(duplicates).contains(gabriel1, gabriel2);
 
         // Test exclusion ID
-        List<Autor> duplicatesExcludingOne = autorRepository.buscarPosiblesDuplicados("Gabriel", gabriel1.getId());
+        List<Autor> duplicatesExcludingOne = autorRepository.findAll(AutorSpecification.posiblesDuplicados("Gabriel", gabriel1.getId()), Sort.by("nombre"));
         assertThat(duplicatesExcludingOne).contains(gabriel2).doesNotContain(gabriel1);
     }
 

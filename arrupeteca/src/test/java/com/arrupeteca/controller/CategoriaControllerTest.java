@@ -64,6 +64,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         when(categoriaService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categorias")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -80,6 +81,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/categorias/1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -91,7 +93,8 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/categorias/{id} - Should deactivate category")
     void shouldDeactivateCategory() throws Exception {
-        mockMvc.perform(delete("/api/v1/categorias/1"))
+        mockMvc.perform(delete("/api/v1/categorias/1")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Categoría desactivada correctamente"));
@@ -100,7 +103,8 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PATCH /api/v1/categorias/{id}/activar - Should activate category")
     void shouldActivateCategory() throws Exception {
-        mockMvc.perform(patch("/api/v1/categorias/1/activar"))
+        mockMvc.perform(patch("/api/v1/categorias/1/activar")
+                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Categoría activada correctamente"));

@@ -11,6 +11,7 @@ import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.arrupeteca.persistence.repository.EjemplarLibroRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.MuebleRepository;
+import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import com.arrupeteca.service.EjemplarLibroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +55,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     @Override
     public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
         log.debug("Búsqueda global de ejemplares por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return ejemplarLibroRepository.busquedaGlobal(palabra, idGenero, idCategoria, pageable)
+        return ejemplarLibroRepository.findAll(EjemplarLibroSpecification.busquedaGlobal(palabra, idGenero, idCategoria), pageable)
                 .map(ejemplarLibroMapper::toResumen);
     }
 
@@ -85,8 +86,10 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         Disponibilidad disponibilidad = (disponibilidadStr instanceof String s && !s.isEmpty())
                 ? Disponibilidad.valueOf(s) : (disponibilidadStr instanceof Disponibilidad d ? d : null);
 
-        return ejemplarLibroRepository.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, estadoFisico,
-                        disponibilidad, termino, pageable)
+        return ejemplarLibroRepository.findAll(
+                        EjemplarLibroSpecification.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, estadoFisico,
+                                disponibilidad, termino),
+                        pageable)
                 .map(ejemplarLibroMapper::toResumen);
     }
 

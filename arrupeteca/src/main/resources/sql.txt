@@ -1,7 +1,11 @@
--- DESACTIVAR RESTRICCIONES DE LLAVE FORÁNEA
+/* DESACTIVAR RESTRICCIONES DE LLAVE FORÁNEA */
 SET FOREIGN_KEY_CHECKS = 0;
 
--- LIMPIAR TABLAS CON DELETE (Evita el error #1701 de MySQL)
+/* LIMPIAR TABLAS CON DELETE (Evita el error #1701 de MySQL) */
+DELETE FROM responsable;
+DELETE FROM parentesco;
+DELETE FROM usuario;
+DELETE FROM tipo_usuario;
 DELETE FROM ejemplar_libro;
 DELETE FROM libro_idioma;
 DELETE FROM libro;
@@ -23,7 +27,11 @@ DELETE FROM formato;
 DELETE FROM edificio;
 DELETE FROM categoria;
 
--- RESTABLECER LOS CONTADORES AUTO_INCREMENT A 1
+/* RESTABLECER LOS CONTADORES AUTO_INCREMENT A 1 */
+ALTER TABLE responsable AUTO_INCREMENT = 1;
+ALTER TABLE parentesco AUTO_INCREMENT = 1;
+ALTER TABLE usuario AUTO_INCREMENT = 1;
+ALTER TABLE tipo_usuario AUTO_INCREMENT = 1;
 ALTER TABLE ejemplar_libro AUTO_INCREMENT = 1;
 ALTER TABLE libro AUTO_INCREMENT = 1;
 ALTER TABLE editorial AUTO_INCREMENT = 1;
@@ -41,10 +49,16 @@ ALTER TABLE formato AUTO_INCREMENT = 1;
 ALTER TABLE edificio AUTO_INCREMENT = 1;
 ALTER TABLE categoria AUTO_INCREMENT = 1;
 
--- ACTIVAR RESTRICCIONES DE NUEVO
+/* ACTIVAR RESTRICCIONES DE NUEVO */
 SET FOREIGN_KEY_CHECKS = 1;
 
--- 1. Tablas Maestras Simples
+/* 1. TABLAS MAESTRAS SIMPLES Y CATÁLOGOS */
+INSERT INTO tipo_usuario (nombre, borrado_logico) VALUES
+('admin', 0), ('alumno', 0), ('maestro', 0), ('personal administrativo', 0);
+
+INSERT INTO parentesco (nombre, borrado_logico) VALUES
+('Padre', 0), ('Madre', 0), ('Tutor Legal', 0), ('Hermano/a', 0), ('Otro', 0);
+
 INSERT INTO categoria (nombre, borrado_logico) VALUES
 ('Literatura General', 0), ('Referencia', 0), ('Hemeroteca', 0), ('Ciencias Exactas', 0), ('Infantil y Juvenil', 0);
 
@@ -69,7 +83,16 @@ INSERT INTO pais (nombre, borrado_logico) VALUES
 INSERT INTO tipo_autoria (nombre, borrado_logico) VALUES
 ('Escritor', 0), ('Ilustrador', 0), ('Traductor', 0), ('Compilador', 0), ('Editor', 0);
 
--- 2. OBRA (Requiere Auditoría)
+/* 2. USUARIOS DE PRUEBA Y SEGURIDAD (Contraseña para ambos: Password123!) */
+INSERT INTO usuario (nombres, apellidos, correo, contrasena, carnet, bloqueado_por_mora, fecha_registro, ultima_fecha_actividad, id_tipo, borrado_logico) VALUES
+('Administrador', 'Sistema', 'admin@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ADM-0001', 0, NOW(), NOW(), 1, 0),
+('Carlos', 'Pérez', 'alumno@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-001', 0, NOW(), NOW(), 2, 0);
+
+/* 3. RESPONSABLE DE ALUMNO */
+INSERT INTO responsable (nombres, apellidos, correo, telefono, dui, id_usuario, id_parentesco, borrado_logico) VALUES
+('Juan', 'Pérez', 'juan.perez@gmail.com', '7890-1234', '01234567-8', 2, 1, 0);
+
+/* 4. OBRA (Requiere Auditoría) */
 INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Pobrecito Poeta que era yo', 1976, 'Novela collage autobiográfica.', 0, NOW(), NOW(), 'SYSTEM'),
 ('It (Eso)', 1986, 'Terror sobre un payaso maligno.', 0, NOW(), NOW(), 'SYSTEM'),
@@ -77,7 +100,7 @@ INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, fecha_creacion
 ('Cien años de soledad', 1967, 'Realismo mágico en Macondo.', 0, NOW(), NOW(), 'SYSTEM'),
 ('Inundación Castálida', 1689, 'Colección de poemas del barroco.', 0, NOW(), NOW(), 'SYSTEM');
 
--- 3. AUTOR (Requiere Auditoría e incluye la columna `version` en 0)
+/* 5. AUTOR (Requiere Auditoría e incluye la columna `version` en 0) */
 INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biografia, borrado_logico, id_pais_nacimiento, id_nacionalidad, id_genero_principal, id_obra, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Roque Dalton García', NULL, 1935, 1975, 'Poeta y ensayista salvadoreño.', 0, 1, 1, 4, 1, 0, NOW(), NOW(), 'SYSTEM'),
 ('Stephen Edwin King', 'Richard Bachman', 1947, NULL, 'El rey del terror contemporáneo.', 0, 2, 2, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
@@ -85,7 +108,7 @@ INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biogr
 ('Gabriel José de la Concordia García Márquez', 'Gabo', 1927, 2014, 'Padre del realismo mágico.', 0, 4, 4, 1, 4, 0, NOW(), NOW(), 'SYSTEM'),
 ('Juana Inés de Asbaje y Ramírez de Santillana', 'Sor Juana', 1648, 1695, 'La décima musa mexicana.', 0, 5, 5, 4, 5, 0, NOW(), NOW(), 'SYSTEM');
 
--- 4. Relaciones de Obra
+/* 6. RELACIONES DE OBRA */
 INSERT INTO obra_autor (id_obra, id_autor, id_tipo_autoria, borrado_logico) VALUES
 (1, 1, 1, 0), (2, 2, 1, 0), (3, 3, 1, 0), (4, 4, 1, 0), (5, 5, 1, 0),
 (1, 5, 2, 0), (2, 4, 3, 0), (3, 1, 2, 0), (4, 2, 5, 0), (5, 1, 4, 0);
@@ -96,7 +119,7 @@ INSERT INTO obra_genero (id_obra, id_genero) VALUES
 INSERT INTO obra_categoria (id_obra, id_categoria) VALUES
 (1, 1), (2, 1), (3, 2), (4, 1), (5, 1);
 
--- 5. Editorial y Ubicación
+/* 7. EDITORIAL Y UBICACIÓN */
 INSERT INTO editorial (nombre, direccion, correo, telefono, persona_contacto, borrado_logico) VALUES
 ('UCA Editores', 'Bulevar de los Próceres, Campus UCA, San Salvador', 'ventas@uca.edu.sv', '2210-6600', 'Carlos Martínez', 0),
 ('Penguin Random House', 'Travessera de Gràcia, 47, Barcelona, España', 'info@penguinrandomhouse.com', '9336-6030', 'Ana María Matute', 0),
@@ -113,7 +136,7 @@ INSERT INTO salon (nombre, id_planta, borrado_logico) VALUES
 INSERT INTO mueble (nombre, id_salon, borrado_logico) VALUES
 ('Mostrador Principal', 1, 0), ('Estante de Reservas', 1, 0), ('Estantería A-F (Literatura)', 2, 0), ('Estantería G-Z (Ciencias)', 2, 0), ('Estantería A-F (Revistas)', 3, 0);
 
--- 6. LIBRO (Requiere Auditoría)
+/* 8. LIBRO (Requiere Auditoría) */
 INSERT INTO libro (isbn, anio_publicacion, precio, mora, url_imagen, borrado_logico, grado, ciclo, id_obra, id_editorial, id_formato, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('978-99923-45-01-2', 2010, 12.50, 0.25, 'https://m.media-amazon.com/images/I/51+Z+A+b+L.jpg', 0, 'BACHI_GENERAL', 'SEGUNDO', 1, 1, 2, NOW(), NOW(), 'SYSTEM'),
 ('978-15011-42-97-0', 2016, 24.99, 0.50, 'https://images.penguinrandomhouse.com/cover/9781501142970', 0, NULL, NULL, 2, 2, 1, NOW(), NOW(), 'SYSTEM'),
@@ -124,7 +147,7 @@ INSERT INTO libro (isbn, anio_publicacion, precio, mora, url_imagen, borrado_log
 INSERT INTO libro_idioma (id_libro, id_idioma) VALUES
 (1, 1), (2, 2), (3, 1), (4, 1), (4, 3), (5, 1);
 
--- 7. EJEMPLAR LIBRO (Requiere Auditoría)
+/* 9. EJEMPLAR LIBRO (Requiere Auditoría) */
 INSERT INTO ejemplar_libro (comentario, estado_fisico, disponibilidad, borrado_logico, id_libro, id_mueble, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Copia de exhibición', 'NUEVO', 'DISPONIBLE', 0, 1, 1, NOW(), NOW(), 'SYSTEM'),
 (NULL, 'BUEN_ESTADO', 'PRESTADO', 0, 1, 3, NOW(), NOW(), 'SYSTEM'),

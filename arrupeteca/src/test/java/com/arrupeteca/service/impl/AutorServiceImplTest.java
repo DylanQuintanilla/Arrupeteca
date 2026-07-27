@@ -332,12 +332,12 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should verify duplicates with trimming")
     void shouldVerifyDuplicatesWithTrimming() {
         Autor autor = Autor.builder().build();
-        when(autorRepository.buscarPosiblesDuplicados("Termino", 1L))
+        when(autorRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Sort.class)))
                 .thenReturn(List.of(autor));
         when(autorMapper.toResumen(autor)).thenReturn(mock(AutorResumenResponse.class));
 
         assertThat(autorService.buscarDuplicados("  Termino  ", 1L)).isNotEmpty();
-        verify(autorRepository).buscarPosiblesDuplicados("Termino", 1L);
+        verify(autorRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Sort.class));
     }
 
     @Test

@@ -16,6 +16,7 @@ import com.arrupeteca.persistence.entity.Planta;
 import com.arrupeteca.persistence.entity.Salon;
 import com.arrupeteca.persistence.enums.Disponibilidad;
 import com.arrupeteca.persistence.enums.EstadoFisico;
+import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +72,7 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should perform global search")
     void shouldSearchGlobal() {
         ejemplarLibroRepository.save(createValidEjemplar("Especial"));
-        Page<EjemplarLibro> page = ejemplarLibroRepository.busquedaGlobal("Especial", null, null, PageRequest.of(0, 10));
+        Page<EjemplarLibro> page = ejemplarLibroRepository.findAll(EjemplarLibroSpecification.busquedaGlobal("Especial", null, null), PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

@@ -33,6 +33,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
 
 	// --- 2. BASE DE DATOS ---
 	runtimeOnly 'com.mysql:mysql-connector-j'
@@ -55,8 +56,14 @@ dependencies {
 
 	implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
 
-	// --- 5. PRUEBAS (TESTING) ---
+	// --- 5. SEGURIDAD JWT ---
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+
+	// --- 6. PRUEBAS (TESTING) ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
 	testImplementation 'org.instancio:instancio-junit:5.0.2'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:mysql'
@@ -85,7 +92,10 @@ jacocoTestReport {
 		classDirectories.setFrom(files(classDirectories.files.collect {
 			fileTree(dir: it, exclude: [
 					'com/arrupeteca/ArrupetecaApplication.class',
-					'com/arrupeteca/mapper/**'
+					'com/arrupeteca/mapper/**',
+					'com/arrupeteca/security/SecurityConfig.class',
+					'com/arrupeteca/security/JwtConfig.class',
+					'com/arrupeteca/security/JwtAuthenticationEntryPoint.class'
 			])
 		}))
 	}
@@ -98,7 +108,10 @@ jacocoTestCoverageVerification {
 			element = 'CLASS'
 			excludes = [
 					'com.arrupeteca.ArrupetecaApplication',
-					'com.arrupeteca.mapper.**'
+					'com.arrupeteca.mapper.**',
+					'com.arrupeteca.security.SecurityConfig',
+					'com.arrupeteca.security.JwtConfig',
+					'com.arrupeteca.security.JwtAuthenticationEntryPoint'
 			]
 			limit {
 				minimum = 0.0
