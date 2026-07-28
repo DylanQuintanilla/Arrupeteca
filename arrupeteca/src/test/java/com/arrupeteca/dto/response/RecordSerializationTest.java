@@ -3,10 +3,14 @@ package com.arrupeteca.dto.response;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.arrupeteca.dto.response.CategoriaResponse;
+import com.arrupeteca.dto.response.CicloResponse;
+import com.arrupeteca.dto.response.DisponibilidadResponse;
 import com.arrupeteca.dto.response.EdificioResponse;
 import com.arrupeteca.dto.response.EditorialResponse;
+import com.arrupeteca.dto.response.EstadoFisicoResponse;
 import com.arrupeteca.dto.response.FormatoResponse;
 import com.arrupeteca.dto.response.GeneroResponse;
+import com.arrupeteca.dto.response.GradoResponse;
 import com.arrupeteca.dto.response.IdiomaResponse;
 import com.arrupeteca.dto.response.MuebleResponse;
 import com.arrupeteca.dto.response.NacionalidadResponse;
@@ -71,6 +75,10 @@ class RecordSerializationTest {
         SalonResponse sal = new SalonResponse(1L, "Sal", false, plan);
         MuebleResponse mueb = new MuebleResponse(1L, "Mueb", false, sal);
         TipoAutoriaResponse tipo = new TipoAutoriaResponse(1L, "Tipo", false);
+        CicloResponse ciclo = new CicloResponse(1L, "Ciclo", false);
+        GradoResponse grado = new GradoResponse(1L, "Grado", false);
+        EstadoFisicoResponse ef = new EstadoFisicoResponse(1L, "Estado", false);
+        DisponibilidadResponse disp = new DisponibilidadResponse(1L, "Disp", false);
 
         verifySerialization(autor);
         verifySerialization(cat);
@@ -88,6 +96,10 @@ class RecordSerializationTest {
         verifySerialization(plan);
         verifySerialization(sal);
         verifySerialization(tipo);
+        verifySerialization(ciclo);
+        verifySerialization(grado);
+        verifySerialization(ef);
+        verifySerialization(disp);
     }
 
     @Test
@@ -108,11 +120,16 @@ class RecordSerializationTest {
                 .fechaActualizacion(now)
                 .build();
         EjemplarLibroDetalleResponse ejem = EjemplarLibroDetalleResponse.builder()
-                .id(1L).comentario("C").version(0L).borradoLogico(true).estadoFisico("U").disponibilidad("U")
+                .id(1L).comentario("C").version(0L).borradoLogico(true)
+                .estadoFisico(new EstadoFisicoResponse(1L, "U", false))
+                .disponibilidad(new DisponibilidadResponse(1L, "U", false))
                 .creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now).ubicacion("S").build();
         LibroDetalleResponse libro = LibroDetalleResponse.builder()
                 .id(1L).isbn("I").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(true).grado("G").ciclo("C").creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now)
+                .version(0L).borradoLogico(true)
+                .grado(new GradoResponse(1L, "G", false))
+                .ciclo(new CicloResponse(1L, "C", false))
+                .creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now)
                 .idiomas(Collections.emptySet()).build();
         ObraAutorDetalleResponse obraAut = new ObraAutorDetalleResponse(1L, null, null);
         ObraDetalleResponse obra = ObraDetalleResponse.builder()

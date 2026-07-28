@@ -97,15 +97,15 @@ public class LibroController {
             @RequestParam(required = false) Long idCategoria,
             @RequestParam(required = false) Long idEditorial,
             @RequestParam(required = false) Long idFormato,
-            @RequestParam(required = false) Object grado,
-            @RequestParam(required = false) Object ciclo,
+            @RequestParam(required = false) Long idGrado,
+            @RequestParam(required = false) Long idCiclo,
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 libroService.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
-                        grado, ciclo, termino, anioInicio, anioFin, pageable)));
+                        idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
     }
 
     @GetMapping("/obra/{idObra}")

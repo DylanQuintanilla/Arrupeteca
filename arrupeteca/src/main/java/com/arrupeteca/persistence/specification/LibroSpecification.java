@@ -1,13 +1,13 @@
 package com.arrupeteca.persistence.specification;
 
 import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Ciclo;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.Formato;
 import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Grado;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
@@ -84,21 +84,23 @@ public class LibroSpecification {
         };
     }
 
-    public static Specification<Libro> tieneGrado(Grado grado) {
+    public static Specification<Libro> tieneGrado(Long idGrado) {
         return (root, query, cb) -> {
-            if (grado == null) {
+            if (idGrado == null) {
                 return null;
             }
-            return cb.equal(root.get("grado"), grado);
+            Join<Libro, Grado> joinGrado = root.join("grado", JoinType.LEFT);
+            return cb.equal(joinGrado.get("id"), idGrado);
         };
     }
 
-    public static Specification<Libro> tieneCiclo(Ciclo ciclo) {
+    public static Specification<Libro> tieneCiclo(Long idCiclo) {
         return (root, query, cb) -> {
-            if (ciclo == null) {
+            if (idCiclo == null) {
                 return null;
             }
-            return cb.equal(root.get("ciclo"), ciclo);
+            Join<Libro, Ciclo> joinCiclo = root.join("ciclo", JoinType.LEFT);
+            return cb.equal(joinCiclo.get("id"), idCiclo);
         };
     }
 
@@ -147,7 +149,7 @@ public class LibroSpecification {
 
     public static Specification<Libro> busquedaMaestraAdmin(
             Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria,
-            Long idEditorial, Long idFormato, Grado grado, Ciclo ciclo,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
             String termino, Integer anioInicio, Integer anioFin) {
 
         return Specification.where(esBorrado(esBorrado))
@@ -156,8 +158,8 @@ public class LibroSpecification {
                 .and(tieneCategoria(idCategoria))
                 .and(tieneEditorial(idEditorial))
                 .and(tieneFormato(idFormato))
-                .and(tieneGrado(grado))
-                .and(tieneCiclo(ciclo))
+                .and(tieneGrado(idGrado))
+                .and(tieneCiclo(idCiclo))
                 .and(contieneTermino(termino))
                 .and(publicadoEnRango(anioInicio, anioFin));
     }

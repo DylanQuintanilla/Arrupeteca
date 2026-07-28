@@ -96,13 +96,13 @@ public class EjemplarLibroController {
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
             @RequestParam(required = false) Long idMueble,
-            @RequestParam(required = false) Object estadoFisico,
-            @RequestParam(required = false) Object disponibilidad,
+            @RequestParam(required = false) Long idEstadoFisico,
+            @RequestParam(required = false) Long idDisponibilidad,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 ejemplarLibroService.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble,
-                        estadoFisico, disponibilidad, termino, pageable)));
+                        idEstadoFisico, idDisponibilidad, termino, pageable)));
     }
 
     @PostMapping

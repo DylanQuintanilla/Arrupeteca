@@ -1,7 +1,5 @@
 package com.arrupeteca.dto.request;
 
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Builder;
@@ -13,8 +11,8 @@ import org.openapitools.jackson.nullable.JsonNullable;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record EjemplarLibroRequest(
     JsonNullable<String> comentario,
-    JsonNullable<EstadoFisico> estadoFisico,
-    JsonNullable<Disponibilidad> disponibilidad,
+    JsonNullable<Long> idEstadoFisico,
+    JsonNullable<Long> idDisponibilidad,
     JsonNullable<Long> idLibro,
     JsonNullable<Long> idMueble,
     Long version

@@ -2,8 +2,6 @@ package com.arrupeteca.dto.request;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
 import java.time.Year;
@@ -47,6 +45,10 @@ class ComprehensiveRequestTest {
         // Just instantiate and trigger Lombok code for other requests
         verifyRequest(new CategoriaRequest("Cat"));
         verifyRequest(new EdificioRequest("Edif"));
+        verifyRequest(new CicloRequest("Ciclo"));
+        verifyRequest(new GradoRequest("Grado"));
+        verifyRequest(new EstadoFisicoRequest("Estado"));
+        verifyRequest(new DisponibilidadRequest("Disp"));
         
         EditorialRequest edit = EditorialRequest.builder()
                 .nombre("N")
@@ -59,8 +61,8 @@ class ComprehensiveRequestTest {
 
         verifyRequest(EjemplarLibroRequest.builder()
                 .comentario(org.openapitools.jackson.nullable.JsonNullable.of("C"))
-                .estadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(EstadoFisico.BUEN_ESTADO))
-                .disponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .idEstadoFisico(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idDisponibilidad(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idLibro(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idMueble(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .build());
@@ -75,6 +77,8 @@ class ComprehensiveRequestTest {
                 .idFormato(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idEditorial(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .idIdiomas(org.openapitools.jackson.nullable.JsonNullable.of(Collections.singleton(1L)))
+                .idGrado(org.openapitools.jackson.nullable.JsonNullable.of(1L))
+                .idCiclo(org.openapitools.jackson.nullable.JsonNullable.of(1L))
                 .build();
         verifyRequest(libro);
 

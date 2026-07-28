@@ -193,7 +193,7 @@
               "name": "Admin: Búsqueda Maestra",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra?esBorrado=false&idObra=1&idEditorial=1&idFormato=1&grado=PRIMERO&ciclo=PRIMERO&termino=isbn&anioInicio=1900&anioFin=2024"
+                "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra?esBorrado=false&idObra=1&idEditorial=1&idFormato=1&idGrado=1&idCiclo=1&termino=isbn&anioInicio=1900&anioFin=2024"
               }
             },
             {
@@ -413,6 +413,450 @@
               }
             }
           ]
+        },
+        {
+          "name": "Ciclo",
+          "item": [
+            {
+              "name": "Obtener ciclos activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (ciclo activa)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Obtener todas las ciclos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/admin?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID (ciclo)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva ciclo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva ciclo\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/ciclos"
+              }
+            },
+            {
+              "name": "Actualizar ciclo",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"ciclo Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar ciclo (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar ciclo",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grado",
+          "item": [
+            {
+              "name": "Obtener grados activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (grado activa)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Obtener todas las grados",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/admin?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID (grado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva grado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva grado\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/grados"
+              }
+            },
+            {
+              "name": "Actualizar grado",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"grado Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar grado (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar grado",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/grados/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado Físico",
+          "item": [
+            {
+              "name": "Obtener estado físicos activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (estado físico activa)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Obtener todas las estado físicos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/admin?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID (estado físico)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva estado físico",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva estado físico\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/estados-fisicos"
+              }
+            },
+            {
+              "name": "Actualizar estado físico",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"estado físico Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar estado físico (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar estado físico",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad",
+          "item": [
+            {
+              "name": "Obtener disponibilidads activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (disponibilidad activa)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Obtener todas las disponibilidads",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/admin?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID (disponibilidad)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva disponibilidad",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva disponibilidad\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/disponibilidades"
+              }
+            },
+            {
+              "name": "Actualizar disponibilidad",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"disponibilidad Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar disponibilidad (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar disponibilidad",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -554,7 +998,7 @@
               "name": "Admin: Búsqueda Maestra",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra?esBorrado=false&idLibro=1&idMueble=1&estadoFisico=NUEVO&disponibilidad=DISPONIBLE&termino=BIB"
+                "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra?esBorrado=false&idLibro=1&idMueble=1&idEstadoFisico=1&idDisponibilidad=1&termino=BIB"
               }
             },
             {

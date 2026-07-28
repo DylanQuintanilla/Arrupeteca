@@ -1,7 +1,5 @@
 package com.arrupeteca.dto.request;
 
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.DisplayName;
@@ -34,8 +32,8 @@ class LibroRequestTest {
                 .isbn(JsonNullable.of("978-3-16-148410-0"))
                 .anioPublicacion(JsonNullable.of(2021))
                 .precio(JsonNullable.of(new BigDecimal("29.99")))
-                .grado(JsonNullable.of(Grado.PRIMER_TO_NOVENO))
-                .ciclo(JsonNullable.of(Ciclo.PRIMER))
+                .idGrado(JsonNullable.of(1L))
+                .idCiclo(JsonNullable.of(1L))
                 .idObra(JsonNullable.of(1L))
                 .idFormato(JsonNullable.of(2L))
                 .idEditorial(JsonNullable.of(3L))

@@ -4,8 +4,8 @@ public record EjemplarLibroResumen(
     Long id,
     String comentario,
     boolean borradoLogico,
-    String estadoFisico,
-    String disponibilidad,
+    String nombreEstadoFisico,
+    String nombreDisponibilidad,
     String tituloLibro,
     String nombreMueble
 ) { }

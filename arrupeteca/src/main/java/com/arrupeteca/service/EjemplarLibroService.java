@@ -19,8 +19,8 @@ public interface EjemplarLibroService {
     EjemplarLibroDetalleResponse obtenerPorId(Long id);
 
     Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Object estadoFisico,
-            Object disponibilidad, String termino, Pageable pageable);
+            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Long idEstadoFisico,
+            Long idDisponibilidad, String termino, Pageable pageable);
 
     EjemplarLibroDetalleResponse crear(EjemplarLibroRequest request);
 

@@ -10,8 +10,8 @@ public record LibroResumen(
     String urlImagen,
     BigDecimal mora,
     boolean borradoLogico,
-    String grado,
-    String ciclo,
+    String nombreGrado,
+    String nombreCiclo,
     String tituloObra,
     String nombreEditorial,
     String nombreFormato

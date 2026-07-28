@@ -1,6 +1,8 @@
 package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.LibroRequest;
+import com.arrupeteca.dto.response.CicloResponse;
+import com.arrupeteca.dto.response.GradoResponse;
 import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
 import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.service.LibroService;
@@ -49,7 +51,10 @@ class LibroControllerTest extends BaseControllerTest {
     void shouldReturnById() throws Exception {
         LibroDetalleResponse detail = LibroDetalleResponse.builder()
                 .id(1L).isbn("1234567890").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .version(0L).borradoLogico(false)
+                .grado(GradoResponse.builder().id(1L).nombre("Grado").build())
+                .ciclo(CicloResponse.builder().id(1L).nombre("Ciclo").build())
+                .creadoPor("admin").modificadoPor("admin")
                 .idiomas(Collections.emptySet()).build();
         when(libroService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
@@ -73,7 +78,10 @@ class LibroControllerTest extends BaseControllerTest {
 
         LibroDetalleResponse detail = LibroDetalleResponse.builder()
                 .id(1L).isbn("9780596520687").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .version(0L).borradoLogico(false)
+                .grado(GradoResponse.builder().id(1L).nombre("Grado").build())
+                .ciclo(CicloResponse.builder().id(1L).nombre("Ciclo").build())
+                .creadoPor("admin").modificadoPor("admin")
                 .idiomas(Collections.emptySet()).build();
         when(libroService.crear(any())).thenReturn(detail);
 
@@ -99,7 +107,10 @@ class LibroControllerTest extends BaseControllerTest {
 
         LibroDetalleResponse detail = LibroDetalleResponse.builder()
                 .id(1L).isbn("9780596520687").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("url").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(false).grado("Grado").ciclo("Ciclo").creadoPor("admin").modificadoPor("admin")
+                .version(0L).borradoLogico(false)
+                .grado(GradoResponse.builder().id(1L).nombre("Grado").build())
+                .ciclo(CicloResponse.builder().id(1L).nombre("Ciclo").build())
+                .creadoPor("admin").modificadoPor("admin")
                 .idiomas(Collections.emptySet()).build();
         when(libroService.actualizar(any(Long.class), any(LibroRequest.class))).thenReturn(detail);
 
@@ -137,7 +148,10 @@ class LibroControllerTest extends BaseControllerTest {
     void shouldReturnByIdForAdmin() throws Exception {
         LibroDetalleResponse detail = LibroDetalleResponse.builder()
                 .id(1L).isbn("123").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(false).grado("G").ciclo("C").creadoPor("A").modificadoPor("A")
+                .version(0L).borradoLogico(false)
+                .grado(GradoResponse.builder().id(1L).nombre("G").build())
+                .ciclo(CicloResponse.builder().id(1L).nombre("C").build())
+                .creadoPor("A").modificadoPor("A")
                 .idiomas(Collections.emptySet()).build();
         when(libroService.obtenerPorId(1L)).thenReturn(detail);
 

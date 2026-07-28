@@ -1,14 +1,14 @@
 package com.arrupeteca.persistence.specification;
 
 import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Disponibilidad;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.EjemplarLibro;
+import com.arrupeteca.persistence.entity.EstadoFisico;
 import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.entity.Obra;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import org.springframework.data.jpa.domain.Specification;
@@ -47,21 +47,23 @@ public class EjemplarLibroSpecification {
         };
     }
 
-    public static Specification<EjemplarLibro> tieneEstadoFisico(EstadoFisico estadoFisico) {
+    public static Specification<EjemplarLibro> tieneEstadoFisico(Long idEstadoFisico) {
         return (root, query, cb) -> {
-            if (estadoFisico == null) {
+            if (idEstadoFisico == null) {
                 return null;
             }
-            return cb.equal(root.get("estadoFisico"), estadoFisico);
+            Join<EjemplarLibro, EstadoFisico> joinEF = root.join("estadoFisico", JoinType.LEFT);
+            return cb.equal(joinEF.get("id"), idEstadoFisico);
         };
     }
 
-    public static Specification<EjemplarLibro> tieneDisponibilidad(Disponibilidad disponibilidad) {
+    public static Specification<EjemplarLibro> tieneDisponibilidad(Long idDisponibilidad) {
         return (root, query, cb) -> {
-            if (disponibilidad == null) {
+            if (idDisponibilidad == null) {
                 return null;
             }
-            return cb.equal(root.get("disponibilidad"), disponibilidad);
+            Join<EjemplarLibro, Disponibilidad> joinD = root.join("disponibilidad", JoinType.LEFT);
+            return cb.equal(joinD.get("id"), idDisponibilidad);
         };
     }
 
@@ -127,7 +129,7 @@ public class EjemplarLibroSpecification {
 
     public static Specification<EjemplarLibro> busquedaMaestraAdmin(
             Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria,
-            Long idMueble, EstadoFisico estadoFisico, Disponibilidad disponibilidad,
+            Long idMueble, Long idEstadoFisico, Long idDisponibilidad,
             String termino) {
 
         return Specification.where(esBorrado(esBorrado))
@@ -135,8 +137,8 @@ public class EjemplarLibroSpecification {
                 .and(tieneGenero(idGenero))
                 .and(tieneCategoria(idCategoria))
                 .and(tieneMueble(idMueble))
-                .and(tieneEstadoFisico(estadoFisico))
-                .and(tieneDisponibilidad(disponibilidad))
+                .and(tieneEstadoFisico(idEstadoFisico))
+                .and(tieneDisponibilidad(idDisponibilidad))
                 .and(contieneTermino(termino));
     }
 }

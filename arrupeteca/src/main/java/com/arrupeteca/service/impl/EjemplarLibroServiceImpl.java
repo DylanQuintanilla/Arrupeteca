@@ -6,11 +6,11 @@ import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EjemplarLibroMapper;
 import com.arrupeteca.persistence.entity.EjemplarLibro;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.arrupeteca.persistence.repository.EjemplarLibroRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.MuebleRepository;
+import com.arrupeteca.persistence.repository.EstadoFisicoRepository;
+import com.arrupeteca.persistence.repository.DisponibilidadRepository;
 import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import com.arrupeteca.service.EjemplarLibroService;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +35,8 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     private final EjemplarLibroMapper ejemplarLibroMapper;
     private final LibroRepository libroRepository;
     private final MuebleRepository muebleRepository;
+    private final EstadoFisicoRepository estadoFisicoRepository;
+    private final DisponibilidadRepository disponibilidadRepository;
 
     @Override
     public Page<EjemplarLibroResumen> obtenerTodosActivos(Pageable pageable) {
@@ -76,19 +78,14 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     @Override
     public Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Object estadoFisicoStr,
-            Object disponibilidadStr, String termino, Pageable pageable) {
+            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Long idEstadoFisico,
+            Long idDisponibilidad, String termino, Pageable pageable) {
 
         log.debug("Búsqueda maestra de ejemplares para admin");
-        EstadoFisico estadoFisico = (estadoFisicoStr instanceof String s && !s.isEmpty())
-                ? EstadoFisico.valueOf(s) : (estadoFisicoStr instanceof EstadoFisico ef ? ef : null);
-
-        Disponibilidad disponibilidad = (disponibilidadStr instanceof String s && !s.isEmpty())
-                ? Disponibilidad.valueOf(s) : (disponibilidadStr instanceof Disponibilidad d ? d : null);
 
         return ejemplarLibroRepository.findAll(
-                        EjemplarLibroSpecification.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, estadoFisico,
-                                disponibilidad, termino),
+                        EjemplarLibroSpecification.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, idEstadoFisico,
+                                idDisponibilidad, termino),
                         pageable)
                 .map(ejemplarLibroMapper::toResumen);
     }
@@ -148,10 +145,10 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         if (request.idMueble() == null || !request.idMueble().isPresent() || request.idMueble().get() == null) {
             errores.add("Por favor ingresar donde se econtrara el ejemplar");
         }
-        if (request.estadoFisico() == null || !request.estadoFisico().isPresent() || request.estadoFisico().get() == null) {
+        if (request.idEstadoFisico() == null || !request.idEstadoFisico().isPresent() || request.idEstadoFisico().get() == null) {
             errores.add("El estado físico no puede estar vacío");
         }
-        if (request.disponibilidad() == null || !request.disponibilidad().isPresent() || request.disponibilidad().get() == null) {
+        if (request.idDisponibilidad() == null || !request.idDisponibilidad().isPresent() || request.idDisponibilidad().get() == null) {
             errores.add("La disponibilidad no puede estar vacía");
         }
         if (!errores.isEmpty()) {
@@ -173,10 +170,10 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         if (request.idMueble() != null && request.idMueble().isPresent() && request.idMueble().get() == null) {
             errores.add("Por favor ingresar donde se econtrara el ejemplar");
         }
-        if (request.estadoFisico() != null && request.estadoFisico().isPresent() && request.estadoFisico().get() == null) {
+        if (request.idEstadoFisico() != null && request.idEstadoFisico().isPresent() && request.idEstadoFisico().get() == null) {
             errores.add("El estado físico no puede estar vacío");
         }
-        if (request.disponibilidad() != null && request.disponibilidad().isPresent() && request.disponibilidad().get() == null) {
+        if (request.idDisponibilidad() != null && request.idDisponibilidad().isPresent() && request.idDisponibilidad().get() == null) {
             errores.add("La disponibilidad no puede estar vacía");
         }
         if (!errores.isEmpty()) {
@@ -202,6 +199,24 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
                 muebleRepository.findById(idMueble)
                         .ifPresentOrElse(ejemplar::setMueble,
                                 () -> errores.add("El Mueble con ID " + idMueble + " no existe."));
+            }
+        }
+
+        if (request.idEstadoFisico() != null && request.idEstadoFisico().isPresent()) {
+            Long idEF = request.idEstadoFisico().get();
+            if (idEF != null) {
+                estadoFisicoRepository.findById(idEF)
+                        .ifPresentOrElse(ejemplar::setEstadoFisico,
+                                () -> errores.add("El estado físico con ID " + idEF + " no existe."));
+            }
+        }
+
+        if (request.idDisponibilidad() != null && request.idDisponibilidad().isPresent()) {
+            Long idD = request.idDisponibilidad().get();
+            if (idD != null) {
+                disponibilidadRepository.findById(idD)
+                        .ifPresentOrElse(ejemplar::setDisponibilidad,
+                                () -> errores.add("La disponibilidad con ID " + idD + " no existe."));
             }
         }
 

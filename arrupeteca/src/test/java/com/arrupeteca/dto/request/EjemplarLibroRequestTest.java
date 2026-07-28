@@ -1,7 +1,5 @@
 package com.arrupeteca.dto.request;
 
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import org.junit.jupiter.api.DisplayName;
@@ -30,13 +28,13 @@ class EjemplarLibroRequestTest {
     void shouldSerialize() throws IOException {
         EjemplarLibroRequest request = EjemplarLibroRequest.builder()
                 .comentario(JsonNullable.of("Nuevo ejemplar"))
-                .estadoFisico(JsonNullable.of(EstadoFisico.NUEVO))
-                .disponibilidad(JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .idEstadoFisico(JsonNullable.of(1L))
+                .idDisponibilidad(JsonNullable.of(1L))
                 .idLibro(JsonNullable.of(1L))
                 .idMueble(JsonNullable.of(2L))
                 .build();
         assertThat(json.write(request)).hasJsonPathStringValue("@.comentario", "Nuevo ejemplar");
-        assertThat(json.write(request)).hasJsonPathStringValue("@.estadoFisico", "NUEVO");
+        assertThat(json.write(request)).hasJsonPathNumberValue("@.idEstadoFisico", 1);
     }
 
     @Test

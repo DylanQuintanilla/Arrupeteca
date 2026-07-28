@@ -3,9 +3,11 @@ package com.arrupeteca.persistence.repository;
 import java.util.Set;
 
 import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Disponibilidad;
 import com.arrupeteca.persistence.entity.Edificio;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.EjemplarLibro;
+import com.arrupeteca.persistence.entity.EstadoFisico;
 import com.arrupeteca.persistence.entity.Formato;
 import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Idioma;
@@ -14,8 +16,6 @@ import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.entity.Obra;
 import com.arrupeteca.persistence.entity.Planta;
 import com.arrupeteca.persistence.entity.Salon;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +51,10 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     private PlantaRepository plantaRepository;
     @Autowired
     private SalonRepository salonRepository;
+    @Autowired
+    private EstadoFisicoRepository estadoFisicoRepository;
+    @Autowired
+    private DisponibilidadRepository disponibilidadRepository;
 
     @Test
     @DisplayName("Should save and find ejemplar")
@@ -98,12 +102,15 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
         Salon s = salonRepository.save(Salon.builder().nombre("S " + comentario).planta(p).build());
         Mueble mueble = muebleRepository.save(Mueble.builder().nombre("Mueble " + comentario).salon(s).build());
 
+        EstadoFisico ef = estadoFisicoRepository.save(EstadoFisico.builder().nombre("Buen estado " + comentario).build());
+        Disponibilidad disp = disponibilidadRepository.save(Disponibilidad.builder().nombre("Disponible " + comentario).build());
+
         return EjemplarLibro.builder()
                 .comentario(comentario)
                 .libro(libro)
                 .mueble(mueble)
-                .estadoFisico(EstadoFisico.BUEN_ESTADO)
-                .disponibilidad(Disponibilidad.DISPONIBLE)
+                .estadoFisico(ef)
+                .disponibilidad(disp)
                 .build();
     }
 

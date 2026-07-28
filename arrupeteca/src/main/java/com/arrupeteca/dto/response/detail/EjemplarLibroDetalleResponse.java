@@ -1,5 +1,7 @@
 package com.arrupeteca.dto.response.detail;
 
+import com.arrupeteca.dto.response.DisponibilidadResponse;
+import com.arrupeteca.dto.response.EstadoFisicoResponse;
 import com.arrupeteca.dto.response.MuebleResponse;
 import com.arrupeteca.dto.response.summary.LibroResumen;
 import java.time.LocalDateTime;
@@ -13,8 +15,8 @@ public record EjemplarLibroDetalleResponse(
     String comentario,
     Long version,
     boolean borradoLogico,
-    String estadoFisico,
-    String disponibilidad,
+    EstadoFisicoResponse estadoFisico,
+    DisponibilidadResponse disponibilidad,
     String creadoPor,
     LocalDateTime fechaCreacion,
     String modificadoPor,

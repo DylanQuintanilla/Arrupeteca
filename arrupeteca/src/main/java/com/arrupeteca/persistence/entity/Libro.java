@@ -4,12 +4,8 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -78,12 +74,12 @@ public class Libro extends Auditable {
     @ToString.Include
     private boolean borradoLogico = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "grado")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_grado")
     private Grado grado;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ciclo")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_ciclo")
     private Ciclo ciclo;
 
     @ManyToOne(fetch = FetchType.LAZY)

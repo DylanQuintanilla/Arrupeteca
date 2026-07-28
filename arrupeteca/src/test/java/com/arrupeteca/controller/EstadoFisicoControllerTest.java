@@ -1,0 +1,99 @@
+package com.arrupeteca.controller;
+
+import com.arrupeteca.dto.request.EstadoFisicoRequest;
+import com.arrupeteca.dto.response.EstadoFisicoResponse;
+import com.arrupeteca.service.EstadoFisicoService;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.util.List;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@WebMvcTest(EstadoFisicoController.class)
+class EstadoFisicoControllerTest extends BaseControllerTest {
+
+    @MockitoBean
+    private EstadoFisicoService estadoFisicoService;
+
+    @Test
+    @DisplayName("GET /api/v1/estados-fisicos - Should return active estados fisicos")
+    void shouldReturnActive() throws Exception {
+        Page<EstadoFisicoResponse> page = new PageImpl<>(List.of());
+        when(estadoFisicoService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/estados-fisicos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/estados-fisicos/{id} - Should return estado fisico by ID")
+    void shouldReturnById() throws Exception {
+        EstadoFisicoResponse response = new EstadoFisicoResponse(1L, "Buen estado", false);
+        when(estadoFisicoService.obtenerPorIdActivo(1L)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/estados-fisicos/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data.nombre").value("Buen estado"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/estados-fisicos - Should create estado fisico")
+    void shouldCreate() throws Exception {
+        EstadoFisicoRequest request = EstadoFisicoRequest.builder().nombre("Nuevo estado").build();
+        EstadoFisicoResponse response = new EstadoFisicoResponse(1L, "Nuevo estado", false);
+        when(estadoFisicoService.crear(any())).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/estados-fisicos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("PUT /api/v1/estados-fisicos/{id} - Should update estado fisico")
+    void shouldUpdate() throws Exception {
+        EstadoFisicoRequest request = EstadoFisicoRequest.builder().nombre("Estado act").build();
+        EstadoFisicoResponse response = new EstadoFisicoResponse(1L, "Estado act", false);
+        when(estadoFisicoService.actualizar(any(Long.class), any(EstadoFisicoRequest.class))).thenReturn(response);
+
+        mockMvc.perform(put("/api/v1/estados-fisicos/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("DELETE /api/v1/estados-fisicos/{id} - Should deactivate estado fisico")
+    void shouldDeactivate() throws Exception {
+        mockMvc.perform(delete("/api/v1/estados-fisicos/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/estados-fisicos/{id}/activar - Should activate estado fisico")
+    void shouldActivate() throws Exception {
+        mockMvc.perform(patch("/api/v1/estados-fisicos/1/activar"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+}

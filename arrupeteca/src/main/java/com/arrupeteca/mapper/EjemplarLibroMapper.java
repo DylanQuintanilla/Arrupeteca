@@ -15,12 +15,14 @@ import org.mapstruct.MappingTarget;
 
 @Mapper(
     config = CentralMapperConfig.class,
-    uses = {LibroMapper.class, MuebleMapper.class}
+    uses = {LibroMapper.class, MuebleMapper.class, EstadoFisicoMapper.class, DisponibilidadMapper.class}
 )
 public interface EjemplarLibroMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "borradoLogico", ignore = true)
+    @Mapping(target = "estadoFisico", ignore = true)
+    @Mapping(target = "disponibilidad", ignore = true)
     @Mapping(target = "libro", ignore = true)
     @Mapping(target = "mueble", ignore = true)
     @Mapping(target = "version", ignore = true)
@@ -29,6 +31,8 @@ public interface EjemplarLibroMapper {
     @InheritConfiguration(name = "toEntity")
     void updateEntity(EjemplarLibroRequest request, @MappingTarget EjemplarLibro ejemplarLibro);
 
+    @Mapping(target = "nombreEstadoFisico", source = "estadoFisico.nombre")
+    @Mapping(target = "nombreDisponibilidad", source = "disponibilidad.nombre")
     @Mapping(target = "tituloLibro", source = "libro.obra.titulo")
     @Mapping(target = "nombreMueble", source = "mueble.nombre")
     EjemplarLibroResumen toResumen(EjemplarLibro ejemplarLibro);

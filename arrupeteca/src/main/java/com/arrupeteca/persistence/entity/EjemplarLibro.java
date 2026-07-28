@@ -1,11 +1,7 @@
 package com.arrupeteca.persistence.entity;
 
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -64,13 +60,13 @@ public class EjemplarLibro extends Auditable {
     @JoinColumn(name = "id_mueble", nullable = false)
     private Mueble mueble;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "estado_fisico", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_estado_fisico", nullable = false)
     @ToString.Include
     private EstadoFisico estadoFisico;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "disponibilidad", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_disponibilidad", nullable = false)
     @ToString.Include
     private Disponibilidad disponibilidad;
 

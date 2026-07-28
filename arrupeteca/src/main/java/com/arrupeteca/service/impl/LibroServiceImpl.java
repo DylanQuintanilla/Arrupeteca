@@ -10,13 +10,13 @@ import com.arrupeteca.persistence.entity.Obra;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.Formato;
 import com.arrupeteca.persistence.entity.Idioma;
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.persistence.repository.FormatoRepository;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
+import com.arrupeteca.persistence.repository.GradoRepository;
+import com.arrupeteca.persistence.repository.CicloRepository;
 import com.arrupeteca.persistence.specification.LibroSpecification;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +44,8 @@ public class LibroServiceImpl implements LibroService {
     private final EditorialRepository editorialRepository;
     private final FormatoRepository formatoRepository;
     private final IdiomaRepository idiomaRepository;
+    private final GradoRepository gradoRepository;
+    private final CicloRepository cicloRepository;
     private final LibroMapper libroMapper;
 
     @Override
@@ -87,19 +89,14 @@ public class LibroServiceImpl implements LibroService {
     @Override
     public Page<LibroResumen> busquedaMaestraAdmin(
             Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEditorial, Long idFormato,
-            Object gradoStr, Object cicloStr, String termino,
+            Long idGrado, Long idCiclo, String termino,
             Integer anioInicio, Integer anioFin, Pageable pageable) {
 
         log.debug("Búsqueda maestra de libros para admin");
-        Grado grado = (gradoStr instanceof String s && !s.isEmpty())
-                ? Grado.valueOf(s) : (gradoStr instanceof Grado g ? g : null);
-
-        Ciclo ciclo = (cicloStr instanceof String s && !s.isEmpty())
-                ? Ciclo.valueOf(s) : (cicloStr instanceof Ciclo c ? c : null);
 
         return libroRepository.findAll(
                         LibroSpecification.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
-                                grado, ciclo, termino, anioInicio, anioFin),
+                                idGrado, idCiclo, termino, anioInicio, anioFin),
                         pageable)
                 .map(libroMapper::toResumen);
     }
@@ -271,6 +268,30 @@ public class LibroServiceImpl implements LibroService {
                                     () -> errores.add("El idioma con ID " + id + " no existe."));
                 }
                 libro.setIdiomas(idiomas);
+            }
+        }
+
+        // 5. Grado
+        if (request.idGrado() != null && request.idGrado().isPresent()) {
+            Long idGrado = request.idGrado().get();
+            if (idGrado != null) {
+                gradoRepository.findById(idGrado)
+                        .ifPresentOrElse(libro::setGrado,
+                                () -> errores.add("El grado con ID " + idGrado + " no existe."));
+            } else {
+                libro.setGrado(null);
+            }
+        }
+
+        // 6. Ciclo
+        if (request.idCiclo() != null && request.idCiclo().isPresent()) {
+            Long idCiclo = request.idCiclo().get();
+            if (idCiclo != null) {
+                cicloRepository.findById(idCiclo)
+                        .ifPresentOrElse(libro::setCiclo,
+                                () -> errores.add("El ciclo con ID " + idCiclo + " no existe."));
+            } else {
+                libro.setCiclo(null);
             }
         }
 

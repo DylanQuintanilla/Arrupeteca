@@ -5,12 +5,14 @@ import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
 import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EjemplarLibroMapper;
+import com.arrupeteca.persistence.entity.Disponibilidad;
 import com.arrupeteca.persistence.entity.EjemplarLibro;
+import com.arrupeteca.persistence.entity.EstadoFisico;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
+import com.arrupeteca.persistence.repository.DisponibilidadRepository;
 import com.arrupeteca.persistence.repository.EjemplarLibroRepository;
+import com.arrupeteca.persistence.repository.EstadoFisicoRepository;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.MuebleRepository;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +30,6 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,6 +47,12 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
 
     @Mock
     private MuebleRepository muebleRepository;
+
+    @Mock
+    private EstadoFisicoRepository estadoFisicoRepository;
+
+    @Mock
+    private DisponibilidadRepository disponibilidadRepository;
 
     @InjectMocks
     private EjemplarLibroServiceImpl service;
@@ -131,18 +138,8 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
                 .thenReturn(page);
         when(mapper.toResumen(any())).thenReturn(summary);
 
-        // String param types
-        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "BUEN_ESTADO", "DISPONIBLE", "term", Pageable.unpaged());
+        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, 1L, 1L, "term", Pageable.unpaged());
         assertThat(result.getContent()).containsExactly(summary);
-
-        // Enum param types
-        service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, EstadoFisico.BUEN_ESTADO, Disponibilidad.DISPONIBLE, "term", Pageable.unpaged());
-
-        // Invalid String for valueOf
-        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "INVALID", "DISPONIBLE", "term", Pageable.unpaged()))
-                .isInstanceOf(IllegalArgumentException.class);
-        assertThatThrownBy(() -> service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, "BUEN_ESTADO", "INVALID", "term", Pageable.unpaged()))
-                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -150,13 +147,15 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     void shouldCreateWithAllCombinations() {
         Libro libro = Libro.builder().build();
         Mueble mueble = Mueble.builder().build();
+        EstadoFisico ef = EstadoFisico.builder().build();
+        Disponibilidad disp = Disponibilidad.builder().build();
         EjemplarLibro entity = EjemplarLibro.builder().build();
 
         EjemplarLibroRequest request = EjemplarLibroRequest.builder()
                 .idLibro(JsonNullable.of(1L))
                 .idMueble(JsonNullable.of(2L))
-                .estadoFisico(JsonNullable.of(EstadoFisico.BUEN_ESTADO))
-                .disponibilidad(JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .idEstadoFisico(JsonNullable.of(1L))
+                .idDisponibilidad(JsonNullable.of(1L))
                 .build();
 
         when(mapper.toEntity(any())).thenReturn(entity);
@@ -164,6 +163,8 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         when(mapper.toDetalleResponse(any())).thenReturn(mock(EjemplarLibroDetalleResponse.class));
         when(libroRepository.findById(1L)).thenReturn(Optional.of(libro));
         when(muebleRepository.findById(2L)).thenReturn(Optional.of(mueble));
+        when(estadoFisicoRepository.findById(1L)).thenReturn(Optional.of(ef));
+        when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disp));
 
         service.crear(request);
         verify(repository).save(entity);
@@ -176,8 +177,8 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         EjemplarLibroRequest request = EjemplarLibroRequest.builder()
                 .idLibro(JsonNullable.of(1L))
                 .idMueble(JsonNullable.of(2L))
-                .estadoFisico(JsonNullable.of(EstadoFisico.BUEN_ESTADO))
-                .disponibilidad(JsonNullable.of(Disponibilidad.DISPONIBLE))
+                .idEstadoFisico(JsonNullable.of(1L))
+                .idDisponibilidad(JsonNullable.of(1L))
                 .version(0L)
                 .build();
 
@@ -186,6 +187,8 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         when(mapper.toDetalleResponse(any())).thenReturn(mock(EjemplarLibroDetalleResponse.class));
         when(libroRepository.findById(1L)).thenReturn(Optional.of(Libro.builder().build()));
         when(muebleRepository.findById(2L)).thenReturn(Optional.of(Mueble.builder().build()));
+        when(estadoFisicoRepository.findById(1L)).thenReturn(Optional.of(EstadoFisico.builder().build()));
+        when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(Disponibilidad.builder().build()));
 
         service.actualizar(1L, request);
 

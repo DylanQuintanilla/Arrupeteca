@@ -1,7 +1,5 @@
 package com.arrupeteca.persistence.entity;
 
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -12,13 +10,16 @@ class EjemplarLibroTest {
     @Test
     @DisplayName("Should test getters, setters and builder")
     void shouldTestGettersSettersAndBuilder() {
+        EstadoFisico ef = EstadoFisico.builder().id(1L).nombre("Buen estado").build();
+        Disponibilidad disp = Disponibilidad.builder().id(1L).nombre("Disponible").build();
+
         EjemplarLibro ejemplar = EjemplarLibro.builder()
                 .id(1L)
                 .comentario("Buen estado")
                 .libro(Libro.builder().build())
                 .mueble(Mueble.builder().build())
-                .estadoFisico(EstadoFisico.BUEN_ESTADO)
-                .disponibilidad(Disponibilidad.DISPONIBLE)
+                .estadoFisico(ef)
+                .disponibilidad(disp)
                 .borradoLogico(true)
                 .build();
 
@@ -26,8 +27,8 @@ class EjemplarLibroTest {
         assertThat(ejemplar.getComentario()).isEqualTo("Buen estado");
         assertThat(ejemplar.getLibro()).isNotNull();
         assertThat(ejemplar.getMueble()).isNotNull();
-        assertThat(ejemplar.getEstadoFisico()).isEqualTo(EstadoFisico.BUEN_ESTADO);
-        assertThat(ejemplar.getDisponibilidad()).isEqualTo(Disponibilidad.DISPONIBLE);
+        assertThat(ejemplar.getEstadoFisico()).isEqualTo(ef);
+        assertThat(ejemplar.getDisponibilidad()).isEqualTo(disp);
         assertThat(ejemplar.isBorradoLogico()).isTrue();
     }
 

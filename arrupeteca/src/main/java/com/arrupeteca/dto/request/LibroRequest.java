@@ -2,8 +2,6 @@ package com.arrupeteca.dto.request;
 
 import java.math.BigDecimal;
 import java.util.Set;
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
 import lombok.Builder;
@@ -19,8 +17,8 @@ public record LibroRequest(
     JsonNullable<BigDecimal> precio,
     JsonNullable<String> urlImagen,
     JsonNullable<BigDecimal> mora,
-    JsonNullable<Grado> grado,
-    JsonNullable<Ciclo> ciclo,
+    JsonNullable<Long> idGrado,
+    JsonNullable<Long> idCiclo,
     JsonNullable<Long> idObra,
     JsonNullable<Long> idFormato,
     JsonNullable<Long> idEditorial,
