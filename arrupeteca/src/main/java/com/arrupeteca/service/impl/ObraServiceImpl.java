@@ -19,7 +19,6 @@ import com.arrupeteca.persistence.repository.CategoriaRepository;
 import com.arrupeteca.persistence.repository.EtiquetaRepository;
 import com.arrupeteca.persistence.repository.AutorRepository;
 import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
-import com.arrupeteca.persistence.specification.ObraSpecification;
 import com.arrupeteca.service.ObraService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -51,9 +50,8 @@ public class ObraServiceImpl implements ObraService {
 
     @Override
     public Page<ObraResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo obras activas paginadas: {}", pageable);
-        return obraRepository.findByBorradoLogicoFalse(pageable)
-                .map(obraMapper::toResumen);
+        log.debug("Obteniendo obras activas proyectadas paginadas: {}", pageable);
+        return obraRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -67,16 +65,14 @@ public class ObraServiceImpl implements ObraService {
 
     @Override
     public Page<ObraResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        log.debug("Búsqueda global de obras por '{}' con paginación: {}", palabra, pageable);
-        return obraRepository.findAll(ObraSpecification.busquedaGlobal(palabra), pageable)
-                .map(obraMapper::toResumen);
+        log.debug("Búsqueda global proyectada de obras por '{}' con paginación: {}", palabra, pageable);
+        return obraRepository.busquedaMaestraAdminProyectada(false, null, null, null, palabra, null, null, pageable);
     }
 
     @Override
     public Page<ObraResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todas las obras (Admin) paginadas: {}", pageable);
-        return obraRepository.findAll(pageable)
-                .map(obraMapper::toResumen);
+        log.debug("Obteniendo todas las obras proyectadas (Admin) paginadas: {}", pageable);
+        return obraRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
     }
 
     @Override

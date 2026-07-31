@@ -11,27 +11,31 @@ Todo controlador REST de Arrupeteca debe seguir las siguientes reglas de anotaci
 *   **`@RestController`**: Registra la clase como un controlador de tipo REST que retorna respuestas en formato JSON.
 *   **`@RequestMapping("/api/v1/recurso")`**: Define el prefijo de la ruta del API. Debe seguir la convención `/api/v1/` seguido del nombre del recurso en plural (ej. `/api/v1/autores`, `/api/v1/libros`).
 *   **`@RequiredArgsConstructor`**: Inyecta los servicios colaboradores de forma automática por constructor vía Lombok (los colaboradores deben declararse como `private final`).
-*   **`@CrossOrigin(origins = "*")`**: Permite la comunicación CORS desde cualquier cliente de desarrollo (Frontend).
 *   **`@Tag(name = "Recurso", description = "...")`**: Anotación de OpenAPI obligatoria para agrupar y describir los endpoints de este controlador en la UI de Swagger.
 
 ---
 
-## 2. Semántica HTTP y Estructura de Endpoints
+## 2. Semántica HTTP y Estructura de Endpoints Estándar (10 Endpoints Base)
 
-Los controladores deben implementar la arquitectura REST de forma estricta, mapeando las acciones a los verbos HTTP correctos:
+Todas las clases de negocio (`AutorController`, `ObraController`, `LibroController`, `EjemplarLibroController`) deben implementar de forma homogénea los **10 endpoints base obligatorios**:
 
-| Método HTTP | Ruta relativa | Acción REST | Códigos de Estado Comunes | Formato de Retorno |
+| Método HTTP | Ruta relativa | Acción REST | Códigos de Estado | Formato de Retorno |
 | :--- | :--- | :--- | :--- | :--- |
-| **GET** | `/` | Obtener listado activo. | `200 OK` | `ApiResponse<Page<[Entidad]ResumenResponse>>` |
-| **GET** | `/{id}` | Obtener detalle activo. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **GET** | `/admin` | Obtener historial completo (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]ResumenResponse>>` |
-| **GET** | `/admin/{id}` | Obtener detalle (Admin). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
+| **GET** | `/` | Obtener listado público activo. | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
+| **GET** | `/{id}` | Obtener detalle público activo. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
+| **GET** | `/global` | Búsqueda global pública por coincidencia. | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
+| **GET** | `/admin` | Obtener historial completo (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
+| **GET** | `/admin/{id}` | Obtener detalle por ID (Admin). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
+| **GET** | `/admin/busqueda-maestra` | Búsqueda avanzada multi-filtro (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
 | **POST** | `/` | Crear nuevo registro. | `201 Created`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **PATCH** | `/{id}` | Actualizar registro (Parcial con JsonNullable). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **DELETE** | `/{id}` | Desactivar (Borrado lógico). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
-| **PATCH** | `/{id}/activar` | Activar registro desactivado. | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
+| **PATCH** | `/{id}` | Actualizar parcial con `JsonNullable`. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
+| **DELETE** | `/{id}` | Desactivar (Borrado lógico `borradoLogico = true`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
+| **PATCH** | `/{id}/activar` | Activar registro (`borradoLogico = false`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
 
-*Nota: Para el estado `201 Created` en el POST, utilizar la sintaxis fluida de Spring:*
+*Notas sobre endpoints específicos*:
+*   `AutorController` incluye de forma adicional `GET /verificar-duplicados` (verificación pre-registro).
+*   `LibroController` incluye de forma adicional `GET /obra/{idObra}` (relación hijo por obra).
+*   Para el estado `201 Created` en el POST, utilizar la sintaxis fluida de Spring:
 ```java
 return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.exito("...", resultado));
 ```
@@ -46,7 +50,6 @@ Para mantener el código fuente limpio y libre de colisiones de nombres con DTOs
 *   **Prohibido**: Utilizar anotaciones `@ApiResponse` personalizadas en cada método.
 *   **Autodetección**: Springdoc OpenAPI lee de forma inteligente el tipo de retorno genérico (ej. `ResponseEntity<ApiResponse<DTO>>`) y genera automáticamente en el Swagger UI el esquema JSON y los códigos de éxito.
 *   **Paginación con `@ParameterObject`**: Todo endpoint que reciba un parámetro `Pageable` debe anotarlo obligatoriamente con `@ParameterObject` y `@PageableDefault(size = 20, sort = "nombre")`. Esto permite que Springdoc exponga de forma plana los parámetros de consulta (`page`, `size`, `sort`) en la documentación de Swagger UI en lugar de un objeto anidado complejo, además de definir los valores por defecto del sistema.
-*   **Checkstyle Compliance (140 Caracteres)**: Las anotaciones de OpenAPI deben formatearse en múltiples líneas independientes para evitar violar el límite máximo de caracteres por línea.
 
 ---
 
@@ -70,13 +73,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -88,8 +89,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/autores")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
-@Tag(name = "Autores", description = "Endpoints para la gestión de autores literarios")
+@Tag(name = "Autores", description = "Endpoints para la gestión de autores de obras literarias")
 public class AutorController {
 
     private final AutorService autorService;
@@ -132,7 +132,7 @@ public class AutorController {
         return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.obtenerPorId(id)));
     }
 
-    @GetMapping("/busqueda")
+    @GetMapping("/global")
     @Operation(
         summary = "Búsqueda global de autores",
         description = "Busca autores por coincidencia parcial de texto y rango de año de nacimiento."
@@ -148,7 +148,7 @@ public class AutorController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada (Admin)",
-        description = "Búsqueda avanzada de administración con filtros opcionales de estado, género, país, período y término."
+        description = "Búsqueda avanzada multi-filtro por estado, género, país y coincidencia de término (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
@@ -162,6 +162,17 @@ public class AutorController {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero,
                         anioInicio, anioFin, termino, pageable)));
+    }
+
+    @GetMapping("/verificar-duplicados")
+    @Operation(
+        summary = "Verificar duplicados",
+        description = "Busca autores con nombres o seudónimos similares en el sistema."
+    )
+    public ResponseEntity<ApiResponse<List<AutorResumenResponse>>> buscarDuplicados(
+            @RequestParam String termino,
+            @RequestParam(required = false) Long idExcluir) {
+        return ResponseEntity.ok(ApiResponse.exito("Verificación completada", autorService.buscarDuplicados(termino, idExcluir)));
     }
 
     @PostMapping
@@ -221,8 +232,3 @@ public class AutorController {
    * ¿Se incluyó `@Tag` a nivel de clase y `@Operation` en cada método?
    * ¿Se evitaron anotaciones `@ApiResponse` redundantes para dejar que Springdoc infiera el esquema automáticamente?
    * ¿Los parámetros de tipo `Pageable` tienen anotados `@ParameterObject` y `@PageableDefault`?
-6. **¿Conformidad con Checkstyle?**
-   * ¿Se formatearon las anotaciones OpenAPI en múltiples líneas para asegurar que ninguna línea de código supere los 140 caracteres?
-
----
-*Este estándar garantiza controladores REST uniformes, limpios, seguros y perfectamente autodocumentados en Arrupeteca.*

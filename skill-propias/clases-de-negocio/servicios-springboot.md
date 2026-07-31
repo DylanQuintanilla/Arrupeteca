@@ -23,34 +23,44 @@ Los métodos que realicen modificaciones de datos (`crear`, `actualizar`, `cambi
 
 ---
 
-## 3. Estrategia de Caché Local
+## 3. Delegación de Proyecciones Directas (`SELECT new`) vs Vistas de Detalle
+
+Para maximizar el rendimiento y la eficiencia de la memoria en la capa de servicio:
+
+*   **Métodos de Listado Paginado de Resumen (`obtenerTodosActivos`, `obtenerTodos`, `busquedaGlobal`, `busquedaMaestraAdmin`, `buscarPorObraId`)**:
+    *   **Delegación Directa**: Deben delegar directamente al método proyectado del repositorio (ej. `autorRepository.busquedaMaestraAdminProyectada(...)`).
+    *   **Prohibido usar MapStruct en Lecturas Paginadas**: NO se debe invocar `.map(mapper::toResumen)`, ya que el resultado entregado por el repositorio ya es la página de DTOs finales (`Page<[Entidad]Resumen>`) instanciada por SQL.
+*   **Métodos de Detalle por ID (`obtenerPorIdActivo`, `obtenerPorId`)**:
+    *   **Carga Completa con `@EntityGraph`**: Consultan la entidad completa desde el repositorio (`findByIdAndBorradoLogicoFalse` / `findById`) y luego mapean el objeto con MapStruct (`.map(mapper::toDetalleResponse)`).
+
+---
+
+## 4. Estrategia de Caché Local
 
 Para optimizar las lecturas frecuentes de un mismo registro por su identificador único:
 *   **`@Cacheable(value = "nombre_cache", key = "#id")`**: Aplicar **únicamente en las consultas de detalle del catálogo público** (`obtenerPorIdActivo`).
-*   **Evitar colisiones con consultas de administración**: Los métodos de detalle para administradores (`obtenerPorId`) **no deben ser cacheados** (o deben usar una caché independiente como `"nombre_cache-admin"`), ya que los administradores modifican datos y requieren ver la versión real en base de datos de manera inmediata, además de evitar la contaminación de la caché pública con entidades borradas lógicamente.
+*   **Evitar colisiones con consultas de administración**: Los métodos de detalle para administradores (`obtenerPorId`) **no deben ser cacheados**, ya que los administradores modifican datos y requieren ver la versión real en base de datos de manera inmediata.
 *   **`@CacheEvict(value = "nombre_cache", key = "#id")`**: Aplicar obligatoriamente en métodos de modificación (`actualizar`) y cambio de estado (`cambiarEstado`) para invalidar de forma quirúrgica las entradas obsoletas en memoria.
 
 ---
 
-## 4. Validaciones de Negocio y Relaciones (Fail-Fast)
+## 5. Validaciones de Negocio y Relaciones (Fail-Fast)
 
-*   **Validaciones de obligatoriedad según la acción**: Como el DTO es reutilizado para creación (POST) y actualización parcial (PUT/PATCH), las validaciones lógicas obligatorias de presencia (ej. "biografía no puede estar vacía" o "debe tener al menos un nombre o seudónimo") deben validarse de manera dinámica en la capa de servicio:
+*   **Validaciones de obligatoriedad según la acción**: Como el DTO es reutilizado para creación (POST) y actualización parcial (PUT/PATCH), las validaciones lógicas obligatorias de presencia deben validarse de manera dinámica en la capa de servicio:
     *   En `crear()`: Se verifica que todos los campos mandatorios estén provistos y no en blanco.
-    *   En `actualizar()`: Se comprueban únicamente si se encuentran presentes en el `JsonNullable` del DTO (para evitar lanzar excepciones sobre campos omitidos), y tras hacer el merge se valida el estado final de la entidad.
-*   **Bloqueo Optimista Manual**: Al actualizar, se debe comprobar si el cliente envió una versión en su DTO. Si la versión es distinta a la de la entidad en la base de datos, lanzar una excepción de negocio de inmediato.
-*   **Recolección de Errores (Multi-Validation)**: Al validar la existencia física de IDs relacionados (ej. llaves foráneas):
-    *   No lanzar excepciones individuales secuenciales.
-    *   Acumular todos los fallos detectados en una lista de cadenas `List<String> errores`.
-    *   Si la lista no está vacía, lanzar una sola `ValidacionNegocioException(errores)`. Esto mejora significativamente la experiencia del frontend al retornar todos los errores en una sola respuesta.
+    *   En `actualizar()`: Se comprueban únicamente si se encuentran presentes en el `JsonNullable` del DTO, y tras hacer el merge se valida el estado final de la entidad.
+*   **Bloqueo Optimista Manual**: Al actualizar, se debe comprobar la versión del DTO. Si no coincide con la versión existente en la entidad, lanzar una excepción de negocio de inmediato.
+*   **Recolección de Errores (Multi-Validation)**: Al validar la existencia de relaciones, acumular todos los fallos detectados en una lista de cadenas `List<String> errores` y lanzar una sola `ValidacionNegocioException(errores)`.
 
 ---
 
-## 5. Plantilla Maestra de Referencia (AutorServiceImpl)
+## 6. Plantilla Maestra de Referencia (AutorServiceImpl)
 
 ```java
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import org.openapitools.jackson.nullable.JsonNullable;
 import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
 import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
@@ -61,16 +71,14 @@ import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.PaisRepository;
-import com.arrupeteca.persistence.specification.AutorSpecification;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.openapitools.jackson.nullable.JsonNullable;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -93,20 +101,15 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores activos con paginación: {}", pageable);
-        Specification<Autor> spec = AutorSpecification.esBorrado(false);
-        return autorRepository.findAll(spec, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Obteniendo todos los autores activos proyectados con paginación: {}", pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
     }
 
     @Override
     @Cacheable(value = "autores", key = "#id")
     public AutorDetalleResponse obtenerPorIdActivo(Long id) {
         log.debug("Buscando autor activo con ID: {}", id);
-        Specification<Autor> spec = Specification.where(AutorSpecification.tieneId(id))
-                .and(AutorSpecification.esBorrado(false));
-
-        return autorRepository.findOne(spec)
+        return autorRepository.findByIdAndBorradoLogicoFalse(id)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor activo con ID: {}", id);
@@ -116,9 +119,8 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores (incluyendo borrados) con paginación: {}", pageable);
-        return autorRepository.findAll((Specification<Autor>) null, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Obteniendo todos los autores proyectados (incluyendo borrados) con paginación: {}", pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -134,19 +136,16 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
-        log.debug("Iniciando búsqueda global: '{}', años: {} - {}", palabra, anioInicio, anioFin);
-        Specification<Autor> spec = AutorSpecification.filtroBusquedaGlobal(palabra, anioInicio, anioFin);
-        return autorRepository.findAll(spec, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Iniciando búsqueda global proyectada: '{}', años: {} - {}", palabra, anioInicio, anioFin);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, anioInicio, anioFin, palabra, pageable);
     }
 
     @Override
     public Page<AutorResumenResponse> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
             Year anioInicio, Year anioFin, String termino, Pageable pageable) {
-        log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}'", termino);
-        return autorRepository.busquedaMaestraAdminProyectada(
-                esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino, pageable);
+        log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}', años: {} - {}", termino, anioInicio, anioFin);
+        return autorRepository.busquedaMaestraAdminProyectada(esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino, pageable);
     }
 
     @Override
@@ -205,7 +204,8 @@ public class AutorServiceImpl implements AutorService {
 
     private void validarDatosActualizacion(AutorRequest request, Autor autorExistente) {
         // Validación manual de Bloqueo Optimista
-        if (request.version() != null && !request.version().equals(autorExistente.getVersion())) {
+        Long vExistente = autorExistente.getVersion() != null ? autorExistente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
             throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 
@@ -330,7 +330,7 @@ public class AutorServiceImpl implements AutorService {
             return List.of();
         }
         log.debug("Buscando duplicados para el término: '{}'", termino);
-        return autorRepository.buscarPosiblesDuplicados(termino.trim(), idExcluir)
+        return autorRepository.buscarDuplicados(termino.trim(), idExcluir, Sort.by("nombre"))
                 .stream()
                 .map(autorMapper::toResumen)
                 .toList();
@@ -340,7 +340,7 @@ public class AutorServiceImpl implements AutorService {
 
 ---
 
-## 6. Lista de Autoverificación (Checklist del Desarrollador)
+## 7. Lista de Autoverificación (Checklist del Desarrollador)
 
 1. **¿Configuración transaccional correcta?**
    * ¿Tiene la clase `@Transactional(readOnly = true)`?
@@ -356,5 +356,3 @@ public class AutorServiceImpl implements AutorService {
    * ¿La validación de unicidad de nombres desenvuelve el `JsonNullable` y permite mantener el valor original al actualizar?
 5. **¿Recolección acumulativa de errores de relaciones?**
    * Al buscar entidades de claves foráneas, ¿se acumulan los errores en una `List<String>` y se lanzan todos juntos en una única excepción `ValidacionNegocioException(errores)`?
-6. **¿Lógica de obligatoriedad en el Servicio?**
-   * ¿Se validan los campos requeridos en `crear()` y se permite omitirlos de forma segura en `actualizar()` respetando el flujo de actualización parcial?

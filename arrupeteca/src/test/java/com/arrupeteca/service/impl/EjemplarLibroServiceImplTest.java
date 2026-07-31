@@ -60,11 +60,9 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("obtenerTodosActivos - Should return summary page")
     void shouldReturnActive() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(mapper.toResumen(any())).thenReturn(summary);
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
+        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<EjemplarLibroResumen> result = service.obtenerTodosActivos(Pageable.unpaged());
 
@@ -88,11 +86,9 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("busquedaGlobal - Should return summary page")
     void shouldSearchGlobally() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        when(repository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
-        when(mapper.toResumen(any())).thenReturn(summary);
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
+        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<EjemplarLibroResumen> result = service.busquedaGlobal("term", 1L, 1L, Pageable.unpaged());
 
@@ -102,11 +98,9 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("obtenerTodos - Should return all page")
     void shouldReturnAll() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        when(repository.findAll(any(Pageable.class))).thenReturn(page);
-        when(mapper.toResumen(any())).thenReturn(summary);
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
+        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<EjemplarLibroResumen> result = service.obtenerTodos(Pageable.unpaged());
 

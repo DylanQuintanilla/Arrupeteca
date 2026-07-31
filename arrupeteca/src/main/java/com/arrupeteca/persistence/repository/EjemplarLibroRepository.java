@@ -4,17 +4,15 @@ import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.persistence.entity.EjemplarLibro;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Long>, JpaSpecificationExecutor<EjemplarLibro> {
+public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Long> {
 
     @Query("SELECT new com.arrupeteca.dto.response.summary.EjemplarLibroResumen(" +
            "e.id, e.comentario, e.borradoLogico, ef.nombre, d.nombre, o.titulo, m.nombre) " +
@@ -48,16 +46,7 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
             Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibro> findAll(Specification<EjemplarLibro> spec, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibro> findByBorradoLogicoFalse(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Optional<EjemplarLibro> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Page<EjemplarLibro> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
     Optional<EjemplarLibro> findById(Long id);

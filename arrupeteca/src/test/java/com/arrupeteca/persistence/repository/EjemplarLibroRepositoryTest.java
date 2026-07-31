@@ -2,6 +2,7 @@ package com.arrupeteca.persistence.repository;
 
 import java.util.Set;
 
+import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Disponibilidad;
 import com.arrupeteca.persistence.entity.Edificio;
@@ -16,7 +17,6 @@ import com.arrupeteca.persistence.entity.Mueble;
 import com.arrupeteca.persistence.entity.Obra;
 import com.arrupeteca.persistence.entity.Planta;
 import com.arrupeteca.persistence.entity.Salon;
-import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,7 +76,8 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should perform global search")
     void shouldSearchGlobal() {
         ejemplarLibroRepository.save(createValidEjemplar("Especial"));
-        Page<EjemplarLibro> page = ejemplarLibroRepository.findAll(EjemplarLibroSpecification.busquedaGlobal("Especial", null, null), PageRequest.of(0, 10));
+        Page<EjemplarLibroResumen> page = ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+                false, null, null, null, null, null, null, null, "Especial", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

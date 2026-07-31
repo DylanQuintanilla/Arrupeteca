@@ -64,12 +64,10 @@ class LibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("obtenerTodosActivos - Should return page of Resumen")
     void obtenerTodosActivos() {
-        Libro entity = Libro.builder().id(1L).build();
-        Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
+        Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
 
-        when(libroRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+        when(libroRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<LibroResumen> result = libroService.obtenerTodosActivos(Pageable.unpaged());
 
@@ -102,11 +100,9 @@ class LibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("busquedaGlobal - Should return page of Resumen")
     void busquedaGlobal() {
-        Libro entity = Libro.builder().id(1L).build();
-        Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(libroRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class))).thenReturn(page);
-        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+        Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
+        when(libroRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<LibroResumen> result = libroService.busquedaGlobal("palabra", null, null, Pageable.unpaged());
 
@@ -116,11 +112,9 @@ class LibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("obtenerTodos - Should return all books")
     void obtenerTodos() {
-        Libro entity = Libro.builder().id(1L).build();
-        Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(libroRepository.findAll(any(Pageable.class))).thenReturn(page);
-        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+        Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
+        when(libroRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<LibroResumen> result = libroService.obtenerTodos(Pageable.unpaged());
 
@@ -152,11 +146,9 @@ class LibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("buscarPorObraId - Should return results")
     void buscarPorObraId() {
-        Libro entity = Libro.builder().id(1L).build();
-        Page<Libro> page = new PageImpl<>(List.of(entity));
         LibroResumen resumen = mock(LibroResumen.class);
-        when(libroRepository.buscarPorObraId(1L, Pageable.unpaged())).thenReturn(page);
-        when(libroMapper.toResumen(entity)).thenReturn(resumen);
+        Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
+        when(libroRepository.buscarPorObraId(eq(1L), any(Pageable.class))).thenReturn(page);
 
         Page<LibroResumen> result = libroService.buscarPorObraId(1L, Pageable.unpaged());
 

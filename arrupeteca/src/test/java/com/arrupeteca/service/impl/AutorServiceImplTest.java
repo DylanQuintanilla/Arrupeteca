@@ -23,10 +23,11 @@ import org.mockito.Mock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Sort;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -58,8 +59,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return active authors page")
     void shouldReturnActiveAuthors() {
-        Page<Autor> page = new PageImpl<>(List.of());
-        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.obtenerTodosActivos(Pageable.unpaged());
 
@@ -70,7 +71,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should return active author by ID")
     void shouldReturnActiveAuthorById() {
         Autor autor = Autor.builder().id(1L).borradoLogico(false).build();
-        when(autorRepository.findOne(any(Specification.class))).thenReturn(Optional.of(autor));
+        when(autorRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(autor));
 
         AutorDetalleResponse detalle = mock(AutorDetalleResponse.class);
         when(autorMapper.toDetalleResponse(autor)).thenReturn(detalle);
@@ -83,7 +84,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when active author by ID is not found")
     void shouldThrowWhenActiveAuthorNotFound() {
-        when(autorRepository.findOne(any(Specification.class))).thenReturn(Optional.empty());
+        when(autorRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> autorService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
@@ -93,8 +94,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should return all authors page")
     void shouldReturnAllAuthors() {
-        Page<Autor> page = new PageImpl<>(List.of());
-        when(autorRepository.findAll(nullable(Specification.class), any(Pageable.class))).thenReturn(page);
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.obtenerTodos(Pageable.unpaged());
 
@@ -128,8 +129,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should perform global search")
     void shouldPerformGlobalSearch() {
-        Page<Autor> page = new PageImpl<>(List.of());
-        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.busquedaGlobal("palabra", Year.of(1900), Year.of(2000), Pageable.unpaged());
 
@@ -332,12 +333,12 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should verify duplicates with trimming")
     void shouldVerifyDuplicatesWithTrimming() {
         Autor autor = Autor.builder().build();
-        when(autorRepository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Sort.class)))
+        when(autorRepository.buscarDuplicados(eq("Termino"), eq(1L), any(Sort.class)))
                 .thenReturn(List.of(autor));
         when(autorMapper.toResumen(autor)).thenReturn(mock(AutorResumenResponse.class));
 
         assertThat(autorService.buscarDuplicados("  Termino  ", 1L)).isNotEmpty();
-        verify(autorRepository).findAll(any(org.springframework.data.jpa.domain.Specification.class), any(org.springframework.data.domain.Sort.class));
+        verify(autorRepository).buscarDuplicados(eq("Termino"), eq(1L), any(Sort.class));
     }
 
     @Test

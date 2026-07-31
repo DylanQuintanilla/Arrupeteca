@@ -74,7 +74,7 @@ public class AutorController {
         return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.obtenerPorId(id)));
     }
 
-    @GetMapping("/busqueda")
+    @GetMapping("/global")
     @Operation(
         summary = "Búsqueda global de autores",
         description = "Busca autores por coincidencia parcial de texto y rango de año de nacimiento."

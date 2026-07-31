@@ -4,17 +4,14 @@ import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.persistence.entity.Obra;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface ObraRepository extends JpaRepository<Obra, Long>, JpaSpecificationExecutor<Obra> {
+public interface ObraRepository extends JpaRepository<Obra, Long> {
 
     @Query("SELECT new com.arrupeteca.dto.response.summary.ObraResumen(" +
            "o.id, o.titulo, o.anioCreacion, o.resumen, o.borradoLogico) " +
@@ -37,14 +34,7 @@ public interface ObraRepository extends JpaRepository<Obra, Long>, JpaSpecificat
             @Param("anioFin") Integer anioFin,
             Pageable pageable);
 
-    @EntityGraph(attributePaths = {"generos", "categorias"})
-    Page<Obra> findAll(Specification<Obra> spec, Pageable pageable);
-
-    Page<Obra> findByBorradoLogicoFalse(Pageable pageable);
-
     Optional<Obra> findByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Obra> findAll(Pageable pageable);
 
     Optional<Obra> findById(Long id);
 
@@ -62,6 +52,4 @@ public interface ObraRepository extends JpaRepository<Obra, Long>, JpaSpecificat
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 
     boolean existsByTituloIgnoreCase(String titulo);
-
-    Page<Obra> findByTituloContainingIgnoreCase(String titulo, Pageable pageable);
 }

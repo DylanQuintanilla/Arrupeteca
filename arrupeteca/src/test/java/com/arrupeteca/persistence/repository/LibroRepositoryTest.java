@@ -2,6 +2,7 @@ package com.arrupeteca.persistence.repository;
 
 import java.util.Set;
 
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Editorial;
 import com.arrupeteca.persistence.entity.Formato;
@@ -46,7 +47,8 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActive() {
         libroRepository.save(createValidLibro("9781107004634"));
-        Page<Libro> page = libroRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        Page<LibroResumen> page = libroRepository.busquedaMaestraAdminProyectada(
+                false, null, null, null, null, null, null, null, null, null, null, null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

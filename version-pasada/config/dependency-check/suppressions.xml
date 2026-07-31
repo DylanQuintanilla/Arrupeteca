@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!-- 
-      Este archivo sirve para ignorar falsos positivos detectados por el Dependency Check.
-      Si una vulnerabilidad (CVE) es reportada pero has verificado que no afecta a tu aplicación,
-      puedes agregar una etiqueta <suppress> aquí.
-    -->
-</suppressions>

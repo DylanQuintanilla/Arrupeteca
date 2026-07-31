@@ -63,12 +63,10 @@ class ObraServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("obtenerTodosActivos - Should return page of Resumen")
     void obtenerTodosActivos() {
-        Obra entity = Obra.builder().id(1L).titulo("Test").build();
-        Page<Obra> page = new PageImpl<>(List.of(entity));
         ObraResumen resumen = new ObraResumen(1L, "Test", 2021, "Resumen", false);
+        Page<ObraResumen> page = new PageImpl<>(List.of(resumen));
 
-        when(obraRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
-        when(obraMapper.toResumen(entity)).thenReturn(resumen);
+        when(obraRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<ObraResumen> result = obraService.obtenerTodosActivos(Pageable.unpaged());
 

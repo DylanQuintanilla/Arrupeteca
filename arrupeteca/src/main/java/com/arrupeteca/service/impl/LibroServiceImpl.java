@@ -17,7 +17,6 @@ import com.arrupeteca.persistence.repository.FormatoRepository;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
 import com.arrupeteca.persistence.repository.GradoRepository;
 import com.arrupeteca.persistence.repository.CicloRepository;
-import com.arrupeteca.persistence.specification.LibroSpecification;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,9 +49,9 @@ public class LibroServiceImpl implements LibroService {
 
     @Override
     public Page<LibroResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo libros activos paginados: {}", pageable);
-        return libroRepository.findByBorradoLogicoFalse(pageable)
-                .map(libroMapper::toResumen);
+        log.debug("Obteniendo libros activos proyectados paginados: {}", pageable);
+        return libroRepository.busquedaMaestraAdminProyectada(
+                false, null, null, null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -66,16 +65,16 @@ public class LibroServiceImpl implements LibroService {
 
     @Override
     public Page<LibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
-        log.debug("Búsqueda global de libros por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return libroRepository.findAll(LibroSpecification.busquedaGlobal(palabra, idGenero, idCategoria), pageable)
-                .map(libroMapper::toResumen);
+        log.debug("Búsqueda global proyectada de libros por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
+        return libroRepository.busquedaMaestraAdminProyectada(
+                false, null, idGenero, idCategoria, null, null, null, null, null, palabra, null, null, pageable);
     }
 
     @Override
     public Page<LibroResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los libros (Admin) paginados: {}", pageable);
-        return libroRepository.findAll(pageable)
-                .map(libroMapper::toResumen);
+        log.debug("Obteniendo todos los libros proyectados (Admin) paginados: {}", pageable);
+        return libroRepository.busquedaMaestraAdminProyectada(
+                null, null, null, null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -101,9 +100,8 @@ public class LibroServiceImpl implements LibroService {
 
     @Override
     public Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable) {
-        log.debug("Obteniendo libros por ID Obra: {}", idObra);
-        return libroRepository.buscarPorObraId(idObra, pageable)
-                .map(libroMapper::toResumen);
+        log.debug("Obteniendo libros proyectados por ID Obra: {}", idObra);
+        return libroRepository.buscarPorObraId(idObra, pageable);
     }
 
     @Override

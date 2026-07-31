@@ -12,7 +12,6 @@ import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.PaisRepository;
-import com.arrupeteca.persistence.specification.AutorSpecification;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -44,20 +42,15 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores activos con paginación: {}", pageable);
-        Specification<Autor> spec = AutorSpecification.esBorrado(false);
-        return autorRepository.findAll(spec, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Obteniendo todos los autores activos proyectados con paginación: {}", pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
     }
 
     @Override
     @Cacheable(value = "autores", key = "#id")
     public AutorDetalleResponse obtenerPorIdActivo(Long id) {
         log.debug("Buscando autor activo con ID: {}", id);
-        Specification<Autor> spec = Specification.where(AutorSpecification.tieneId(id))
-                .and(AutorSpecification.esBorrado(false));
-
-        return autorRepository.findOne(spec)
+        return autorRepository.findByIdAndBorradoLogicoFalse(id)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor activo con ID: {}", id);
@@ -67,9 +60,8 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores (incluyendo borrados) con paginación: {}", pageable);
-        return autorRepository.findAll((Specification<Autor>) null, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Obteniendo todos los autores proyectados (incluyendo borrados) con paginación: {}", pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -85,10 +77,8 @@ public class AutorServiceImpl implements AutorService {
 
     @Override
     public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
-        log.debug("Iniciando búsqueda global: '{}', años: {} - {}", palabra, anioInicio, anioFin);
-        Specification<Autor> spec = AutorSpecification.filtroBusquedaGlobal(palabra, anioInicio, anioFin);
-        return autorRepository.findAll(spec, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Iniciando búsqueda global proyectada: '{}', años: {} - {}", palabra, anioInicio, anioFin);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, anioInicio, anioFin, palabra, pageable);
     }
 
     @Override
@@ -285,9 +275,7 @@ public class AutorServiceImpl implements AutorService {
             return List.of();
         }
         log.debug("Buscando duplicados para el término: '{}'", termino);
-        return autorRepository.findAll(
-                        AutorSpecification.posiblesDuplicados(termino.trim(), idExcluir),
-                        Sort.by("nombre"))
+        return autorRepository.buscarDuplicados(termino.trim(), idExcluir, Sort.by("nombre"))
                 .stream()
                 .map(autorMapper::toResumen)
                 .toList();

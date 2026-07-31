@@ -8,41 +8,48 @@ Este documento establece las reglas y convenciones para la capa de acceso a dato
 
 Todo repositorio debe definirse como una interfaz y extender de:
 *   `JpaRepository<Entity, Long>`: Proporciona métodos CRUD estándar de forma automática.
-*   `JpaSpecificationExecutor<Entity>`: Permite ejecutar consultas dinámicas y avanzadas utilizando la API de Criterios de JPA (Specifications).
 
 ### Regla de Limpieza de Código (Clean Code):
 *   **Prohibido**: Utilizar la anotación `@Repository` sobre la interfaz del repositorio. Dado que extiende de `JpaRepository`, Spring Data JPA lo detecta y lo registra de forma automática en el contexto de aplicación. Colocar la anotación es redundante.
+*   **Prohibido**: Extender de `JpaSpecificationExecutor<Entity>`. Todas las búsquedas paginadas y filtrados complejos del sistema se gestionan a través del método proyectado `busquedaMaestraAdminProyectada(...)`, manteniendo los repositorios limpios y sin código muerto de especificaciones.
 
 ---
 
 ## 2. Optimización con `@EntityGraph` (Prevenir el Problema N+1)
 
-Hibernate utiliza carga perezosa (`FetchType.LAZY`) por defecto en las relaciones. Sin embargo, al consultar listados o detalles de entidades que serán mapeadas a DTOs de salida, acceder a atributos de relaciones puede generar decenas de consultas individuales adicionales en bucle (el problema N+1).
+Hibernate utiliza carga perezosa (`FetchType.LAZY`) por defecto en las relaciones. Sin embargo, al consultar detalles por ID que serán mapeados a DTOs de salida, acceder a atributos de relaciones puede generar decenas de consultas individuales adicionales en bucle (el problema N+1).
 
-*   **Solución Obligatoria**: Usar `@EntityGraph(attributePaths = {"relacion1", "relacion2"})` en métodos de consulta clave (`findAll`, `findById`, `findOne`, etc.).
+*   **Solución Obligatoria**: Usar `@EntityGraph(attributePaths = {"relacion1", "relacion2"})` en métodos de consulta de detalle por ID (`findById`, `findByIdAndBorradoLogicoFalse`).
 *   **Propósito**: Fuerza a Hibernate a generar una única consulta SQL con sentencias `LEFT JOIN FETCH` para traer todos los objetos relacionados de un solo viaje, optimizando la base de datos y preparando los datos para ser cacheados sin lanzar excepciones `LazyInitializationException`.
 *   **Restricción Crítica (Colecciones ToMany)**:
     *   **Prohibido**: Incluir colecciones (`@ManyToMany` o `@OneToMany`, ej. `categorias` u `obras`) dentro del `@EntityGraph` junto con otras colecciones o en consultas de listados paginados.
     *   *Razón*: Carga múltiples colecciones en paralelo provocando la excepción `MultipleBagFetchException` en Hibernate o generando un Producto Cartesiano en memoria que degrada drásticamente el rendimiento. Además, la paginación con colecciones obliga a Hibernate a paginar en memoria (JVM), lo cual es extremadamente ineficiente.
-    *   *Solución*: Configurar `@BatchSize` a nivel de colección o globalmente en `application.properties` (`spring.jpa.properties.hibernate.default_batch_fetch_size=100`) para que las colecciones se carguen en lotes optimizados independientes.
 
 ---
 
-## 3. Proyecciones por Constructor (`SELECT new`) para Búsquedas Maestras de Admin
+## 3. Proyecciones por Constructor (`SELECT new`) para Listados Paginados (Regla de Oro)
 
-Para las tablas de administración paginadas de alto tráfico y volumen (ej. `busquedaMaestraAdmin` en `Autor`, `Obra`, `Libro`, `EjemplarLibro`), las consultas no deben recuperar entidades completas ni pasar por MapStruct.
+En Arrupeteca se establece la **Regla de Oro** para la capa de persistencia en clases de negocio:
 
-*   **Uso de `SELECT new`**: Definir consultas JPQL con la sintaxis `@Query("SELECT new com.arrupeteca.dto.response.summary.MiResumenResponse(...) FROM ...")`.
-*   **Ventajas de Rendimiento**:
-    *   **Bypassea el Persistence Context (Caché L1)**: Hibernate no crea proxies, snapshots de auditoría ni rastreo de cambios (*dirty checking*), reduciendo entre un 70% y 85% la memoria RAM consumida en la JVM.
-    *   **Tráfico Mínimo de Red**: Lee únicamente de la base de datos las columnas necesarias para el DTO Resumen.
-    *   **Sin MapStruct en Lecturas Paginadas**: La base de datos y Hibernate entregan directamente la lista de DTOs finales lista para serializarse a JSON.
-*   **Filtrado de Colecciones `@ManyToMany` sin Producto Cartesiano**:
-    *   Al filtrar por colecciones (como géneros, categorías o etiquetas), **evitar `JOIN` directo en el `WHERE`**. Usar el patrón `EXISTS (SELECT 1 FROM ...)`:
-        ```jpql
-        AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero))
-        ```
-    *   *Propósito*: Evita la duplicación de filas en el ResultSet de la base de datos (producto cartesiano) sin necesidad de aplicar `query.distinct(true)`.
+*   **1. Todos los métodos que retornen un Listado Paginado de Resumen (`Page<Resumen>`)** (tales como `obtenerTodosActivos`, `obtenerTodos`, `busquedaGlobal`, `busquedaMaestraAdmin`, `buscarPorObraId`):
+    *   **Obligatorio**: Deben ejecutarse mediante **`SELECT new`** en consultas `@Query` de JPQL (ej. `@Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(...) FROM ...")`).
+    *   **Ventajas de Rendimiento**: Bypassean la caché L1 de Hibernate (Persistence Context), reducen la RAM en un 80%, consumen el mínimo ancho de banda SQL y eliminan la necesidad de transformación MapStruct en lectura.
+    *   **Filtrado `@ManyToMany` sin Producto Cartesiano**: Usar `EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)` en lugar de `JOIN` explícito en el `WHERE`.
+*   **2. Todos los métodos que retornen un Detalle por ID (`DetalleResponse`)** (tales como `obtenerPorIdActivo`, `obtenerPorId`):
+    *   **Obligatorio**: Deben usar **`@EntityGraph`** para cargar la entidad completa con todas sus relaciones para visualización detallada o edición.
+
+### 📌 Patrón de Diseño: 1 Consulta Proyectada Maestra para 4 Endpoints
+
+En lugar de duplicar la sintaxis del constructor `SELECT new [Entidad]Resumen(...)` 4 veces distintas en el repositorio, la arquitectura de Arrupeteca implementa **1 sola Consulta Proyectada Maestra Parametrizada (`busquedaMaestraAdminProyectada`)**.
+
+Esta única consulta atiende los **4 endpoints de listado paginado** pasando parámetros opcionales nulos desde el Servicio:
+
+| Endpoint en Controller | Método en Service | Parámetros enviados a `busquedaMaestraAdminProyectada` |
+|---|---|---|
+| `GET /api/v1/[recurso]` | `obtenerTodosActivos` | `esBorrado = false`, demás filtros `null` |
+| `GET /api/v1/[recurso]/global` | `busquedaGlobal` | `esBorrado = false`, `termino = palabra`, demás `null` |
+| `GET /api/v1/[recurso]/admin` | `obtenerTodos` | `esBorrado = null` (trae activos y borrados), demás `null` |
+| `GET /api/v1/[recurso]/admin/busqueda-maestra` | `busquedaMaestraAdmin` | Filtros dinámicos seleccionados por el administrador |
 
 ---
 
@@ -56,32 +63,20 @@ Para consultas personalizadas de actualización o borrado directo (ej. actualiza
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
     void desactivar(@Param("id") Long id);
     ```
-*   **Por qué es crítico**:
-    *   `flushAutomatically = true`: Envía a la base de datos cualquier cambio pendiente almacenado en memoria antes de que se ejecute la consulta SQL de modificación.
-    *   `clearAutomatically = true`: Vacía el contexto de persistencia (Caché L1) de Hibernate inmediatamente después de ejecutar la consulta. Esto evita lecturas obsoletas/sucias, obligando a Hibernate a recargar la entidad actualizada desde la base de datos cuando se vuelva a solicitar.
 
 ---
 
-## 4. Gestión de Borrado Lógico y Compatibilidad MySQL (COUNT)
+## 5. Gestión de Borrado Lógico y Conteo Físico
 
-Dado que el borrado lógico preserva la fila en la tabla, necesitamos chequear si un ID existe físicamente (incluso si está borrado lógicamente) antes de activarlo o desactivarlo. 
-
-*   **Problema de Compatibilidad**: En MySQL, la función booleana nativa `SELECT COUNT(*) > 0` retorna un entero (`Integer`), lo cual lanza un error `ClassCastException` si intentamos recibirlo en Java como `boolean`.
-*   **Solución Estándar**: Para validar existencia física de manera compatible con cualquier motor de base de datos (H2, MySQL, PostgreSQL, etc.), se debe realizar un conteo numérico (`long`) y comprobar en el servicio si el valor es mayor a cero:
+*   **Verificación de Existencia Física**: Se utiliza una consulta nativa `countByIdIncludeDeleted` que retorna `long`:
     ```java
     @Query(value = "SELECT COUNT(*) FROM autor WHERE id_autor = :id", nativeQuery = true)
     long countByIdIncludeDeleted(@Param("id") Long id);
     ```
-*   En la capa de servicio:
-    ```java
-    if (autorRepository.countByIdIncludeDeleted(id) == 0) {
-        throw new ValidacionNegocioException("No se encontró el registro...");
-    }
-    ```
 
 ---
 
-## 6. Plantilla Base Recomendada (Ejemplo de AutorRepository)
+## 6. Plantilla Maestra de Referencia (AutorRepository)
 
 ```java
 package com.arrupeteca.persistence.repository;
@@ -91,10 +86,8 @@ import com.arrupeteca.persistence.entity.Autor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -103,7 +96,7 @@ import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
-public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecificationExecutor<Autor> {
+public interface AutorRepository extends JpaRepository<Autor, Long> {
 
     @Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(" +
            "a.id, a.nombre, a.seudonimo, a.anioNacimiento, a.anioFallecimiento, " +
@@ -133,16 +126,17 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
             Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Page<Autor> findAll(Specification<Autor> spec, Pageable pageable);
+    @Query("SELECT a FROM Autor a " +
+           "WHERE (LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "   OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:idExcluir IS NULL OR a.id != :idExcluir)")
+    List<Autor> buscarDuplicados(@Param("termino") String termino, @Param("idExcluir") Long idExcluir, Sort sort);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    List<Autor> findAll(Specification<Autor> spec, Sort sort);
+    Optional<Autor> findByIdAndBorradoLogicoFalse(Long id);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<Autor> findById(Long id);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<Autor> findOne(Specification<Autor> spec);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
@@ -163,24 +157,13 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
 
 ## 7. Lista de Autoverificación (Checklist del Desarrollador)
 
-Antes de considerar listo un repositorio, verifique el cumplimiento de los siguientes puntos:
-
 1. **¿Hereda de las interfaces correctas?**
-   * ¿Extiende de `JpaRepository<Entidad, Long>` y de `JpaSpecificationExecutor<Entidad>`?
+   * ¿Extiende de `JpaRepository<Entidad, Long>` únicamente sin incluir `JpaSpecificationExecutor`?
 2. **¿Evita anotaciones redundantes?**
    * ¿Está la interfaz libre de la anotación `@Repository`?
 3. **¿Utiliza Proyección `SELECT new` para la Búsqueda Maestra de Admin?**
    * ¿Tiene definido un método `busquedaMaestraAdminProyectada(...)` con la consulta `@Query("SELECT new ...")` que construye directamente el DTO Resumen?
-   * Al filtrar por colecciones `@ManyToMany`, ¿utiliza el patrón `EXISTS (SELECT 1 FROM ...)` para evitar duplicación de filas (producto cartesiano)?
 4. **¿Tiene optimización de consultas N+1 con `@EntityGraph` para vistas de detalle?**
-   * ¿Los métodos de lectura de entidades (`findById`, `findOne`, `findAll`) tienen anotado `@EntityGraph` con relaciones `@ManyToOne`/`@OneToOne` únicamente?
+   * ¿Los métodos de detalle por ID (`findById`, `findByIdAndBorradoLogicoFalse`) tienen anotado `@EntityGraph` con las relaciones `@ManyToOne`?
 5. **¿Los métodos `@Modifying` son seguros para el contexto de Hibernate?**
    * ¿Tienen todos los métodos `@Modifying` configurado `clearAutomatically = true` y `flushAutomatically = true`?
-6. **¿Se utiliza `@Param` explícito?**
-   * ¿Todos los parámetros en los métodos `@Query` tienen su correspondiente `@Param("nombre")`?
-7. **¿El método de verificación de existencia física es compatible con MySQL?**
-   * Si la entidad maneja borrado lógico, ¿existe el método native query `countByIdIncludeDeleted` retornando un `long` en lugar de una comparación booleana directa?
-
----
-*Este estándar garantiza que la capa de persistencia sea consultada de forma eficiente y proteja el estado transaccional del sistema.*
-*Este estándar garantiza que la capa de persistencia sea consultada de forma eficiente y proteja el estado transaccional del sistema.*

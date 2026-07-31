@@ -63,12 +63,12 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/busqueda - Should perform global search")
+    @DisplayName("GET /api/v1/autores/global - Should perform global search")
     void shouldPerformGlobalSearch() throws Exception {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
         when(autorService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/autores/busqueda")
+        mockMvc.perform(get("/api/v1/autores/global")
                         .param("palabra", "test")
                         .param("inicio", "1900")
                         .param("fin", "2000"))

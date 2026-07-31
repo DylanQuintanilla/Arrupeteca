@@ -4,17 +4,15 @@ import com.arrupeteca.dto.response.summary.LibroResumen;
 import com.arrupeteca.persistence.entity.Libro;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
-public interface LibroRepository extends JpaRepository<Libro, Long>, JpaSpecificationExecutor<Libro> {
+public interface LibroRepository extends JpaRepository<Libro, Long> {
 
     @Query("SELECT new com.arrupeteca.dto.response.summary.LibroResumen(" +
            "l.id, l.isbn, l.anioPublicacion, l.precio, l.urlImagen, l.mora, " +
@@ -55,23 +53,22 @@ public interface LibroRepository extends JpaRepository<Libro, Long>, JpaSpecific
             Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
-    Page<Libro> findAll(Specification<Libro> spec, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
-    Page<Libro> findByBorradoLogicoFalse(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Optional<Libro> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
-    Page<Libro> findAll(Pageable pageable);
 
     @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
     Optional<Libro> findById(Long id);
 
-    @EntityGraph(attributePaths = {"obra", "editorial", "formato"})
-    @Query("SELECT l FROM Libro l WHERE l.obra.id = :obraId")
-    Page<Libro> buscarPorObraId(@Param("obraId") Long obraId, Pageable pageable);
+    @Query("SELECT new com.arrupeteca.dto.response.summary.LibroResumen(" +
+           "l.id, l.isbn, l.anioPublicacion, l.precio, l.urlImagen, l.mora, " +
+           "l.borradoLogico, gr.nombre, ci.nombre, o.titulo, ed.nombre, f.nombre) " +
+           "FROM Libro l " +
+           "LEFT JOIN l.obra o " +
+           "LEFT JOIN l.editorial ed " +
+           "LEFT JOIN l.formato f " +
+           "LEFT JOIN l.grado gr " +
+           "LEFT JOIN l.ciclo ci " +
+           "WHERE l.borradoLogico = false AND o.id = :obraId")
+    Page<LibroResumen> buscarPorObraId(@Param("obraId") Long obraId, Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Libro l SET l.borradoLogico = true WHERE l.id = :id")

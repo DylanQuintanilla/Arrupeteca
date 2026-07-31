@@ -11,7 +11,6 @@ import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.persistence.repository.MuebleRepository;
 import com.arrupeteca.persistence.repository.EstadoFisicoRepository;
 import com.arrupeteca.persistence.repository.DisponibilidadRepository;
-import com.arrupeteca.persistence.specification.EjemplarLibroSpecification;
 import com.arrupeteca.service.EjemplarLibroService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +39,9 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     @Override
     public Page<EjemplarLibroResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo ejemplares activos paginados: {}", pageable);
-        return ejemplarLibroRepository.findByBorradoLogicoFalse(pageable)
-                .map(ejemplarLibroMapper::toResumen);
+        log.debug("Obteniendo ejemplares activos proyectados paginados: {}", pageable);
+        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+                false, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -56,16 +55,16 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     @Override
     public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
-        log.debug("Búsqueda global de ejemplares por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return ejemplarLibroRepository.findAll(EjemplarLibroSpecification.busquedaGlobal(palabra, idGenero, idCategoria), pageable)
-                .map(ejemplarLibroMapper::toResumen);
+        log.debug("Búsqueda global proyectada de ejemplares por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
+        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+                false, null, idGenero, idCategoria, null, null, null, null, palabra, pageable);
     }
 
     @Override
     public Page<EjemplarLibroResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los ejemplares paginados: {}", pageable);
-        return ejemplarLibroRepository.findAll(pageable)
-                .map(ejemplarLibroMapper::toResumen);
+        log.debug("Obteniendo todos los ejemplares proyectados paginados: {}", pageable);
+        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+                null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
