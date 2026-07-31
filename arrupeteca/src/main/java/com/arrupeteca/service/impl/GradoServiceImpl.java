@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,31 +29,25 @@ public class GradoServiceImpl implements GradoService {
 
     @Override
     @Cacheable(value = "grados-activos")
-    public Page<GradoResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los grados activos con paginación: {}", pageable);
-        return gradoRepository.findByBorradoLogicoFalse(pageable)
-                .map(gradoMapper::toResponse);
-    }
-
-    @Override
-    public GradoResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando grado activo con ID: {}", id);
-        return gradoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+    public List<GradoResponse> obtenerTodosActivos() {
+        log.debug("Obteniendo todos los grados activos en lista plana");
+        return gradoRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
                 .map(gradoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un grado activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<GradoResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los grados (incluyendo borrados) con paginación: {}", pageable);
-        return gradoRepository.findAllProjectedBy(pageable)
+    public Page<GradoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de grados con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return gradoRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(gradoMapper::toResponse);
     }
 
     @Override
     public GradoResponse obtenerPorId(Long id) {
-        log.debug("Buscando grado con ID: {}", id);
-        return gradoRepository.findProjectedById(id)
+        log.debug("Buscando grado por ID: {}", id);
+        return gradoRepository.findById(id)
                 .map(gradoMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un grado con ID: " + id));
     }
@@ -97,11 +93,7 @@ public class GradoServiceImpl implements GradoService {
 
         if ((esNuevo || nombreCambio) && gradoRepository.existsByNombreIgnoreCase(nombreNuevo)) {
             log.warn("Intento de duplicar grado: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe un grado con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otro grado con el nombre: " + nombreNuevo);
-            }
+            throw new ValidacionNegocioException("Ya existe un grado con el nombre: " + nombreNuevo);
         }
     }
 

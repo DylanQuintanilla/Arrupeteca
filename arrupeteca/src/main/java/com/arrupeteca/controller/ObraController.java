@@ -86,18 +86,19 @@ public class ObraController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda maestra multi-filtro (Admin)",
-        description = "Búsqueda avanzada de obras con filtros de estado lógico, género, categoría, rango de años y coincidencia de término (solo para administradores)."
+        description = "Búsqueda avanzada de obras con filtros de estado lógico, género, categoría, etiqueta, rango de años y coincidencia de término (solo para administradores)."
     )
     public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
+            @RequestParam(required = false) Long idEtiqueta,
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                obraService.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin, pageable)));
+                obraService.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, idEtiqueta, termino, anioInicio, anioFin, pageable)));
     }
 
     @PostMapping

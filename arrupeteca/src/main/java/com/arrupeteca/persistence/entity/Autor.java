@@ -6,6 +6,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
@@ -30,7 +31,10 @@ import org.hibernate.annotations.SQLDelete;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
 @Builder
-@Table(name = "autor")
+@Table(name = "autor", indexes = {
+    @Index(name = "idx_autor_busqueda", columnList = "borrado_logico, id_nacionalidad, id_pais_nacimiento, id_genero_principal, id_obra"),
+    @Index(name = "idx_autor_nombre", columnList = "nombre, seudonimo")
+})
 @SQLDelete(sql = "UPDATE autor SET borrado_logico = 1 WHERE id_autor = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Autor extends Auditable {

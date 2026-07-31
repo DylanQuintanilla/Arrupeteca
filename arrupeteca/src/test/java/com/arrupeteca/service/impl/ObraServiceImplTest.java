@@ -83,7 +83,7 @@ class ObraServiceImplTest extends BaseServiceTest {
         ObraDetalleResponse detail = ObraDetalleResponse.builder()
                 .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
 
         when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);

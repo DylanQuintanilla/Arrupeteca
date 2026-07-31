@@ -49,7 +49,7 @@ class ObraControllerTest extends BaseControllerTest {
         ObraDetalleResponse detail = ObraDetalleResponse.builder()
                 .id(1L).titulo("Obra Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.obtenerPorIdActivo(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/obras/1"))
@@ -86,7 +86,7 @@ class ObraControllerTest extends BaseControllerTest {
         ObraDetalleResponse detail = ObraDetalleResponse.builder()
                 .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.obtenerPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/obras/admin/1"))
@@ -98,7 +98,7 @@ class ObraControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/obras/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(obraService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/obras/admin/busqueda-maestra"))
                 .andExpect(status().isOk())
@@ -119,7 +119,7 @@ class ObraControllerTest extends BaseControllerTest {
         ObraDetalleResponse detail = ObraDetalleResponse.builder()
                 .id(1L).titulo("Nueva").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.crear(any())).thenReturn(detail);
 
         mockMvc.perform(post("/api/v1/obras")
@@ -144,7 +144,7 @@ class ObraControllerTest extends BaseControllerTest {
         ObraDetalleResponse detail = ObraDetalleResponse.builder()
                 .id(1L).titulo("Actualizada").anioCreacion(2021).resumen("Nuevo resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.actualizar(any(Long.class), any(ObraRequest.class))).thenReturn(detail);
 
         mockMvc.perform(patch("/api/v1/obras/1")

@@ -1,5 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.persistence.entity.Autor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,10 +13,38 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecificationExecutor<Autor> {
+
+    @Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(" +
+           "a.id, a.nombre, a.seudonimo, a.anioNacimiento, a.anioFallecimiento, " +
+           "a.borradoLogico, p.nombre, n.nombre, g.nombre, o.titulo, " +
+           "a.biografia) " +
+           "FROM Autor a " +
+           "LEFT JOIN a.paisNacimiento p " +
+           "LEFT JOIN a.nacionalidad n " +
+           "LEFT JOIN a.generoPrincipal g " +
+           "LEFT JOIN a.obraCumbre o " +
+           "WHERE (:esBorrado IS NULL OR a.borradoLogico = :esBorrado) " +
+           "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
+           "AND (:idPais IS NULL OR p.id = :idPais) " +
+           "AND (:idGenero IS NULL OR g.id = :idGenero) " +
+           "AND (:termino IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
+           "AND (:anioFin IS NULL OR a.anioNacimiento <= :anioFin)")
+    Page<AutorResumenResponse> busquedaMaestraAdminProyectada(
+            @Param("esBorrado") Boolean esBorrado,
+            @Param("idNacionalidad") Long idNacionalidad,
+            @Param("idPais") Long idPais,
+            @Param("idGenero") Long idGenero,
+            @Param("anioInicio") Year anioInicio,
+            @Param("anioFin") Year anioFin,
+            @Param("termino") String termino,
+            Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Page<Autor> findAll(Specification<Autor> spec, Pageable pageable);

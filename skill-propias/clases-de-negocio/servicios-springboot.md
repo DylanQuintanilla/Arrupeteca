@@ -144,10 +144,9 @@ public class AutorServiceImpl implements AutorService {
     public Page<AutorResumenResponse> busquedaMaestraAdmin(
             Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
             Year anioInicio, Year anioFin, String termino, Pageable pageable) {
-        log.debug("Iniciando búsqueda maestra admin para término: '{}'", termino);
-        Specification<Autor> spec = AutorSpecification.filtroMaestroAdmin(esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino);
-        return autorRepository.findAll(spec, pageable)
-                .map(autorMapper::toResumen);
+        log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}'", termino);
+        return autorRepository.busquedaMaestraAdminProyectada(
+                esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino, pageable);
     }
 
     @Override

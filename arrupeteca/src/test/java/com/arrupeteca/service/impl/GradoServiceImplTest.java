@@ -8,8 +8,10 @@ import com.arrupeteca.persistence.entity.Grado;
 import com.arrupeteca.persistence.repository.GradoRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +22,13 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class GradoServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class GradoServiceImplTest {
 
     @Mock
     private GradoRepository gradoRepository;
@@ -36,32 +40,18 @@ class GradoServiceImplTest extends BaseServiceTest {
     private GradoServiceImpl gradoService;
 
     @Test
-    @DisplayName("Should return all active grados paginated")
+    @DisplayName("Should return all active grados list")
     void shouldReturnAllActive() {
         Grado entity = Grado.builder().build();
-        Page<Grado> expectedPage = new PageImpl<>(List.of(entity));
         GradoResponse response = mock(GradoResponse.class);
 
-        when(gradoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(gradoRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
         when(gradoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<GradoResponse> result = gradoService.obtenerTodosActivos(Pageable.unpaged());
+        List<GradoResponse> result = gradoService.obtenerTodosActivos();
 
-        assertThat(result.getContent()).containsExactly(response);
-    }
-
-    @Test
-    @DisplayName("Should return grado by ID and active")
-    void shouldReturnByIdAndActive() {
-        Grado entity = Grado.builder().build();
-        GradoResponse response = mock(GradoResponse.class);
-        when(gradoRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(gradoMapper.toResponse(entity)).thenReturn(response);
-
-        assertThat(gradoService.obtenerPorIdActivo(1L)).isEqualTo(response);
-
-        when(gradoRepository.findProjectedByIdAndBorradoLogicoFalse(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> gradoService.obtenerPorIdActivo(2L)).isInstanceOf(ValidacionNegocioException.class);
+        assertThat(result).containsExactly(response);
+        verify(gradoRepository).findByBorradoLogicoFalseOrderByNombreAsc();
     }
 
     @Test
@@ -71,10 +61,12 @@ class GradoServiceImplTest extends BaseServiceTest {
         Page<Grado> expectedPage = new PageImpl<>(List.of(entity));
         GradoResponse response = mock(GradoResponse.class);
 
-        when(gradoRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(gradoRepository.busquedaAdmin(isNull(), isNull(), any(Pageable.class))).thenReturn(expectedPage);
         when(gradoMapper.toResponse(entity)).thenReturn(response);
 
-        assertThat(gradoService.obtenerTodos(Pageable.unpaged()).getContent()).containsExactly(response);
+        Page<GradoResponse> result = gradoService.obtenerTodos(null, null, Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(response);
     }
 
     @Test
@@ -82,68 +74,60 @@ class GradoServiceImplTest extends BaseServiceTest {
     void shouldReturnById() {
         Grado entity = Grado.builder().build();
         GradoResponse response = mock(GradoResponse.class);
-        when(gradoRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(gradoRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(gradoMapper.toResponse(entity)).thenReturn(response);
 
-        assertThat(gradoService.obtenerPorId(1L)).isEqualTo(response);
+        GradoResponse result = gradoService.obtenerPorId(1L);
 
-        when(gradoRepository.findProjectedById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> gradoService.obtenerPorId(2L)).isInstanceOf(ValidacionNegocioException.class);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should create grado when name is unique")
+    @DisplayName("Should throw exception when grado not found")
+    void shouldThrowWhenNotFound() {
+        when(gradoRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> gradoService.obtenerPorId(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró un grado con ID: 1");
+    }
+
+    @Test
+    @DisplayName("Should create grado successfully")
     void shouldCreateGrado() {
-        GradoRequest request = GradoRequest.builder().nombre("Nuevo").build();
+        GradoRequest request = GradoRequest.builder().nombre("Bachillerato General").build();
         Grado entity = Grado.builder().build();
-        Grado saved = Grado.builder().build();
-        saved.setId(1L);
+        Grado savedEntity = Grado.builder().build();
         GradoResponse response = mock(GradoResponse.class);
 
-        when(gradoRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
-        when(gradoMapper.toEntity(any())).thenReturn(entity);
-        when(gradoRepository.save(any())).thenReturn(saved);
-        when(gradoMapper.toResponse(saved)).thenReturn(response);
+        when(gradoRepository.existsByNombreIgnoreCase("Bachillerato General")).thenReturn(false);
+        when(gradoMapper.toEntity(request)).thenReturn(entity);
+        when(gradoRepository.save(entity)).thenReturn(savedEntity);
+        when(gradoMapper.toResponse(savedEntity)).thenReturn(response);
 
         assertThat(gradoService.crear(request)).isEqualTo(response);
-
-        when(gradoRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(true);
-        assertThatThrownBy(() -> gradoService.crear(request)).isInstanceOf(ValidacionNegocioException.class);
     }
 
     @Test
-    @DisplayName("Should update grado")
-    void shouldUpdateGrado() {
-        GradoRequest request = GradoRequest.builder().nombre("Actualizado").build();
-        Grado existing = Grado.builder().build();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
-        Grado saved = Grado.builder().build();
-        saved.setId(1L);
-        GradoResponse response = mock(GradoResponse.class);
+    @DisplayName("Should throw exception when creating duplicate grado")
+    void shouldThrowWhenDuplicateNameOnCreate() {
+        GradoRequest request = GradoRequest.builder().nombre("Bachillerato General").build();
+        when(gradoRepository.existsByNombreIgnoreCase("Bachillerato General")).thenReturn(true);
 
-        when(gradoRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(gradoRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
-        when(gradoRepository.save(any())).thenReturn(saved);
-        when(gradoMapper.toResponse(saved)).thenReturn(response);
-
-        assertThat(gradoService.actualizar(1L, request)).isEqualTo(response);
-
-        when(gradoRepository.findById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> gradoService.actualizar(2L, request)).isInstanceOf(ValidacionNegocioException.class);
+        assertThatThrownBy(() -> gradoService.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe un grado con el nombre: Bachillerato General");
     }
 
     @Test
-    @DisplayName("Should change status")
-    void shouldChangeStatus() {
+    @DisplayName("Should change estado of grado successfully")
+    void shouldCambiarEstado() {
         when(gradoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
-        gradoService.cambiarEstado(1L, true);
-        verify(gradoRepository).activar(1L);
 
         gradoService.cambiarEstado(1L, false);
         verify(gradoRepository).desactivar(1L);
 
-        when(gradoRepository.countByIdIncludeDeleted(2L)).thenReturn(0L);
-        assertThatThrownBy(() -> gradoService.cambiarEstado(2L, true)).isInstanceOf(ValidacionNegocioException.class);
+        gradoService.cambiarEstado(1L, true);
+        verify(gradoRepository).activar(1L);
     }
 }

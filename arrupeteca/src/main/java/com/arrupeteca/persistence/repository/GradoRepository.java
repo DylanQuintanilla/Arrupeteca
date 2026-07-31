@@ -8,17 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface GradoRepository extends JpaRepository<Grado, Long> {
 
-    Page<Grado> findByBorradoLogicoFalse(Pageable pageable);
+    List<Grado> findByBorradoLogicoFalseOrderByNombreAsc();
 
-    Optional<Grado> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Grado> findAllProjectedBy(Pageable pageable);
-
-    Optional<Grado> findProjectedById(Long id);
+    @Query("SELECT g FROM Grado g WHERE " +
+           "(:nombre IS NULL OR LOWER(g.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR g.borradoLogico = :borradoLogico)")
+    Page<Grado> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Grado g SET g.borradoLogico = true WHERE g.id = :id")

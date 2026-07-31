@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.CategoriaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CategoriaService {
 
-    Page<CategoriaResponse> obtenerTodosActivos(Pageable pageable);
+    List<CategoriaResponse> obtenerTodosActivos();
 
-    CategoriaResponse obtenerPorIdActivo(Long id);
-
-    Page<CategoriaResponse> obtenerTodos(Pageable pageable);
+    Page<CategoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     CategoriaResponse obtenerPorId(Long id);
 

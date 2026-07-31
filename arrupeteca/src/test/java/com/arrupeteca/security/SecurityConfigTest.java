@@ -85,7 +85,7 @@ class SecurityConfigTest {
 
         String token = jwtService.generateToken(usuarioAdmin);
 
-        mockMvc.perform(get("/api/v1/categorias/admin")
+        mockMvc.perform(get("/api/v1/categorias/all")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
@@ -105,7 +105,7 @@ class SecurityConfigTest {
 
         String token = jwtService.generateToken(usuarioAlumno);
 
-        mockMvc.perform(get("/api/v1/categorias/admin")
+        mockMvc.perform(get("/api/v1/categorias/all")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }

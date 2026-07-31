@@ -418,37 +418,24 @@
           "name": "Ciclo",
           "item": [
             {
-              "name": "Obtener ciclos activas",
+              "name": "Obtener ciclos activas (para dropdowns)",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/ciclos?page=0&size=20&sort=nombre"
+                "url": "{{baseUrl}}/api/v1/ciclos"
               }
             },
             {
-              "name": "Obtener por ID (ciclo activa)",
+              "name": "Tabla de administración de ciclos (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (ciclo)",
               "request": {
                 "method": "GET",
                 "url": "{{baseUrl}}/api/v1/ciclos/:id",
-                "variable": [
-                  {
-                    "key": "id",
-                    "value": "1"
-                  }
-                ]
-              }
-            },
-            {
-              "name": "Admin: Obtener todas las ciclos",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/ciclos/admin?page=0&size=20&sort=nombre"
-              }
-            },
-            {
-              "name": "Admin: Obtener por ID (ciclo)",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/ciclos/admin/:id",
                 "variable": [
                   {
                     "key": "id",
@@ -529,37 +516,24 @@
           "name": "Grado",
           "item": [
             {
-              "name": "Obtener grados activas",
+              "name": "Obtener grados activas (para dropdowns)",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/grados?page=0&size=20&sort=nombre"
+                "url": "{{baseUrl}}/api/v1/grados"
               }
             },
             {
-              "name": "Obtener por ID (grado activa)",
+              "name": "Tabla de administración de grados (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (grado)",
               "request": {
                 "method": "GET",
                 "url": "{{baseUrl}}/api/v1/grados/:id",
-                "variable": [
-                  {
-                    "key": "id",
-                    "value": "1"
-                  }
-                ]
-              }
-            },
-            {
-              "name": "Admin: Obtener todas las grados",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/grados/admin?page=0&size=20&sort=nombre"
-              }
-            },
-            {
-              "name": "Admin: Obtener por ID (grado)",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/grados/admin/:id",
                 "variable": [
                   {
                     "key": "id",
@@ -640,37 +614,24 @@
           "name": "Estado Físico",
           "item": [
             {
-              "name": "Obtener estado físicos activas",
+              "name": "Obtener estado físicos activas (para dropdowns)",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/estados-fisicos?page=0&size=20&sort=nombre"
+                "url": "{{baseUrl}}/api/v1/estados-fisicos"
               }
             },
             {
-              "name": "Obtener por ID (estado físico activa)",
+              "name": "Tabla de administración de estado físicos (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (estado físico)",
               "request": {
                 "method": "GET",
                 "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
-                "variable": [
-                  {
-                    "key": "id",
-                    "value": "1"
-                  }
-                ]
-              }
-            },
-            {
-              "name": "Admin: Obtener todas las estado físicos",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/estados-fisicos/admin?page=0&size=20&sort=nombre"
-              }
-            },
-            {
-              "name": "Admin: Obtener por ID (estado físico)",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/estados-fisicos/admin/:id",
                 "variable": [
                   {
                     "key": "id",
@@ -751,37 +712,24 @@
           "name": "Disponibilidad",
           "item": [
             {
-              "name": "Obtener disponibilidads activas",
+              "name": "Obtener disponibilidads activas (para dropdowns)",
               "request": {
                 "method": "GET",
-                "url": "{{baseUrl}}/api/v1/disponibilidades?page=0&size=20&sort=nombre"
+                "url": "{{baseUrl}}/api/v1/disponibilidades"
               }
             },
             {
-              "name": "Obtener por ID (disponibilidad activa)",
+              "name": "Tabla de administración de disponibilidads (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (disponibilidad)",
               "request": {
                 "method": "GET",
                 "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
-                "variable": [
-                  {
-                    "key": "id",
-                    "value": "1"
-                  }
-                ]
-              }
-            },
-            {
-              "name": "Admin: Obtener todas las disponibilidads",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/disponibilidades/admin?page=0&size=20&sort=nombre"
-              }
-            },
-            {
-              "name": "Admin: Obtener por ID (disponibilidad)",
-              "request": {
-                "method": "GET",
-                "url": "{{baseUrl}}/api/v1/disponibilidades/admin/:id",
                 "variable": [
                   {
                     "key": "id",
@@ -848,6 +796,104 @@
               "request": {
                 "method": "PATCH",
                 "url": "{{baseUrl}}/api/v1/disponibilidades/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Etiqueta",
+          "item": [
+            {
+              "name": "Obtener etiquetas activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas"
+              }
+            },
+            {
+              "name": "Tabla de administración de etiquetas (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (etiqueta)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva etiqueta",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva etiqueta\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/etiquetas"
+              }
+            },
+            {
+              "name": "Actualizar etiqueta",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"etiqueta Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar etiqueta (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar etiqueta",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id/activar",
                 "variable": [
                   {
                     "key": "id",

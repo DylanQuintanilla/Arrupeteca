@@ -8,17 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface CicloRepository extends JpaRepository<Ciclo, Long> {
 
-    Page<Ciclo> findByBorradoLogicoFalse(Pageable pageable);
+    List<Ciclo> findByBorradoLogicoFalseOrderByNombreAsc();
 
-    Optional<Ciclo> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Ciclo> findAllProjectedBy(Pageable pageable);
-
-    Optional<Ciclo> findProjectedById(Long id);
+    @Query("SELECT c FROM Ciclo c WHERE " +
+           "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR c.borradoLogico = :borradoLogico)")
+    Page<Ciclo> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Ciclo c SET c.borradoLogico = true WHERE c.id = :id")

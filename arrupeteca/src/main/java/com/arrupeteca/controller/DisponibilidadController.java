@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,52 +23,48 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/disponibilidades")
 @RequiredArgsConstructor
-@Tag(name = "Disponibilidades", description = "Endpoints para la gestión de estados de disponibilidad")
+@CrossOrigin(origins = "*")
+@Tag(name = "Disponibilidades", description = "Endpoints para la gestión de estados de disponibilidad de ejemplares")
 public class DisponibilidadController {
 
     private final DisponibilidadService disponibilidadService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener disponibilidades activas",
-        description = "Retorna una página de disponibilidades registradas que no están borradas lógicamente."
+        summary = "Obtener disponibilidades activas para dropdowns",
+        description = "Retorna una lista simple no paginada de disponibilidades activas para selects y filtros."
     )
-    public ResponseEntity<ApiResponse<Page<DisponibilidadResponse>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<List<DisponibilidadResponse>>> obtenerTodosActivos() {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de disponibilidades activas", disponibilidadService.obtenerTodosActivos()));
+    }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de disponibilidades",
+        description = "Retorna una página de disponibilidades con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<DisponibilidadResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de disponibilidades activas", disponibilidadService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de disponibilidades", disponibilidadService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener detalle de disponibilidad activa",
-        description = "Busca la información de una disponibilidad activa por su ID."
-    )
-    public ResponseEntity<ApiResponse<DisponibilidadResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad encontrada", disponibilidadService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todas las disponibilidades (Admin)",
-        description = "Retorna todas las disponibilidades incluyendo las eliminadas lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<DisponibilidadResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de disponibilidades", disponibilidadService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener disponibilidad por ID (Admin)",
-        description = "Busca el detalle de una disponibilidad por su ID sin importar su estado lógico (solo admin)."
+        summary = "Obtener disponibilidad por ID",
+        description = "Busca la información de una disponibilidad por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<DisponibilidadResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad encontrada (admin)", disponibilidadService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad encontrada", disponibilidadService.obtenerPorId(id)));
     }
 
     @PostMapping

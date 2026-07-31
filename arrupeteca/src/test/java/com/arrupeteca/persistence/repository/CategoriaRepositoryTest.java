@@ -4,9 +4,8 @@ import com.arrupeteca.persistence.entity.Categoria;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,24 +24,24 @@ class CategoriaRepositoryTest extends BaseRepositoryTest {
                 .build();
 
         Categoria saved = categoriaRepository.save(categoria);
-        Optional<Categoria> found = categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(saved.getId());
+        Optional<Categoria> found = categoriaRepository.findById(saved.getId());
 
         assertThat(found).isPresent();
         assertThat(found.get().getNombre()).isEqualTo("Novela");
     }
 
     @Test
-    @DisplayName("Should find active categories with pagination")
-    void shouldFindActiveCategoriesWithPagination() {
-        categoriaRepository.save(Categoria.builder().nombre("Cat 1").borradoLogico(false).build());
+    @DisplayName("Should find active categories list ordered by name")
+    void shouldFindActiveCategoriesList() {
         categoriaRepository.save(Categoria.builder().nombre("Cat 2").borradoLogico(false).build());
+        categoriaRepository.save(Categoria.builder().nombre("Cat 1").borradoLogico(false).build());
         categoriaRepository.save(Categoria.builder().nombre("Cat 3").borradoLogico(true).build());
 
-        Page<Categoria> page = categoriaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
+        List<Categoria> list = categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc();
 
-        assertThat(page.getTotalElements()).isEqualTo(2);
-        assertThat(page.getContent()).extracting(Categoria::getNombre)
-                .containsExactlyInAnyOrder("Cat 1", "Cat 2");
+        assertThat(list).hasSize(2);
+        assertThat(list).extracting(Categoria::getNombre)
+                .containsExactly("Cat 1", "Cat 2");
     }
 
     @Test

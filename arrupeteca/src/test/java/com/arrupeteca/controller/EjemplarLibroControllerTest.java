@@ -154,7 +154,7 @@ class EjemplarLibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/ejemplares/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<EjemplarLibroResumen> page = new PageImpl<>(List.of());
-        when(ejemplarLibroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(ejemplarLibroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/ejemplares/admin/busqueda-maestra"))
                 .andExpect(status().isOk())

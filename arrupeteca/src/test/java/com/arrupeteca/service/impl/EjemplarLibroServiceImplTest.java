@@ -130,15 +130,13 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("busquedaMaestraAdmin - All branches")
     void shouldPerformMasterSearch() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        Page<EjemplarLibro> page = new PageImpl<>(List.of(entity));
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
+        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
         
-        when(repository.findAll(any(org.springframework.data.jpa.domain.Specification.class), any(Pageable.class)))
+        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
-        when(mapper.toResumen(any())).thenReturn(summary);
 
-        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, 1L, 1L, "term", Pageable.unpaged());
+        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, 1L, 1L, 1L, "term", Pageable.unpaged());
         assertThat(result.getContent()).containsExactly(summary);
     }
 

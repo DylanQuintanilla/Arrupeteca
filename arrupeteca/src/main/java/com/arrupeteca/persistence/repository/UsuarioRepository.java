@@ -18,11 +18,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Page<Usuario> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<Usuario> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Usuario> findAllProjectedBy(Pageable pageable);
-
-    Optional<Usuario> findProjectedById(Long id);
+    Optional<Usuario> findByIdAndBorradoLogicoFalse(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Usuario u SET u.borradoLogico = true WHERE u.id = :id")

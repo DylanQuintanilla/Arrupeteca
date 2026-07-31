@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,11 +23,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/estados-fisicos")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 @Tag(name = "Estados Físicos", description = "Endpoints para la gestión de estados físicos de ejemplares")
 public class EstadoFisicoController {
 
@@ -34,40 +39,32 @@ public class EstadoFisicoController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener estados físicos activos",
-        description = "Retorna una página de estados físicos registrados que no están borrados lógicamente."
+        summary = "Obtener estados físicos activos para dropdowns",
+        description = "Retorna una lista simple no paginada de estados físicos activos para selects y filtros."
     )
-    public ResponseEntity<ApiResponse<Page<EstadoFisicoResponse>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<List<EstadoFisicoResponse>>> obtenerTodosActivos() {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de estados físicos activos", estadoFisicoService.obtenerTodosActivos()));
+    }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de estados físicos",
+        description = "Retorna una página de estados físicos con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<EstadoFisicoResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de estados físicos activos", estadoFisicoService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de estados físicos", estadoFisicoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener detalle de estado físico activo",
-        description = "Busca la información de un estado físico activo por su ID."
-    )
-    public ResponseEntity<ApiResponse<EstadoFisicoResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico encontrado", estadoFisicoService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los estados físicos (Admin)",
-        description = "Retorna todos los estados físicos incluyendo los eliminados lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<EstadoFisicoResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de estados físicos", estadoFisicoService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener estado físico por ID (Admin)",
-        description = "Busca el detalle de un estado físico por su ID sin importar su estado lógico (solo admin)."
+        summary = "Obtener estado físico por ID",
+        description = "Busca la información de un estado físico por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<EstadoFisicoResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico encontrado (admin)", estadoFisicoService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Estado físico encontrado", estadoFisicoService.obtenerPorId(id)));
     }
 
     @PostMapping

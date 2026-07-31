@@ -49,6 +49,14 @@ INSERT INTO disponibilidad (id_disponibilidad, nombre, borrado_logico) VALUES
   (6, 'Botado', 0),
   (7, 'Donado', 0);
 
+-- DDL/DML de semilla para etiqueta
+INSERT INTO etiqueta (id_etiqueta, nombre, borrado_logico) VALUES
+  (1, 'Tecnología', 0),
+  (2, 'Día del Niño', 0),
+  (3, 'Día de la Madre', 0),
+  (4, 'Recomendados', 0),
+  (5, 'Novedades', 0);
+
 -- Usuarios Semilla (Contraseña para ambos: Password123!)
 INSERT INTO usuario (id_usuario, nombres, apellidos, correo, contrasena, carnet, bloqueado_por_mora, fecha_registro, ultima_fecha_actividad, id_tipo, borrado_logico) VALUES
   (1, 'Administrador', 'Sistema', 'admin@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ADM-0001', 0, NOW(), NOW(), 1, 0),

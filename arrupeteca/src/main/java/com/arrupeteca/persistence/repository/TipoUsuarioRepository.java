@@ -14,11 +14,7 @@ public interface TipoUsuarioRepository extends JpaRepository<TipoUsuario, Long> 
 
     Page<TipoUsuario> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<TipoUsuario> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<TipoUsuario> findAllProjectedBy(Pageable pageable);
-
-    Optional<TipoUsuario> findProjectedById(Long id);
+    Optional<TipoUsuario> findByIdAndBorradoLogicoFalse(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE TipoUsuario t SET t.borradoLogico = true WHERE t.id = :id")

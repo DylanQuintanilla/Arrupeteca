@@ -139,8 +139,8 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should perform admin master search")
     void shouldPerformAdminMasterSearch() {
-        Page<Autor> page = new PageImpl<>(List.of());
-        when(autorRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
+        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.busquedaMaestraAdmin(
                 false, 1L, 1L, 1L, null, null, "test", Pageable.unpaged()

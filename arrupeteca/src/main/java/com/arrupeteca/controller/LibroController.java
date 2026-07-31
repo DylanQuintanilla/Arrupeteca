@@ -88,13 +88,14 @@ public class LibroController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada de libros (Admin)",
-        description = "Búsqueda avanzada de libros mediante múltiples filtros opcionales incluidos género y categoría (sólo admin)."
+        description = "Búsqueda avanzada de libros mediante múltiples filtros opcionales incluidos género, categoría y etiqueta (sólo admin)."
     )
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idObra,
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
+            @RequestParam(required = false) Long idEtiqueta,
             @RequestParam(required = false) Long idEditorial,
             @RequestParam(required = false) Long idFormato,
             @RequestParam(required = false) Long idGrado,
@@ -104,7 +105,7 @@ public class LibroController {
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                libroService.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
+                libroService.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEtiqueta, idEditorial, idFormato,
                         idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
     }
 

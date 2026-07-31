@@ -1,5 +1,6 @@
 package com.arrupeteca.persistence.repository;
 
+import com.arrupeteca.dto.response.summary.ObraResumen;
 import com.arrupeteca.persistence.entity.Obra;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +15,27 @@ import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 
 public interface ObraRepository extends JpaRepository<Obra, Long>, JpaSpecificationExecutor<Obra> {
+
+    @Query("SELECT new com.arrupeteca.dto.response.summary.ObraResumen(" +
+           "o.id, o.titulo, o.anioCreacion, o.resumen, o.borradoLogico) " +
+           "FROM Obra o " +
+           "WHERE (:esBorrado IS NULL OR o.borradoLogico = :esBorrado) " +
+           "AND (:termino IS NULL OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "     OR LOWER(o.resumen) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:anioInicio IS NULL OR o.anioCreacion >= :anioInicio) " +
+           "AND (:anioFin IS NULL OR o.anioCreacion <= :anioFin) " +
+           "AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)) " +
+           "AND (:idCategoria IS NULL OR EXISTS (SELECT 1 FROM o.categorias c WHERE c.id = :idCategoria)) " +
+           "AND (:idEtiqueta IS NULL OR EXISTS (SELECT 1 FROM o.etiquetas e WHERE e.id = :idEtiqueta))")
+    Page<ObraResumen> busquedaMaestraAdminProyectada(
+            @Param("esBorrado") Boolean esBorrado,
+            @Param("idGenero") Long idGenero,
+            @Param("idCategoria") Long idCategoria,
+            @Param("idEtiqueta") Long idEtiqueta,
+            @Param("termino") String termino,
+            @Param("anioInicio") Integer anioInicio,
+            @Param("anioFin") Integer anioFin,
+            Pageable pageable);
 
     @EntityGraph(attributePaths = {"generos", "categorias"})
     Page<Obra> findAll(Specification<Obra> spec, Pageable pageable);

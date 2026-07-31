@@ -13,7 +13,7 @@ import org.mapstruct.Named;
 
 @Mapper(
     config = CentralMapperConfig.class,
-    uses = {GeneroMapper.class, CategoriaMapper.class, ObraAutorMapper.class}
+    uses = {GeneroMapper.class, CategoriaMapper.class, EtiquetaMapper.class, ObraAutorMapper.class}
 )
 public interface ObraMapper {
 
@@ -21,6 +21,7 @@ public interface ObraMapper {
     @Mapping(target = "borradoLogico", ignore = true)
     @Mapping(target = "generos", ignore = true)
     @Mapping(target = "categorias", ignore = true)
+    @Mapping(target = "etiquetas", ignore = true)
     @Mapping(target = "obraAutores", ignore = true)
     @Mapping(target = "version", ignore = true)
     Obra toEntity(ObraRequest request);

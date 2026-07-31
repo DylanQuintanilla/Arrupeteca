@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -34,7 +35,10 @@ import org.hibernate.annotations.SQLDelete;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "obra")
+@Table(name = "obra", indexes = {
+    @Index(name = "idx_obra_busqueda", columnList = "borrado_logico, anio_creacion"),
+    @Index(name = "idx_obra_titulo", columnList = "titulo")
+})
 @SQLDelete(sql = "UPDATE obra SET borrado_logico = 1 WHERE id_obra = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Obra extends Auditable {
@@ -83,6 +87,15 @@ public class Obra extends Auditable {
             inverseJoinColumns = @JoinColumn(name = "id_categoria")
     )
     private Set<Categoria> categorias = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @Builder.Default
+    @JoinTable(
+            name = "obra_etiqueta",
+            joinColumns = @JoinColumn(name = "id_obra"),
+            inverseJoinColumns = @JoinColumn(name = "id_etiqueta")
+    )
+    private Set<Etiqueta> etiquetas = new HashSet<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "obra", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)

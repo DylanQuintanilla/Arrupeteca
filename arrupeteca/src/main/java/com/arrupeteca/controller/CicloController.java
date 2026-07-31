@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,52 +23,48 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/ciclos")
 @RequiredArgsConstructor
-@Tag(name = "Ciclos", description = "Endpoints para la gestión de ciclos académicos")
+@CrossOrigin(origins = "*")
+@Tag(name = "Ciclos", description = "Endpoints para la gestión de ciclos escolares")
 public class CicloController {
 
     private final CicloService cicloService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener ciclos activos",
-        description = "Retorna una página de ciclos registrados que no están borrados lógicamente."
+        summary = "Obtener ciclos activos para dropdowns",
+        description = "Retorna una lista simple no paginada de ciclos activos para selects y filtros."
     )
-    public ResponseEntity<ApiResponse<Page<CicloResponse>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<List<CicloResponse>>> obtenerTodosActivos() {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de ciclos activos", cicloService.obtenerTodosActivos()));
+    }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de ciclos",
+        description = "Retorna una página de ciclos con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<CicloResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de ciclos activos", cicloService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de ciclos", cicloService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener detalle de ciclo activo",
-        description = "Busca la información de un ciclo activo por su ID."
-    )
-    public ResponseEntity<ApiResponse<CicloResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo encontrado", cicloService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los ciclos (Admin)",
-        description = "Retorna todos los ciclos incluyendo los eliminados lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<CicloResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de ciclos", cicloService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener ciclo por ID (Admin)",
-        description = "Busca el detalle de un ciclo por su ID sin importar su estado lógico (solo admin)."
+        summary = "Obtener ciclo por ID",
+        description = "Busca la información de un ciclo por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<CicloResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo encontrado (admin)", cicloService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Ciclo encontrado", cicloService.obtenerPorId(id)));
     }
 
     @PostMapping

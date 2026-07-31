@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,31 +29,25 @@ public class CicloServiceImpl implements CicloService {
 
     @Override
     @Cacheable(value = "ciclos-activos")
-    public Page<CicloResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los ciclos activos con paginación: {}", pageable);
-        return cicloRepository.findByBorradoLogicoFalse(pageable)
-                .map(cicloMapper::toResponse);
-    }
-
-    @Override
-    public CicloResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando ciclo activo con ID: {}", id);
-        return cicloRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+    public List<CicloResponse> obtenerTodosActivos() {
+        log.debug("Obteniendo todos los ciclos activos en lista plana");
+        return cicloRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
                 .map(cicloMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un ciclo activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<CicloResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los ciclos (incluyendo borrados) con paginación: {}", pageable);
-        return cicloRepository.findAllProjectedBy(pageable)
+    public Page<CicloResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de ciclos con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return cicloRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(cicloMapper::toResponse);
     }
 
     @Override
     public CicloResponse obtenerPorId(Long id) {
-        log.debug("Buscando ciclo con ID: {}", id);
-        return cicloRepository.findProjectedById(id)
+        log.debug("Buscando ciclo por ID: {}", id);
+        return cicloRepository.findById(id)
                 .map(cicloMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un ciclo con ID: " + id));
     }
@@ -97,11 +93,7 @@ public class CicloServiceImpl implements CicloService {
 
         if ((esNuevo || nombreCambio) && cicloRepository.existsByNombreIgnoreCase(nombreNuevo)) {
             log.warn("Intento de duplicar ciclo: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe un ciclo con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otro ciclo con el nombre: " + nombreNuevo);
-            }
+            throw new ValidacionNegocioException("Ya existe un ciclo con el nombre: " + nombreNuevo);
         }
     }
 

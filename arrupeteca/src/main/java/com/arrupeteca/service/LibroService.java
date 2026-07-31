@@ -19,9 +19,10 @@ public interface LibroService {
     LibroDetalleResponse obtenerPorId(Long id);
 
     Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEditorial, Long idFormato,
-            Long idGrado, Long idCiclo, String termino,
-            Integer anioInicio, Integer anioFin, Pageable pageable);
+            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable);
 
     Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable);
 

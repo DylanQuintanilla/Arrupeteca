@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,11 +23,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/grados")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "*")
 @Tag(name = "Grados", description = "Endpoints para la gestión de grados académicos")
 public class GradoController {
 
@@ -34,40 +39,32 @@ public class GradoController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener grados activos",
-        description = "Retorna una página de grados registrados que no están borrados lógicamente."
+        summary = "Obtener grados activos para dropdowns",
+        description = "Retorna una lista simple no paginada de grados activos para selects y filtros."
     )
-    public ResponseEntity<ApiResponse<Page<GradoResponse>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<List<GradoResponse>>> obtenerTodosActivos() {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de grados activos", gradoService.obtenerTodosActivos()));
+    }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de grados",
+        description = "Retorna una página de grados con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<GradoResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de grados activos", gradoService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de grados", gradoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener detalle de grado activo",
-        description = "Busca la información de un grado activo por su ID."
-    )
-    public ResponseEntity<ApiResponse<GradoResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Grado encontrado", gradoService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los grados (Admin)",
-        description = "Retorna todos los grados incluyendo los eliminados lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<GradoResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de grados", gradoService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener grado por ID (Admin)",
-        description = "Busca el detalle de un grado por su ID sin importar su estado lógico (solo admin)."
+        summary = "Obtener grado por ID",
+        description = "Busca la información de un grado por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<GradoResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Grado encontrado (admin)", gradoService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Grado encontrado", gradoService.obtenerPorId(id)));
     }
 
     @PostMapping

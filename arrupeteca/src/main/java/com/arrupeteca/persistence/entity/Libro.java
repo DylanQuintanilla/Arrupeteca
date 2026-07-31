@@ -10,6 +10,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -34,7 +35,10 @@ import org.hibernate.annotations.SQLDelete;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "libro")
+@Table(name = "libro", indexes = {
+    @Index(name = "idx_libro_busqueda", columnList = "borrado_logico, id_obra, id_editorial, id_grado, id_ciclo, id_formato"),
+    @Index(name = "idx_libro_isbn", columnList = "isbn")
+})
 @SQLDelete(sql = "UPDATE libro SET borrado_logico = 1 WHERE id_libro = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Libro extends Auditable {

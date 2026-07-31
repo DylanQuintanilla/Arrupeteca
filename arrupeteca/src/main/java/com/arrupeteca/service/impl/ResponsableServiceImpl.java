@@ -44,7 +44,7 @@ public class ResponsableServiceImpl implements ResponsableService {
     @Override
     public ResponsableResponse obtenerPorIdActivo(Long id) {
         log.debug("Buscando responsable activo con ID: {}", id);
-        return responsableRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+        return responsableRepository.findByIdAndBorradoLogicoFalse(id)
                 .map(responsableMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un responsable activo con ID: " + id));
     }
@@ -52,14 +52,14 @@ public class ResponsableServiceImpl implements ResponsableService {
     @Override
     public Page<ResponsableResponse> obtenerTodos(Pageable pageable) {
         log.debug("Obteniendo todos los responsables (incluyendo borrados) con paginación: {}", pageable);
-        return responsableRepository.findAllProjectedBy(pageable)
+        return responsableRepository.findAll(pageable)
                 .map(responsableMapper::toResponse);
     }
 
     @Override
     public ResponsableResponse obtenerPorId(Long id) {
         log.debug("Buscando responsable con ID: {}", id);
-        return responsableRepository.findProjectedById(id)
+        return responsableRepository.findById(id)
                 .map(responsableMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un responsable con ID: " + id));
     }

@@ -15,11 +15,7 @@ public interface ResponsableRepository extends JpaRepository<Responsable, Long> 
 
     Page<Responsable> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<Responsable> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Responsable> findAllProjectedBy(Pageable pageable);
-
-    Optional<Responsable> findProjectedById(Long id);
+    Optional<Responsable> findByIdAndBorradoLogicoFalse(Long id);
 
     List<Responsable> findByUsuarioIdAndBorradoLogicoFalse(Long idUsuario);
 

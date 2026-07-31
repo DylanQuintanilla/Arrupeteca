@@ -15,7 +15,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -31,10 +33,9 @@ class CategoriaControllerTest extends BaseControllerTest {
     private CategoriaService categoriaService;
 
     @Test
-    @DisplayName("GET /api/v1/categorias - Should return active categories")
+    @DisplayName("GET /api/v1/categorias - Should return active categories list")
     void shouldReturnActiveCategories() throws Exception {
-        Page<CategoriaResponse> page = new PageImpl<>(List.of());
-        when(categoriaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(categoriaService.obtenerTodosActivos()).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/categorias"))
                 .andExpect(status().isOk())
@@ -43,10 +44,22 @@ class CategoriaControllerTest extends BaseControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/categorias/all - Should return categories table")
+    void shouldReturnAllCategories() throws Exception {
+        Page<CategoriaResponse> page = new PageImpl<>(List.of());
+        when(categoriaService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/categorias/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Tabla de categorías"));
+    }
+
+    @Test
     @DisplayName("GET /api/v1/categorias/{id} - Should return category by ID")
     void shouldReturnCategoryById() throws Exception {
         CategoriaResponse response = new CategoriaResponse(1L, "Existente", false);
-        when(categoriaService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(categoriaService.obtenerPorId(1L)).thenReturn(response);
 
         mockMvc.perform(get("/api/v1/categorias/1"))
                 .andExpect(status().isOk())
@@ -64,7 +77,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         when(categoriaService.crear(any())).thenReturn(response);
 
         mockMvc.perform(post("/api/v1/categorias")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -81,7 +94,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(response);
 
         mockMvc.perform(put("/api/v1/categorias/1")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf())
+                        .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -94,7 +107,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @DisplayName("DELETE /api/v1/categorias/{id} - Should deactivate category")
     void shouldDeactivateCategory() throws Exception {
         mockMvc.perform(delete("/api/v1/categorias/1")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Categoría desactivada correctamente"));
@@ -104,34 +117,9 @@ class CategoriaControllerTest extends BaseControllerTest {
     @DisplayName("PATCH /api/v1/categorias/{id}/activar - Should activate category")
     void shouldActivateCategory() throws Exception {
         mockMvc.perform(patch("/api/v1/categorias/1/activar")
-                        .with(org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf()))
+                        .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Categoría activada correctamente"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/categorias/admin - Should return all categories for admin")
-    void shouldReturnAllCategoriesAdmin() throws Exception {
-        Page<CategoriaResponse> page = new PageImpl<>(List.of());
-        when(categoriaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/categorias/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de categorías"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/categorias/admin/{id} - Should return category by ID for admin")
-    void shouldReturnCategoryByIdAdmin() throws Exception {
-        CategoriaResponse response = new CategoriaResponse(1L, "Existente", false);
-        when(categoriaService.obtenerPorId(1L)).thenReturn(response);
-
-        mockMvc.perform(get("/api/v1/categorias/admin/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Categoría encontrada (admin)"))
-                .andExpect(jsonPath("$.data.nombre").value("Existente"));
     }
 }

@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,31 +29,25 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
 
     @Override
     @Cacheable(value = "estados-fisicos-activos")
-    public Page<EstadoFisicoResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los estados físicos activos con paginación: {}", pageable);
-        return estadoFisicoRepository.findByBorradoLogicoFalse(pageable)
-                .map(estadoFisicoMapper::toResponse);
-    }
-
-    @Override
-    public EstadoFisicoResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando estado físico activo con ID: {}", id);
-        return estadoFisicoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+    public List<EstadoFisicoResponse> obtenerTodosActivos() {
+        log.debug("Obteniendo todos los estados físicos activos en lista plana");
+        return estadoFisicoRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
                 .map(estadoFisicoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un estado físico activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<EstadoFisicoResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los estados físicos (incluyendo borrados) con paginación: {}", pageable);
-        return estadoFisicoRepository.findAllProjectedBy(pageable)
+    public Page<EstadoFisicoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de estados físicos con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return estadoFisicoRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(estadoFisicoMapper::toResponse);
     }
 
     @Override
     public EstadoFisicoResponse obtenerPorId(Long id) {
-        log.debug("Buscando estado físico con ID: {}", id);
-        return estadoFisicoRepository.findProjectedById(id)
+        log.debug("Buscando estado físico por ID: {}", id);
+        return estadoFisicoRepository.findById(id)
                 .map(estadoFisicoMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un estado físico con ID: " + id));
     }
@@ -97,11 +93,7 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
 
         if ((esNuevo || nombreCambio) && estadoFisicoRepository.existsByNombreIgnoreCase(nombreNuevo)) {
             log.warn("Intento de duplicar estado físico: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe un estado físico con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otro estado físico con el nombre: " + nombreNuevo);
-            }
+            throw new ValidacionNegocioException("Ya existe un estado físico con el nombre: " + nombreNuevo);
         }
     }
 

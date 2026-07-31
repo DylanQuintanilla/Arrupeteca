@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.CicloResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface CicloService {
 
-    Page<CicloResponse> obtenerTodosActivos(Pageable pageable);
+    List<CicloResponse> obtenerTodosActivos();
 
-    CicloResponse obtenerPorIdActivo(Long id);
-
-    Page<CicloResponse> obtenerTodos(Pageable pageable);
+    Page<CicloResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     CicloResponse obtenerPorId(Long id);
 

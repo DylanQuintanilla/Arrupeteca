@@ -8,17 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface EstadoFisicoRepository extends JpaRepository<EstadoFisico, Long> {
 
-    Page<EstadoFisico> findByBorradoLogicoFalse(Pageable pageable);
+    List<EstadoFisico> findByBorradoLogicoFalseOrderByNombreAsc();
 
-    Optional<EstadoFisico> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<EstadoFisico> findAllProjectedBy(Pageable pageable);
-
-    Optional<EstadoFisico> findProjectedById(Long id);
+    @Query("SELECT e FROM EstadoFisico e WHERE " +
+           "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico)")
+    Page<EstadoFisico> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EstadoFisico e SET e.borradoLogico = true WHERE e.id = :id")

@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.DisponibilidadResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface DisponibilidadService {
 
-    Page<DisponibilidadResponse> obtenerTodosActivos(Pageable pageable);
+    List<DisponibilidadResponse> obtenerTodosActivos();
 
-    DisponibilidadResponse obtenerPorIdActivo(Long id);
-
-    Page<DisponibilidadResponse> obtenerTodos(Pageable pageable);
+    Page<DisponibilidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     DisponibilidadResponse obtenerPorId(Long id);
 

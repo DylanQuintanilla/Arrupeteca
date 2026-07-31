@@ -14,11 +14,7 @@ public interface ParentescoRepository extends JpaRepository<Parentesco, Long> {
 
     Page<Parentesco> findByBorradoLogicoFalse(Pageable pageable);
 
-    Optional<Parentesco> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Parentesco> findAllProjectedBy(Pageable pageable);
-
-    Optional<Parentesco> findProjectedById(Long id);
+    Optional<Parentesco> findByIdAndBorradoLogicoFalse(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Parentesco p SET p.borradoLogico = true WHERE p.id = :id")

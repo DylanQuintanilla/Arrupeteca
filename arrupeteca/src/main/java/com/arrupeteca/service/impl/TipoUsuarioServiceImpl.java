@@ -36,7 +36,7 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
     @Override
     public TipoUsuarioResponse obtenerPorIdActivo(Long id) {
         log.debug("Buscando tipo de usuario activo con ID: {}", id);
-        return tipoUsuarioRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+        return tipoUsuarioRepository.findByIdAndBorradoLogicoFalse(id)
                 .map(tipoUsuarioMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de usuario activo con ID: " + id));
     }
@@ -44,14 +44,14 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
     @Override
     public Page<TipoUsuarioResponse> obtenerTodos(Pageable pageable) {
         log.debug("Obteniendo todos los tipos de usuario (incluyendo borrados) con paginación: {}", pageable);
-        return tipoUsuarioRepository.findAllProjectedBy(pageable)
+        return tipoUsuarioRepository.findAll(pageable)
                 .map(tipoUsuarioMapper::toResponse);
     }
 
     @Override
     public TipoUsuarioResponse obtenerPorId(Long id) {
         log.debug("Buscando tipo de usuario con ID: {}", id);
-        return tipoUsuarioRepository.findProjectedById(id)
+        return tipoUsuarioRepository.findById(id)
                 .map(tipoUsuarioMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de usuario con ID: " + id));
     }

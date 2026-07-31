@@ -62,7 +62,7 @@ El uso de Lombok debe ser riguroso para evitar efectos secundarios indeseados en
 
 ---
 
-## 5. Borrado Lógico (Soft Delete)
+## 6. Borrado Lógico (Soft Delete)
 
 Para preservar la integridad histórica ante eliminaciones:
 *   Anotar la entidad con `@SQLDelete(sql = "UPDATE tabla SET borrado_logico = 1 WHERE id_tabla = ?")`.
@@ -71,7 +71,20 @@ Para preservar la integridad histórica ante eliminaciones:
 
 ---
 
-## 6. Plantilla Base Recomendada (Ejemplo de Autor)
+## 7. Configuración de Índices en la Base de Datos (`@Table(indexes = ...)`)
+
+Para garantizar el rendimiento óptimo de las consultas sin depender de scripts SQL externos que se pueden perder durante `create-drop` o migraciones, **los índices deben definirse directamente en la entidad JPA**:
+
+*   **Uso de `@Table(indexes = { @Index(...) })`**: Declarar la lista de índices en la anotación `@Table`.
+*   **Índices Compuestos (Filtros Múltiples)**: Agrupar columnas que frecuentemente se consultan juntas en las cláusulas `WHERE` (ej. `borrado_logico` junto con claves foráneas o campos de estado).
+    *   *Regla del Prefijo Izquierdo*: La columna más filtrada y constante (como `borrado_logico`) debe colocarse en la primera posición del índice compuesto.
+*   **Índices Individuales (Búsquedas Textuales y Únicas)**: Crear índices individuales para columnas de texto buscadas por coincidencia parcial (`nombre`, `titulo`), ordenaciones (`ORDER BY`) o identificadores únicos (`isbn`).
+*   **Límite Recomendado**: Definir entre **2 y 4 índices por entidad transaccional** para equilibrar la velocidad de lectura (`SELECT`) sin penalizar el rendimiento de inserción (`INSERT` / `UPDATE`).
+*   *(Nota: Las tablas intermedias `@ManyToMany` son indexadas automáticamente por JPA en sus claves foráneas)*.
+
+---
+
+## 8. Plantilla Base Recomendada (Ejemplo de Autor)
 
 ```java
 package com.arrupeteca.persistence.entity;
@@ -82,6 +95,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
@@ -106,7 +120,10 @@ import org.hibernate.annotations.SQLDelete;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
 @Builder
-@Table(name = "autor")
+@Table(name = "autor", indexes = {
+    @Index(name = "idx_autor_busqueda", columnList = "borrado_logico, id_nacionalidad, id_pais_nacimiento, id_genero_principal, id_obra"),
+    @Index(name = "idx_autor_nombre", columnList = "nombre, seudonimo")
+})
 @SQLDelete(sql = "UPDATE autor SET borrado_logico = 1 WHERE id_autor = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Autor extends Auditable {
@@ -167,7 +184,7 @@ public class Autor extends Auditable {
 
 ---
 
-## 7. Lista de Autoverificación (Checklist del Desarrollador)
+## 9. Lista de Autoverificación (Checklist del Desarrollador)
 
 Antes de dar por terminada la refactorización o creación de una nueva entidad, hágase las siguientes preguntas:
 
@@ -188,7 +205,8 @@ Antes de dar por terminada la refactorización o creación de una nueva entidad,
 6. **¿El borrado lógico está bien estructurado?**
    * ¿Tiene `@SQLDelete(sql = "UPDATE ...")`?
    * ¿El campo `borradoLogico` está anotado con `@Builder.Default` y configurado con la definición de columna `TINYINT DEFAULT 0`?
+7. **¿Se configuraron los índices en `@Table(indexes = ...)`?**
+   * En entidades transaccionales de negocio, ¿se declararon los índices compuestos (filtros frecuentes `borrado_logico` + FKs) e individuales (búsquedas por texto u ordenación) directamente en la anotación `@Table`?
 
 ---
 *Este estándar garantiza la estabilidad, rendimiento e integridad de datos en el dominio de Arrupeteca.*
-

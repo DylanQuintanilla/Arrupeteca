@@ -78,16 +78,15 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
 
     @Override
     public Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idMueble, Long idEstadoFisico,
-            Long idDisponibilidad, String termino, Pageable pageable) {
+            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idMueble, Long idEstadoFisico, Long idDisponibilidad,
+            String termino, Pageable pageable) {
 
-        log.debug("Búsqueda maestra de ejemplares para admin");
+        log.debug("Búsqueda maestra de ejemplares para admin proyectada: esBorrado={}, idLibro={}, idEtiqueta={}", esBorrado, idLibro, idEtiqueta);
 
-        return ejemplarLibroRepository.findAll(
-                        EjemplarLibroSpecification.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idMueble, idEstadoFisico,
-                                idDisponibilidad, termino),
-                        pageable)
-                .map(ejemplarLibroMapper::toResumen);
+        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+                esBorrado, idLibro, idGenero, idCategoria, idEtiqueta,
+                idMueble, idEstadoFisico, idDisponibilidad, termino, pageable);
     }
 
     @Override

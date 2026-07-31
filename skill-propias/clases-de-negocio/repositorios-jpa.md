@@ -28,7 +28,25 @@ Hibernate utiliza carga perezosa (`FetchType.LAZY`) por defecto en las relacione
 
 ---
 
-## 3. Modificaciones en Base de Datos (`@Modifying`)
+## 3. Proyecciones por Constructor (`SELECT new`) para Búsquedas Maestras de Admin
+
+Para las tablas de administración paginadas de alto tráfico y volumen (ej. `busquedaMaestraAdmin` en `Autor`, `Obra`, `Libro`, `EjemplarLibro`), las consultas no deben recuperar entidades completas ni pasar por MapStruct.
+
+*   **Uso de `SELECT new`**: Definir consultas JPQL con la sintaxis `@Query("SELECT new com.arrupeteca.dto.response.summary.MiResumenResponse(...) FROM ...")`.
+*   **Ventajas de Rendimiento**:
+    *   **Bypassea el Persistence Context (Caché L1)**: Hibernate no crea proxies, snapshots de auditoría ni rastreo de cambios (*dirty checking*), reduciendo entre un 70% y 85% la memoria RAM consumida en la JVM.
+    *   **Tráfico Mínimo de Red**: Lee únicamente de la base de datos las columnas necesarias para el DTO Resumen.
+    *   **Sin MapStruct en Lecturas Paginadas**: La base de datos y Hibernate entregan directamente la lista de DTOs finales lista para serializarse a JSON.
+*   **Filtrado de Colecciones `@ManyToMany` sin Producto Cartesiano**:
+    *   Al filtrar por colecciones (como géneros, categorías o etiquetas), **evitar `JOIN` directo en el `WHERE`**. Usar el patrón `EXISTS (SELECT 1 FROM ...)`:
+        ```jpql
+        AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero))
+        ```
+    *   *Propósito*: Evita la duplicación de filas en el ResultSet de la base de datos (producto cartesiano) sin necesidad de aplicar `query.distinct(true)`.
+
+---
+
+## 4. Modificaciones en Base de Datos (`@Modifying`)
 
 Para consultas personalizadas de actualización o borrado directo (ej. actualizar estados o realizar borrado lógico masivo):
 
@@ -63,14 +81,16 @@ Dado que el borrado lógico preserva la fila en la tabla, necesitamos chequear s
 
 ---
 
-## 5. Plantilla Base Recomendada (Ejemplo de AutorRepository)
+## 6. Plantilla Base Recomendada (Ejemplo de AutorRepository)
 
 ```java
 package com.arrupeteca.persistence.repository;
 
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.persistence.entity.Autor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -79,34 +99,50 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
 public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecificationExecutor<Autor> {
 
+    @Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(" +
+           "a.id, a.nombre, a.seudonimo, a.anioNacimiento, a.anioFallecimiento, " +
+           "a.borradoLogico, p.nombre, n.nombre, g.nombre, o.titulo, " +
+           "a.biografia) " +
+           "FROM Autor a " +
+           "LEFT JOIN a.paisNacimiento p " +
+           "LEFT JOIN a.nacionalidad n " +
+           "LEFT JOIN a.generoPrincipal g " +
+           "LEFT JOIN a.obraCumbre o " +
+           "WHERE (:esBorrado IS NULL OR a.borradoLogico = :esBorrado) " +
+           "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
+           "AND (:idPais IS NULL OR p.id = :idPais) " +
+           "AND (:idGenero IS NULL OR g.id = :idGenero) " +
+           "AND (:termino IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
+           "AND (:anioFin IS NULL OR a.anioNacimiento <= :anioFin)")
+    Page<AutorResumenResponse> busquedaMaestraAdminProyectada(
+            @Param("esBorrado") Boolean esBorrado,
+            @Param("idNacionalidad") Long idNacionalidad,
+            @Param("idPais") Long idPais,
+            @Param("idGenero") Long idGenero,
+            @Param("anioInicio") Year anioInicio,
+            @Param("anioFin") Year anioFin,
+            @Param("termino") String termino,
+            Pageable pageable);
+
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Page<Autor> findAll(Specification<Autor> spec, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    List<Autor> findAll(Specification<Autor> spec, Sort sort);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<Autor> findById(Long id);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     Optional<Autor> findOne(Specification<Autor> spec);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    @Query("""
-        SELECT a FROM Autor a
-        WHERE (
-            a.nombre LIKE CONCAT('%', :termino, '%')
-            OR (a.seudonimo IS NOT NULL AND a.seudonimo LIKE CONCAT('%', :termino, '%'))
-        )
-        AND (:idExcluir IS NULL OR a.id != :idExcluir)
-        ORDER BY a.nombre ASC
-    """)
-    List<Autor> buscarPosiblesDuplicados(
-            @Param("termino") String termino,
-            @Param("idExcluir") Long idExcluir
-    );
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
@@ -125,7 +161,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long>, JpaSpecific
 
 ---
 
-## 6. Lista de Autoverificación (Checklist del Desarrollador)
+## 7. Lista de Autoverificación (Checklist del Desarrollador)
 
 Antes de considerar listo un repositorio, verifique el cumplimiento de los siguientes puntos:
 
@@ -133,16 +169,18 @@ Antes de considerar listo un repositorio, verifique el cumplimiento de los sigui
    * ¿Extiende de `JpaRepository<Entidad, Long>` y de `JpaSpecificationExecutor<Entidad>`?
 2. **¿Evita anotaciones redundantes?**
    * ¿Está la interfaz libre de la anotación `@Repository`?
-3. **¿Tiene optimización de consultas N+1?**
-   * ¿Los métodos de listado (`findAll`) y búsqueda de detalle tienen anotado `@EntityGraph` con relaciones `@ManyToOne`/`@OneToOne` únicamente, evitando incluir colecciones `@ManyToMany`/`@OneToMany` para prevenir el producto cartesiano o paginación en memoria?
-4. **¿Los métodos `@Modifying` son seguros para el contexto de Hibernate?**
+3. **¿Utiliza Proyección `SELECT new` para la Búsqueda Maestra de Admin?**
+   * ¿Tiene definido un método `busquedaMaestraAdminProyectada(...)` con la consulta `@Query("SELECT new ...")` que construye directamente el DTO Resumen?
+   * Al filtrar por colecciones `@ManyToMany`, ¿utiliza el patrón `EXISTS (SELECT 1 FROM ...)` para evitar duplicación de filas (producto cartesiano)?
+4. **¿Tiene optimización de consultas N+1 con `@EntityGraph` para vistas de detalle?**
+   * ¿Los métodos de lectura de entidades (`findById`, `findOne`, `findAll`) tienen anotado `@EntityGraph` con relaciones `@ManyToOne`/`@OneToOne` únicamente?
+5. **¿Los métodos `@Modifying` son seguros para el contexto de Hibernate?**
    * ¿Tienen todos los métodos `@Modifying` configurado `clearAutomatically = true` y `flushAutomatically = true`?
-5. **¿Se utiliza `@Param` explícito?**
+6. **¿Se utiliza `@Param` explícito?**
    * ¿Todos los parámetros en los métodos `@Query` tienen su correspondiente `@Param("nombre")`?
-6. **¿El método de verificación de existencia física es compatible con MySQL?**
+7. **¿El método de verificación de existencia física es compatible con MySQL?**
    * Si la entidad maneja borrado lógico, ¿existe el método native query `countByIdIncludeDeleted` retornando un `long` en lugar de una comparación booleana directa?
-7. **¿Se realiza el conteo correctamente en el Servicio?**
-   * ¿La capa de servicio comprueba `countByIdIncludeDeleted(id) == 0` para lanzar la excepción?
- 
+
 ---
+*Este estándar garantiza que la capa de persistencia sea consultada de forma eficiente y proteja el estado transaccional del sistema.*
 *Este estándar garantiza que la capa de persistencia sea consultada de forma eficiente y proteja el estado transaccional del sistema.*

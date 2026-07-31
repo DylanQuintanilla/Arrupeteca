@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,31 +29,25 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
 
     @Override
     @Cacheable(value = "disponibilidades-activas")
-    public Page<DisponibilidadResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todas las disponibilidades activas con paginación: {}", pageable);
-        return disponibilidadRepository.findByBorradoLogicoFalse(pageable)
-                .map(disponibilidadMapper::toResponse);
-    }
-
-    @Override
-    public DisponibilidadResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando disponibilidad activa con ID: {}", id);
-        return disponibilidadRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+    public List<DisponibilidadResponse> obtenerTodosActivos() {
+        log.debug("Obteniendo todas las disponibilidades activas en lista plana");
+        return disponibilidadRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
                 .map(disponibilidadMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una disponibilidad activa con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<DisponibilidadResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todas las disponibilidades (incluyendo borrados) con paginación: {}", pageable);
-        return disponibilidadRepository.findAllProjectedBy(pageable)
+    public Page<DisponibilidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de disponibilidades con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return disponibilidadRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(disponibilidadMapper::toResponse);
     }
 
     @Override
     public DisponibilidadResponse obtenerPorId(Long id) {
-        log.debug("Buscando disponibilidad con ID: {}", id);
-        return disponibilidadRepository.findProjectedById(id)
+        log.debug("Buscando disponibilidad por ID: {}", id);
+        return disponibilidadRepository.findById(id)
                 .map(disponibilidadMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró una disponibilidad con ID: " + id));
     }
@@ -97,11 +93,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
 
         if ((esNuevo || nombreCambio) && disponibilidadRepository.existsByNombreIgnoreCase(nombreNuevo)) {
             log.warn("Intento de duplicar disponibilidad: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe una disponibilidad con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otra disponibilidad con el nombre: " + nombreNuevo);
-            }
+            throw new ValidacionNegocioException("Ya existe una disponibilidad con el nombre: " + nombreNuevo);
         }
     }
 

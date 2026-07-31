@@ -1,6 +1,6 @@
 # Estándar de Desarrollo: Controladores Spring Boot para Catálogos (Arrupeteca)
 
-Este documento establece las directrices para el diseño e implementación de la capa de **Controladores REST** en los módulos de **Catálogo** (tablas maestras de referencia, ej. `Categoria`, `Idioma`, `Pais`, `Nacionalidad`, `Formato`, `Genero`).
+Este documento establece las directrices para el diseño e implementación de la capa de **Controladores REST** en los módulos de **Catálogo** (tablas maestras de referencia, ej. `Categoria`, `Ciclo`, `Disponibilidad`, `EstadoFisico`, `Etiqueta`, `Formato`, `Genero`, `Grado`, `Idioma`, `Nacionalidad`, `Pais`, `Parentesco`, `TipoAutoria`, `TipoUsuario`).
 
 ---
 
@@ -18,14 +18,13 @@ Todo controlador de catálogo debe seguir las siguientes reglas de anotación y 
 
 ## 2. Semántica HTTP de Endpoints de Catálogo
 
-Los endpoints deben respetar la semántica HTTP clásica de manera estricta y retornar la misma estructura unificada de salida `[Entidad]Response`:
+Los endpoints deben respetar la semántica HTTP de manera estricta y retornar la misma estructura unificada de salida `[Entidad]Response`:
 
 | Método HTTP | Ruta relativa | Acción | Retorno exitoso |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/` | Obtener listado activo. | `200 OK` $\rightarrow$ `ApiResponse<Page<[Entidad]Response>>` |
-| **GET** | `/{id}` | Obtener detalle activo. | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
-| **GET** | `/admin` | Obtener historial completo (Admin). | `200 OK` $\rightarrow$ `ApiResponse<Page<[Entidad]Response>>` |
-| **GET** | `/admin/{id}` | Obtener detalle (Admin). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
+| **GET** | `/` | Obtener listado activo para dropdowns/selects (sin paginación). | `200 OK` $\rightarrow$ `ApiResponse<List<[Entidad]Response>>` |
+| **GET** | `/all` | Obtener tabla de administración (paginado con filtros `nombre` y `borradoLogico`). | `200 OK` $\rightarrow$ `ApiResponse<Page<[Entidad]Response>>` |
+| **GET** | `/{id}` | Obtener registro por ID (activo o inactivo). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
 | **POST** | `/` | Crear nuevo registro. | `201 Created` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
 | **PUT** | `/{id}` | Actualizar completo (Full update). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
 | **DELETE** | `/{id}` | Desactivar (Borrado lógico). | `200 OK` $\rightarrow$ `ApiResponse<Void>` |
@@ -41,8 +40,8 @@ return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.exito("...", r
 ## 3. Autodocumentación OpenAPI y Paginación
 
 *   **Anotar con `@Operation(summary = "...", description = "...")`**: Obligatorio en todos los métodos para documentar la acción.
-*   **Formatear anotaciones**: Mantener las anotaciones OpenAPI multilínea para cumplir estrictamente con el límite de 140 caracteres de Checkstyle.
-*   **Documentación de paginación**: Todo parámetro `Pageable` debe ir decorado con `@ParameterObject` y `@PageableDefault(size = 20, sort = "nombre")` para aplanar sus parámetros y hacer el Swagger UI legible.
+*   **Formatear anotaciones**: Mantener las anotaciones OpenAPI multilínea para cumplir estrictamente con el límite de caracteres.
+*   **Documentación de paginación**: En `/all`, el parámetro `Pageable` debe ir decorado con `@ParameterObject` y `@PageableDefault(size = 20, sort = "nombre")`.
 
 ---
 
@@ -74,7 +73,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/categorias")
@@ -87,40 +89,32 @@ public class CategoriaController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener categorías activas",
-        description = "Retorna una página de categorías registradas que no están borradas lógicamente."
+        summary = "Obtener categorías activas para dropdowns",
+        description = "Retorna una lista simple no paginada de categorías activas para selects y filtros."
     )
-    public ResponseEntity<ApiResponse<Page<CategoriaResponse>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<List<CategoriaResponse>>> obtenerTodosActivos() {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos()));
+    }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de categorías",
+        description = "Retorna una página de categorías con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<CategoriaResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de categorías", categoriaService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/{id}")
     @Operation(
-        summary = "Obtener detalle de categoría activa",
-        description = "Busca la información de una categoría activa por su ID."
-    )
-    public ResponseEntity<ApiResponse<CategoriaResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Categoría encontrada", categoriaService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todas las categorías (Admin)",
-        description = "Retorna todas las categorías incluyendo las eliminadas lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<CategoriaResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de categorías", categoriaService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener categoría por ID (Admin)",
-        description = "Busca el detalle de una categoría por su ID sin importar su estado lógico (solo admin)."
+        summary = "Obtener categoría por ID",
+        description = "Busca la información de una categoría por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<CategoriaResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Categoría encontrada (admin)", categoriaService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Categoría encontrada", categoriaService.obtenerPorId(id)));
     }
 
     @PostMapping
@@ -164,24 +158,3 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Categoría activada correctamente"));
     }
 }
-```
-
----
-
-## 5. Lista de Autoverificación (Checklist)
-
-1. **¿El mapeo de rutas es correcto?**
-   * ¿Comienza con `/api/v1/` y sigue el nombre del recurso en plural en minúsculas?
-2. **¿Los métodos HTTP son correctos?**
-   * ¿GET para consultas, POST para crear, PUT para actualizar, DELETE para desactivar y PATCH para activar?
-3. **¿Se validan las entradas `@RequestBody`?**
-   * ¿Tienen la anotación `@Valid` al lado del cuerpo?
-4. **¿Sintaxis fluida para el código de creación (POST)?**
-   * ¿Se utiliza `ResponseEntity.status(HttpStatus.CREATED).body(...)`?
-5. **¿La salida de controladores está centralizada?**
-   * ¿Todos los endpoints de lectura retornan `[Entidad]Response` en lugar de diferenciar entre resumen y detalle?
-6. **¿Autodocumentación OpenAPI y Paginación configuradas?**
-   * ¿Tiene `@Tag` y `@Operation`?
-   * ¿Los parámetros Pageable tienen `@ParameterObject` y `@PageableDefault`?
-7. **¿Conformidad con Checkstyle?**
-   * ¿Las anotaciones OpenAPI largas se dividieron en varias líneas para respetar el límite de longitud de línea?

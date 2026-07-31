@@ -16,6 +16,7 @@ public record ObraRequest(
     JsonNullable<String> resumen,
     JsonNullable<Set<Long>> idGeneros,
     JsonNullable<Set<Long>> idCategorias,
+    JsonNullable<Set<Long>> idEtiquetas,
     JsonNullable<Set<ObraAutorRequest>> autores,
     Long version
 ) {

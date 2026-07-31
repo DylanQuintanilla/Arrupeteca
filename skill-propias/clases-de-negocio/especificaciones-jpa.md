@@ -10,6 +10,31 @@ En lugar de crear métodos de consulta rígidos o consultas `@Query` gigantescas
 
 ---
 
+## 2. Anatomía de una Clase Specification (Qué lleva y Cuándo se usan)
+
+Toda clase `[Entidad]Specification` se divide funcionalmente en **dos capas de métodos**:
+
+### A. Predicados Atómicos (Filtros Individuales)
+Cada método atómico representa **una sola regla de negocio** o criterio de filtrado. Se usan de forma independiente o como bloques de construcción.
+
+1. **`tieneId(Long id)`**: Filtro exacto por clave primaria.
+2. **`esBorrado(Boolean esBorrado)`**: Filtro por estado lógico (`null` = sin filtro para admin; `false` = activo; `true` = eliminado).
+3. **`tiene[Relacion](Long idRelacion)`**: Filtro por clave foránea usando `JoinType.LEFT` (ej: `tieneNacionalidad`, `tieneEditorial`, `tieneMueble`).
+4. **`contieneTermino(String termino)`**: Búsqueda por coincidencia de texto parcial (`LIKE %termino%`) en campos principales como `nombre`, `titulo`, `isbn`, `codigoBarras` o `seudonimo`.
+5. **`vivoEnPeriodo / coincideRango`**: Filtro por intersección de rangos numéricos o de fechas.
+
+### B. Orquestadores de Búsqueda (Especificaciones Compuestas)
+Métodos de alto nivel que combinan múltiples predicados atómicos usando `.and()`. Se invocan directamente desde los Servicios:
+
+1. **`filtroMaestroAdmin(...)`**:
+   - **Cuándo se usa**: En la ruta `GET /api/v1/[recurso]/admin/busqueda-maestra`.
+   - **Qué lleva**: Todos los filtros posibles del sistema (incluyendo estado borrado, rangos, categorización y término).
+2. **`filtroBusquedaGlobal(...)`**:
+   - **Cuándo se usa**: En la ruta pública `GET /api/v1/[recurso]` de búsqueda para alumnos.
+   - **Qué lleva**: Fuerza `esBorrado(false)` + búsqueda textual amplia en múltiples campos y tablas asociadas.
+
+---
+
 ## 2. Reglas de Diseño de la Clase de Especificación
 
 *   **Clase de Utilidad**:

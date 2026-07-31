@@ -88,17 +88,15 @@ public class LibroServiceImpl implements LibroService {
 
     @Override
     public Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEditorial, Long idFormato,
-            Long idGrado, Long idCiclo, String termino,
-            Integer anioInicio, Integer anioFin, Pageable pageable) {
-
-        log.debug("Búsqueda maestra de libros para admin");
-
-        return libroRepository.findAll(
-                        LibroSpecification.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEditorial, idFormato,
-                                idGrado, idCiclo, termino, anioInicio, anioFin),
-                        pageable)
-                .map(libroMapper::toResumen);
+            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda maestra de libros admin proyectada: esBorrado={}, idObra={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
+                esBorrado, idObra, idGenero, idCategoria, idEtiqueta, termino);
+        return libroRepository.busquedaMaestraAdminProyectada(
+                esBorrado, idObra, idGenero, idCategoria, idEtiqueta,
+                idEditorial, idFormato, idGrado, idCiclo, termino, anioInicio, anioFin, pageable);
     }
 
     @Override

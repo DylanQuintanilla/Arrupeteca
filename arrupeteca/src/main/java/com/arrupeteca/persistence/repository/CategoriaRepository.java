@@ -8,17 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
-    Page<Categoria> findByBorradoLogicoFalse(Pageable pageable);
+    List<Categoria> findByBorradoLogicoFalseOrderByNombreAsc();
 
-    Optional<Categoria> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Categoria> findAllProjectedBy(Pageable pageable);
-
-    Optional<Categoria> findProjectedById(Long id);
+    @Query("SELECT c FROM Categoria c WHERE " +
+           "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR c.borradoLogico = :borradoLogico)")
+    Page<Categoria> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Categoria c SET c.borradoLogico = true WHERE c.id = :id")

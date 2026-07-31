@@ -12,9 +12,11 @@ import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Categoria;
 import com.arrupeteca.persistence.entity.Autor;
 import com.arrupeteca.persistence.entity.TipoAutoria;
+import com.arrupeteca.persistence.entity.Etiqueta;
 import com.arrupeteca.persistence.repository.ObraRepository;
 import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.persistence.repository.CategoriaRepository;
+import com.arrupeteca.persistence.repository.EtiquetaRepository;
 import com.arrupeteca.persistence.repository.AutorRepository;
 import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import com.arrupeteca.persistence.specification.ObraSpecification;
@@ -42,6 +44,7 @@ public class ObraServiceImpl implements ObraService {
     private final ObraRepository obraRepository;
     private final GeneroRepository generoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final EtiquetaRepository etiquetaRepository;
     private final AutorRepository autorRepository;
     private final TipoAutoriaRepository tipoAutoriaRepository;
     private final ObraMapper obraMapper;
@@ -86,13 +89,12 @@ public class ObraServiceImpl implements ObraService {
 
     @Override
     public Page<ObraResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idGenero, Long idCategoria, String termino, Integer anioInicio, Integer anioFin,
+            Boolean esBorrado, Long idGenero, Long idCategoria, Long idEtiqueta, String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable) {
-        log.debug("Búsqueda maestra de obras: {}, género: {}, categoría: {}, '{}', {} - {}", esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin);
-        return obraRepository.findAll(
-                        ObraSpecification.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, termino, anioInicio, anioFin),
-                        pageable)
-                .map(obraMapper::toResumen);
+        log.debug("Búsqueda maestra de obras admin proyectada: esBorrado={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
+                esBorrado, idGenero, idCategoria, idEtiqueta, termino);
+        return obraRepository.busquedaMaestraAdminProyectada(
+                esBorrado, idGenero, idCategoria, idEtiqueta, termino, anioInicio, anioFin, pageable);
     }
 
     @Override
@@ -237,6 +239,20 @@ public class ObraServiceImpl implements ObraService {
                                     () -> errores.add("La categoría con ID " + id + " no existe."));
                 }
                 obra.setCategorias(categorias);
+            }
+        }
+
+        // 3. Etiquetas
+        if (request.idEtiquetas() != null && request.idEtiquetas().isPresent()) {
+            Set<Long> ids = request.idEtiquetas().get();
+            if (ids != null) {
+                Set<Etiqueta> etiquetas = new HashSet<>();
+                for (Long id : ids) {
+                    etiquetaRepository.findById(id)
+                            .ifPresentOrElse(etiquetas::add,
+                                    () -> errores.add("La etiqueta con ID " + id + " no existe."));
+                }
+                obra.setEtiquetas(etiquetas);
             }
         }
 

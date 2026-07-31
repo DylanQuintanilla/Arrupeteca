@@ -135,7 +135,7 @@ class RecordSerializationTest {
         ObraDetalleResponse obra = ObraDetalleResponse.builder()
                 .id(1L).titulo("T").anioCreacion(2020).resumen("D").version(0L).borradoLogico(true)
                 .creadoPor("U").fechaCreacion(now).modificadoPor("U").fechaModificacion(now)
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).autores(Collections.emptySet()).build();
+                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         verifySerialization(autor);
         verifySerialization(ejem);
         verifySerialization(libro);

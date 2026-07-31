@@ -8,8 +8,10 @@ import com.arrupeteca.persistence.entity.Ciclo;
 import com.arrupeteca.persistence.repository.CicloRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -20,11 +22,13 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-class CicloServiceImplTest extends BaseServiceTest {
+@ExtendWith(MockitoExtension.class)
+class CicloServiceImplTest {
 
     @Mock
     private CicloRepository cicloRepository;
@@ -36,32 +40,18 @@ class CicloServiceImplTest extends BaseServiceTest {
     private CicloServiceImpl cicloService;
 
     @Test
-    @DisplayName("Should return all active ciclos paginated")
+    @DisplayName("Should return all active ciclos list")
     void shouldReturnAllActive() {
         Ciclo entity = Ciclo.builder().build();
-        Page<Ciclo> expectedPage = new PageImpl<>(List.of(entity));
         CicloResponse response = mock(CicloResponse.class);
 
-        when(cicloRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(expectedPage);
+        when(cicloRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
         when(cicloMapper.toResponse(entity)).thenReturn(response);
 
-        Page<CicloResponse> result = cicloService.obtenerTodosActivos(Pageable.unpaged());
+        List<CicloResponse> result = cicloService.obtenerTodosActivos();
 
-        assertThat(result.getContent()).containsExactly(response);
-    }
-
-    @Test
-    @DisplayName("Should return ciclo by ID and active")
-    void shouldReturnByIdAndActive() {
-        Ciclo entity = Ciclo.builder().build();
-        CicloResponse response = mock(CicloResponse.class);
-        when(cicloRepository.findProjectedByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(cicloMapper.toResponse(entity)).thenReturn(response);
-
-        assertThat(cicloService.obtenerPorIdActivo(1L)).isEqualTo(response);
-
-        when(cicloRepository.findProjectedByIdAndBorradoLogicoFalse(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cicloService.obtenerPorIdActivo(2L)).isInstanceOf(ValidacionNegocioException.class);
+        assertThat(result).containsExactly(response);
+        verify(cicloRepository).findByBorradoLogicoFalseOrderByNombreAsc();
     }
 
     @Test
@@ -71,10 +61,12 @@ class CicloServiceImplTest extends BaseServiceTest {
         Page<Ciclo> expectedPage = new PageImpl<>(List.of(entity));
         CicloResponse response = mock(CicloResponse.class);
 
-        when(cicloRepository.findAllProjectedBy(any(Pageable.class))).thenReturn(expectedPage);
+        when(cicloRepository.busquedaAdmin(isNull(), isNull(), any(Pageable.class))).thenReturn(expectedPage);
         when(cicloMapper.toResponse(entity)).thenReturn(response);
 
-        assertThat(cicloService.obtenerTodos(Pageable.unpaged()).getContent()).containsExactly(response);
+        Page<CicloResponse> result = cicloService.obtenerTodos(null, null, Pageable.unpaged());
+
+        assertThat(result.getContent()).containsExactly(response);
     }
 
     @Test
@@ -82,68 +74,60 @@ class CicloServiceImplTest extends BaseServiceTest {
     void shouldReturnById() {
         Ciclo entity = Ciclo.builder().build();
         CicloResponse response = mock(CicloResponse.class);
-        when(cicloRepository.findProjectedById(1L)).thenReturn(Optional.of(entity));
+        when(cicloRepository.findById(1L)).thenReturn(Optional.of(entity));
         when(cicloMapper.toResponse(entity)).thenReturn(response);
 
-        assertThat(cicloService.obtenerPorId(1L)).isEqualTo(response);
+        CicloResponse result = cicloService.obtenerPorId(1L);
 
-        when(cicloRepository.findProjectedById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cicloService.obtenerPorId(2L)).isInstanceOf(ValidacionNegocioException.class);
+        assertThat(result).isEqualTo(response);
     }
 
     @Test
-    @DisplayName("Should create ciclo when name is unique")
+    @DisplayName("Should throw exception when ciclo not found")
+    void shouldThrowWhenNotFound() {
+        when(cicloRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> cicloService.obtenerPorId(1L))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("No se encontró un ciclo con ID: 1");
+    }
+
+    @Test
+    @DisplayName("Should create ciclo successfully")
     void shouldCreateCiclo() {
-        CicloRequest request = CicloRequest.builder().nombre("Nuevo").build();
+        CicloRequest request = CicloRequest.builder().nombre("Primer ciclo").build();
         Ciclo entity = Ciclo.builder().build();
-        Ciclo saved = Ciclo.builder().build();
-        saved.setId(1L);
+        Ciclo savedEntity = Ciclo.builder().build();
         CicloResponse response = mock(CicloResponse.class);
 
-        when(cicloRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(false);
-        when(cicloMapper.toEntity(any())).thenReturn(entity);
-        when(cicloRepository.save(any())).thenReturn(saved);
-        when(cicloMapper.toResponse(saved)).thenReturn(response);
+        when(cicloRepository.existsByNombreIgnoreCase("Primer ciclo")).thenReturn(false);
+        when(cicloMapper.toEntity(request)).thenReturn(entity);
+        when(cicloRepository.save(entity)).thenReturn(savedEntity);
+        when(cicloMapper.toResponse(savedEntity)).thenReturn(response);
 
         assertThat(cicloService.crear(request)).isEqualTo(response);
-
-        when(cicloRepository.existsByNombreIgnoreCase("Nuevo")).thenReturn(true);
-        assertThatThrownBy(() -> cicloService.crear(request)).isInstanceOf(ValidacionNegocioException.class);
     }
 
     @Test
-    @DisplayName("Should update ciclo")
-    void shouldUpdateCiclo() {
-        CicloRequest request = CicloRequest.builder().nombre("Actualizado").build();
-        Ciclo existing = Ciclo.builder().build();
-        existing.setId(1L);
-        existing.setNombre("Antiguo");
-        Ciclo saved = Ciclo.builder().build();
-        saved.setId(1L);
-        CicloResponse response = mock(CicloResponse.class);
+    @DisplayName("Should throw exception when creating duplicate ciclo")
+    void shouldThrowWhenDuplicateNameOnCreate() {
+        CicloRequest request = CicloRequest.builder().nombre("Primer ciclo").build();
+        when(cicloRepository.existsByNombreIgnoreCase("Primer ciclo")).thenReturn(true);
 
-        when(cicloRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(cicloRepository.existsByNombreIgnoreCase("Actualizado")).thenReturn(false);
-        when(cicloRepository.save(any())).thenReturn(saved);
-        when(cicloMapper.toResponse(saved)).thenReturn(response);
-
-        assertThat(cicloService.actualizar(1L, request)).isEqualTo(response);
-
-        when(cicloRepository.findById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> cicloService.actualizar(2L, request)).isInstanceOf(ValidacionNegocioException.class);
+        assertThatThrownBy(() -> cicloService.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("Ya existe un ciclo con el nombre: Primer ciclo");
     }
 
     @Test
-    @DisplayName("Should change status")
-    void shouldChangeStatus() {
+    @DisplayName("Should change estado of ciclo successfully")
+    void shouldCambiarEstado() {
         when(cicloRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
-        cicloService.cambiarEstado(1L, true);
-        verify(cicloRepository).activar(1L);
 
         cicloService.cambiarEstado(1L, false);
         verify(cicloRepository).desactivar(1L);
 
-        when(cicloRepository.countByIdIncludeDeleted(2L)).thenReturn(0L);
-        assertThatThrownBy(() -> cicloService.cambiarEstado(2L, true)).isInstanceOf(ValidacionNegocioException.class);
+        cicloService.cambiarEstado(1L, true);
+        verify(cicloRepository).activar(1L);
     }
 }

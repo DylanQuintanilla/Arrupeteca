@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -27,31 +29,25 @@ public class CategoriaServiceImpl implements CategoriaService {
 
     @Override
     @Cacheable(value = "categorias-activas")
-    public Page<CategoriaResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todas las categorías activas con paginación: {}", pageable);
-        return categoriaRepository.findByBorradoLogicoFalse(pageable)
-                .map(categoriaMapper::toResponse);
-    }
-
-    @Override
-    public CategoriaResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando categoría activa con ID: {}", id);
-        return categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+    public List<CategoriaResponse> obtenerTodosActivos() {
+        log.debug("Obteniendo todas las categorías activas en lista plana");
+        return categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
                 .map(categoriaMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría activa con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<CategoriaResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todas las categorías (incluyendo borrados) con paginación: {}", pageable);
-        return categoriaRepository.findAllProjectedBy(pageable)
+    public Page<CategoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de categorías con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return categoriaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(categoriaMapper::toResponse);
     }
 
     @Override
     public CategoriaResponse obtenerPorId(Long id) {
-        log.debug("Buscando categoría con ID: {}", id);
-        return categoriaRepository.findProjectedById(id)
+        log.debug("Buscando categoría por ID: {}", id);
+        return categoriaRepository.findById(id)
                 .map(categoriaMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría con ID: " + id));
     }
@@ -66,7 +62,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         Categoria categoria = categoriaMapper.toEntity(request);
         categoria.setNombre(nombreTrimmed);
-        
+
         Categoria guardada = categoriaRepository.save(categoria);
         log.info("Categoría creada exitosamente con ID: {}", guardada.getId());
         return categoriaMapper.toResponse(guardada);
@@ -85,7 +81,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         categoriaMapper.updateEntity(request, categoriaExistente);
         categoriaExistente.setNombre(nombreTrimmed);
-        
+
         Categoria actualizada = categoriaRepository.save(categoriaExistente);
         log.info("Categoría con ID: {} actualizada exitosamente", id);
         return categoriaMapper.toResponse(actualizada);
@@ -97,11 +93,7 @@ public class CategoriaServiceImpl implements CategoriaService {
 
         if ((esNuevo || nombreCambio) && categoriaRepository.existsByNombreIgnoreCase(nombreNuevo)) {
             log.warn("Intento de duplicar categoría: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe una categoría con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otra categoría con el nombre: " + nombreNuevo);
-            }
+            throw new ValidacionNegocioException("Ya existe una categoría con el nombre: " + nombreNuevo);
         }
     }
 

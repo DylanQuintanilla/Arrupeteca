@@ -36,7 +36,7 @@ public class ParentescoServiceImpl implements ParentescoService {
     @Override
     public ParentescoResponse obtenerPorIdActivo(Long id) {
         log.debug("Buscando parentesco activo con ID: {}", id);
-        return parentescoRepository.findProjectedByIdAndBorradoLogicoFalse(id)
+        return parentescoRepository.findByIdAndBorradoLogicoFalse(id)
                 .map(parentescoMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un parentesco activo con ID: " + id));
     }
@@ -44,14 +44,14 @@ public class ParentescoServiceImpl implements ParentescoService {
     @Override
     public Page<ParentescoResponse> obtenerTodos(Pageable pageable) {
         log.debug("Obteniendo todos los parentescos (incluyendo borrados) con paginación: {}", pageable);
-        return parentescoRepository.findAllProjectedBy(pageable)
+        return parentescoRepository.findAll(pageable)
                 .map(parentescoMapper::toResponse);
     }
 
     @Override
     public ParentescoResponse obtenerPorId(Long id) {
         log.debug("Buscando parentesco con ID: {}", id);
-        return parentescoRepository.findProjectedById(id)
+        return parentescoRepository.findById(id)
                 .map(parentescoMapper::toResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró un parentesco con ID: " + id));
     }

@@ -1,6 +1,7 @@
 package com.arrupeteca.persistence.specification;
 
 import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Etiqueta;
 import com.arrupeteca.persistence.entity.Genero;
 import com.arrupeteca.persistence.entity.Obra;
 import jakarta.persistence.criteria.Join;
@@ -75,17 +76,31 @@ public class ObraSpecification {
         };
     }
 
+    public static Specification<Obra> tieneEtiqueta(Long idEtiqueta) {
+        return (root, query, cb) -> {
+            if (idEtiqueta == null) {
+                return null;
+            }
+            if (query != null && query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.distinct(true);
+            }
+            Join<Obra, Etiqueta> join = root.join("etiquetas", JoinType.LEFT);
+            return cb.equal(join.get("id"), idEtiqueta);
+        };
+    }
+
     public static Specification<Obra> busquedaGlobal(String palabra) {
         return Specification.where(esBorrado(false))
                 .and(contieneTermino(palabra));
     }
 
     public static Specification<Obra> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idGenero, Long idCategoria, String termino,
+            Boolean esBorrado, Long idGenero, Long idCategoria, Long idEtiqueta, String termino,
             Integer anioInicio, Integer anioFin) {
         return Specification.where(esBorrado(esBorrado))
                 .and(tieneGenero(idGenero))
                 .and(tieneCategoria(idCategoria))
+                .and(tieneEtiqueta(idEtiqueta))
                 .and(contieneTermino(termino))
                 .and(creadoEnRango(anioInicio, anioFin));
     }

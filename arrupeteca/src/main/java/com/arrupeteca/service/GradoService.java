@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.GradoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface GradoService {
 
-    Page<GradoResponse> obtenerTodosActivos(Pageable pageable);
+    List<GradoResponse> obtenerTodosActivos();
 
-    GradoResponse obtenerPorIdActivo(Long id);
-
-    Page<GradoResponse> obtenerTodos(Pageable pageable);
+    Page<GradoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     GradoResponse obtenerPorId(Long id);
 

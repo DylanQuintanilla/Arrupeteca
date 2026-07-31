@@ -147,8 +147,20 @@ public class LibroSpecification {
                 .and(contieneTermino(palabra));
     }
 
+    public static Specification<Libro> tieneEtiqueta(Long idEtiqueta) {
+        return (root, query, cb) -> {
+            if (idEtiqueta == null) {
+                return null;
+            }
+            if (query != null && query.getResultType() != Long.class && query.getResultType() != long.class) {
+                query.distinct(true);
+            }
+            return cb.equal(root.join("obra", JoinType.INNER).join("etiquetas", JoinType.LEFT).get("id"), idEtiqueta);
+        };
+    }
+
     public static Specification<Libro> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria,
+            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEtiqueta,
             Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
             String termino, Integer anioInicio, Integer anioFin) {
 
@@ -156,6 +168,7 @@ public class LibroSpecification {
                 .and(tieneObra(idObra))
                 .and(tieneGenero(idGenero))
                 .and(tieneCategoria(idCategoria))
+                .and(tieneEtiqueta(idEtiqueta))
                 .and(tieneEditorial(idEditorial))
                 .and(tieneFormato(idFormato))
                 .and(tieneGrado(idGrado))

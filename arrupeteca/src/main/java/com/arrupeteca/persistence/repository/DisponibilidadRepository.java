@@ -8,17 +8,19 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, Long> {
 
-    Page<Disponibilidad> findByBorradoLogicoFalse(Pageable pageable);
+    List<Disponibilidad> findByBorradoLogicoFalseOrderByNombreAsc();
 
-    Optional<Disponibilidad> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    Page<Disponibilidad> findAllProjectedBy(Pageable pageable);
-
-    Optional<Disponibilidad> findProjectedById(Long id);
+    @Query("SELECT d FROM Disponibilidad d WHERE " +
+           "(:nombre IS NULL OR LOWER(d.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR d.borradoLogico = :borradoLogico)")
+    Page<Disponibilidad> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Disponibilidad d SET d.borradoLogico = true WHERE d.id = :id")

@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.EstadoFisicoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface EstadoFisicoService {
 
-    Page<EstadoFisicoResponse> obtenerTodosActivos(Pageable pageable);
+    List<EstadoFisicoResponse> obtenerTodosActivos();
 
-    EstadoFisicoResponse obtenerPorIdActivo(Long id);
-
-    Page<EstadoFisicoResponse> obtenerTodos(Pageable pageable);
+    Page<EstadoFisicoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     EstadoFisicoResponse obtenerPorId(Long id);
 
