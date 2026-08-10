@@ -19,21 +19,21 @@ class GeneroRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Genero entity = Genero.builder().nombre("Drama").build();
         Genero saved = generoRepository.save(entity);
-        assertThat(generoRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(generoRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
     @DisplayName("Should find active with pagination")
     void shouldFindActiveWithPagination() {
         generoRepository.save(Genero.builder().nombre("G1").borradoLogico(false).build());
-        Page<Genero> page = generoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isGreaterThan(0);
+        java.util.List<Genero> list = generoRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Genero saved = generoRepository.save(Genero.builder().nombre("G3").borradoLogico(true).build());
-        assertThat(generoRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(generoRepository.existsById(saved.getId())).isTrue();
     }
 }

@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,98 +23,88 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/formatos")
-@Tag(name = "Formatos", description = "Endpoints para la gestión del catálogo de formatos de libros")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+@Tag(name = "Formatos", description = "Endpoints para la gestión de formatos de libros")
 public class FormatoController {
 
     private final FormatoService formatoService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener formatos activos paginados",
-        description = "Retorna una lista paginada de todos los formatos activos en el sistema."
+        summary = "Obtener formatos de libros activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de formatos de libros activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<FormatoResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<FormatoResponse> pagina = formatoService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos activos", pagina));
+    public ResponseEntity<ApiResponse<List<FormatoResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de formatos de libros activos(as)", formatoService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener formato activo por ID",
-        description = "Busca y retorna un formato activo por su identificador único."
+        summary = "Obtener tabla de administración de formatos de libros",
+        description = "Retorna una página de formatos de libros con soporte para filtros por nombre y estado borradoLogico."
     )
-    public ResponseEntity<ApiResponse<FormatoResponse>> obtenerPorId(@PathVariable Long id) {
-        FormatoResponse formato = formatoService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado", formato));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Crear nuevo formato",
-        description = "Crea un nuevo formato validando la unicidad del nombre."
-    )
-    public ResponseEntity<ApiResponse<FormatoResponse>> crear(@Valid @RequestBody FormatoRequest request) {
-        FormatoResponse nuevo = formatoService.crear(request);
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Formato creado exitosamente", nuevo));
-    }
-
-    @PutMapping("/{id}")
-    @Operation(
-        summary = "Actualizar formato",
-        description = "Actualiza los datos de un formato existente."
-    )
-    public ResponseEntity<ApiResponse<FormatoResponse>> actualizar(@PathVariable Long id,
-                                                                   @Valid @RequestBody FormatoRequest request) {
-        FormatoResponse actualizado = formatoService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Formato actualizado correctamente", actualizado));
-    }
-
-    @DeleteMapping("/{id}")
-    @Operation(
-        summary = "Desactivar formato",
-        description = "Realiza el borrado lógico de un formato en el sistema."
-    )
-    public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
-        formatoService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Formato desactivado correctamente"));
-    }
-
-    @PatchMapping("/{id}/activar")
-    @Operation(
-        summary = "Activar formato",
-        description = "Reactiva un formato previamente desactivado."
-    )
-    public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
-        formatoService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Formato activado correctamente"));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los formatos (Admin)",
-        description = "Retorna el historial completo de formatos (activos e inactivos) para administradores."
-    )
-    public ResponseEntity<ApiResponse<Page<FormatoResponse>>> obtenerTodosAdmin(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(
-                ApiResponse.exito("Historial completo de formatos", formatoService.obtenerTodos(pageable))
-        );
+    public ResponseEntity<ApiResponse<Page<FormatoResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de formatos de libros", formatoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener formato por ID (Admin)",
-        description = "Busca y retorna cualquier formato (activo o inactivo) por su identificador único para administradores."
+        summary = "Obtener formatos de libros por ID",
+        description = "Busca la información de un(a) formato por su ID sin importar su estado lógico."
     )
-    public ResponseEntity<ApiResponse<FormatoResponse>> obtenerPorIdAdmin(@PathVariable Long id) {
-        FormatoResponse formato = formatoService.obtenerPorId(id);
-        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado (admin)", formato));
+    public ResponseEntity<ApiResponse<FormatoResponse>> obtenerPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Formato encontrado(a)", formatoService.obtenerPorId(id)));
     }
-}
+
+    @PostMapping("/admin")
+    @Operation(
+        summary = "Registrar nuevo(a) formato",
+        description = "Crea un(a) nuevo(a) formato en el sistema validando la unicidad del nombre."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> crear(@Valid @RequestBody FormatoRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Formato creado(a) exitosamente", formatoService.crear(request)));
+    }
+
+    @PutMapping("/admin/{id}")
+    @Operation(
+        summary = "Actualizar formato",
+        description = "Actualiza los campos de un(a) formato existente mediante una edición completa."
+    )
+    public ResponseEntity<ApiResponse<FormatoResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody FormatoRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Formato actualizado(a) correctamente",
+                formatoService.actualizar(id, request)));
+    }
+
+    @DeleteMapping("/admin/{id}")
+    @Operation(
+        summary = "Desactivar formato (Borrado lógico)",
+        description = "Oculta el/la formato en el catálogo público cambiando su estado a borrado."
+    )
+    public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
+        formatoService.cambiarEstado(id, false);
+        return ResponseEntity.ok(ApiResponse.exito("Formato desactivado(a) correctamente"));
+    }
+
+    @PatchMapping("/admin/{id}/activar")
+    @Operation(
+        summary = "Activar formato",
+        description = "Restaura la visibilidad pública de un(a) formato previamente desactivado(a)."
+    )
+    public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
+        formatoService.cambiarEstado(id, true);
+        return ResponseEntity.ok(ApiResponse.exito("Formato activado(a) correctamente"));
+    }}

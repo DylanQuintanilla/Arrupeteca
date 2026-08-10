@@ -35,7 +35,7 @@ class PlantaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/plantas - Should return active plants")
     void shouldReturnActive() throws Exception {
         Page<PlantaResponse> page = new PageImpl<>(List.of());
-        when(plantaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(plantaService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/plantas"))
                 .andExpect(status().isOk())
@@ -46,23 +46,12 @@ class PlantaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/plantas/{id} - Should return plant by ID")
     void shouldReturnById() throws Exception {
         PlantaResponse response = new PlantaResponse(1L, "Test", false, new EdificioResponse(1L, "Edif", false));
-        when(plantaService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(plantaService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/plantas/1"))
+        mockMvc.perform(get("/api/v1/plantas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/plantas/edificio/{idEdificio} - Should return plants by building ID")
-    void shouldReturnByEdificioId() throws Exception {
-        Page<PlantaResponse> page = new PageImpl<>(List.of());
-        when(plantaService.buscarPorEdificioId(any(Long.class), any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/plantas/edificio/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
@@ -73,7 +62,7 @@ class PlantaControllerTest extends BaseControllerTest {
 
         when(plantaService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/plantas")
+        mockMvc.perform(post("/api/v1/plantas/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -88,7 +77,7 @@ class PlantaControllerTest extends BaseControllerTest {
 
         when(plantaService.actualizar(any(Long.class), any(PlantaRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/plantas/1")
+        mockMvc.perform(put("/api/v1/plantas/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -99,12 +88,12 @@ class PlantaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/plantas/admin - Should return all plants for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<PlantaResponse> page = new PageImpl<>(List.of());
-        when(plantaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(plantaService.obtenerTodos(any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/plantas/admin"))
+        mockMvc.perform(get("/api/v1/plantas/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de plantas"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de plantas de edificios"));
     }
 
     @Test
@@ -116,24 +105,24 @@ class PlantaControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/plantas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Planta encontrada (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Planta encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/plantas/{id} - Should deactivate plant")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/plantas/1"))
+        mockMvc.perform(delete("/api/v1/plantas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Planta desactivada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Planta desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/plantas/{id}/activar - Should activate plant")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/plantas/1/activar"))
+        mockMvc.perform(patch("/api/v1/plantas/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Planta activada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Planta activado(a) correctamente"));
     }
 }

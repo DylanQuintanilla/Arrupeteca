@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(MockitoExtension.class)
 class ParentescoServiceImplTest {
@@ -43,14 +44,14 @@ class ParentescoServiceImplTest {
         Parentesco entity = Parentesco.builder().id(1L).nombre("Padre").build();
         ParentescoResponse responseDto = ParentescoResponse.builder().id(1L).nombre("Padre").build();
 
-        given(parentescoRepository.findByBorradoLogicoFalse(pageable))
-                .willReturn(new PageImpl<>(List.of(entity)));
+        given(parentescoRepository.buscarActivosPorNombre(any()))
+                .willReturn(List.of(entity));
         given(parentescoMapper.toResponse(entity)).willReturn(responseDto);
 
-        Page<ParentescoResponse> result = parentescoService.obtenerTodosActivos(pageable);
+        List<ParentescoResponse> result = parentescoService.obtenerTodosActivos(null);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getContent().get(0).nombre()).isEqualTo("Padre");
+        assertThat(result.get(0).nombre()).isEqualTo("Padre");
     }
 
     @Test
@@ -80,7 +81,7 @@ class ParentescoServiceImplTest {
 
         assertThatThrownBy(() -> parentescoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un parentesco con el nombre");
+                .hasMessageContaining("con el nombre:");
     }
 
 }

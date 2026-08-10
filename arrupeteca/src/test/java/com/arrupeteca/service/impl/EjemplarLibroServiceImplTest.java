@@ -191,13 +191,13 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - All branches")
     void shouldChangeStatus() {
-        when(repository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(repository.existsById(1L)).thenReturn(true);
         service.cambiarEstado(1L, true);
         verify(repository).activar(1L);
         service.cambiarEstado(1L, false);
         verify(repository).desactivar(1L);
 
-        when(repository.countByIdIncludeDeleted(2L)).thenReturn(0L);
+        when(repository.existsById(2L)).thenReturn(false);
         assertThatThrownBy(() -> service.cambiarEstado(2L, true)).isInstanceOf(ValidacionNegocioException.class);
     }
 

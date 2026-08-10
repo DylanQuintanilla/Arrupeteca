@@ -33,8 +33,7 @@ class EditorialControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/editoriales - Should return active publisher entries")
     void shouldReturnActive() throws Exception {
-        Page<EditorialResponse> page = new PageImpl<>(List.of());
-        when(editorialService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(editorialService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/editoriales"))
                 .andExpect(status().isOk())
@@ -45,9 +44,9 @@ class EditorialControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/editoriales/{id} - Should return publisher by ID")
     void shouldReturnById() throws Exception {
         EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
-        when(editorialService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(editorialService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/editoriales/1"))
+        mockMvc.perform(get("/api/v1/editoriales/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -66,7 +65,7 @@ class EditorialControllerTest extends BaseControllerTest {
 
         when(editorialService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/editoriales")
+        mockMvc.perform(post("/api/v1/editoriales/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -86,7 +85,7 @@ class EditorialControllerTest extends BaseControllerTest {
 
         when(editorialService.actualizar(any(Long.class), any(EditorialRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/editoriales/1")
+        mockMvc.perform(put("/api/v1/editoriales/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -97,12 +96,12 @@ class EditorialControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/editoriales/admin - Should return all publishers for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<EditorialResponse> page = new PageImpl<>(List.of());
-        when(editorialService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(editorialService.obtenerTodos(any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/editoriales/admin"))
+        mockMvc.perform(get("/api/v1/editoriales/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de editoriales"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de editoriales"));
     }
 
     @Test
@@ -114,35 +113,24 @@ class EditorialControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/editoriales/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Editorial encontrada (admin)"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/editoriales/admin/busqueda-maestra - Should search publishers for admin")
-    void shouldSearchAdmin() throws Exception {
-        Page<EditorialResponse> page = new PageImpl<>(List.of());
-        when(editorialService.busquedaMaestraAdmin(any(), any(), any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/editoriales/admin/busqueda-maestra"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
+                .andExpect(jsonPath("$.mensaje").value("Editorial encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/editoriales/{id} - Should deactivate publisher")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/editoriales/1"))
+        mockMvc.perform(delete("/api/v1/editoriales/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Editorial desactivada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Editorial desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/editoriales/{id}/activar - Should activate publisher")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/editoriales/1/activar"))
+        mockMvc.perform(patch("/api/v1/editoriales/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Editorial activada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Editorial activado(a) correctamente"));
     }
 }

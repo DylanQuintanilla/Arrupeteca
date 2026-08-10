@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.ParentescoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface ParentescoService {
 
-    Page<ParentescoResponse> obtenerTodosActivos(Pageable pageable);
+    List<ParentescoResponse> obtenerTodosActivos(String nombre);
 
-    ParentescoResponse obtenerPorIdActivo(Long id);
-
-    Page<ParentescoResponse> obtenerTodos(Pageable pageable);
+    Page<ParentescoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     ParentescoResponse obtenerPorId(Long id);
 
@@ -19,6 +19,4 @@ public interface ParentescoService {
 
     ParentescoResponse actualizar(Long id, ParentescoRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-
-}
+    void cambiarEstado(Long id, boolean estado);}

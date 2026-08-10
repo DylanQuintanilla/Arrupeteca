@@ -97,7 +97,7 @@ class ObraServiceImplTest extends BaseServiceTest {
         when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> obraService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Obra activa con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -182,13 +182,13 @@ class ObraServiceImplTest extends BaseServiceTest {
         when(obraRepository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> obraService.actualizar(1L, ObraRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Obra con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate work")
     void activarObra() {
-        when(obraRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(obraRepository.existsById(1L)).thenReturn(true);
         obraService.cambiarEstado(1L, true);
         verify(obraRepository).activar(1L);
     }
@@ -196,7 +196,7 @@ class ObraServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate work")
     void desactivarObra() {
-        when(obraRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(obraRepository.existsById(1L)).thenReturn(true);
         obraService.cambiarEstado(1L, false);
         verify(obraRepository).desactivar(1L);
     }

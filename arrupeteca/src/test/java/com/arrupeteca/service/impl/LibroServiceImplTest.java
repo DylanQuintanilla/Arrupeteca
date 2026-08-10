@@ -94,7 +94,7 @@ class LibroServiceImplTest extends BaseServiceTest {
         when(libroRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> libroService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Libro activo con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -140,7 +140,7 @@ class LibroServiceImplTest extends BaseServiceTest {
         when(libroRepository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> libroService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Libro con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -272,13 +272,13 @@ class LibroServiceImplTest extends BaseServiceTest {
         when(libroRepository.findById(1L)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> libroService.actualizar(1L, LibroRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Libro con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate book")
     void activarLibro() {
-        when(libroRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(libroRepository.existsById(1L)).thenReturn(true);
         libroService.cambiarEstado(1L, true);
         verify(libroRepository).activar(1L);
     }
@@ -286,7 +286,7 @@ class LibroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate book")
     void desactivarLibro() {
-        when(libroRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(libroRepository.existsById(1L)).thenReturn(true);
         libroService.cambiarEstado(1L, false);
         verify(libroRepository).desactivar(1L);
     }

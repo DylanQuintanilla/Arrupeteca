@@ -147,7 +147,7 @@ public class LibroServiceImpl implements LibroService {
     @CacheEvict(value = "libros", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado del libro ID: {} a {}", id, !estado);
-        if (libroRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!libroRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Libro con ID: " + id);
         }
         if (estado) {

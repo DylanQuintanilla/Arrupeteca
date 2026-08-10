@@ -1,6 +1,7 @@
 package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.persistence.entity.Planta;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
@@ -9,24 +10,21 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
-
 public interface PlantaRepository extends JpaRepository<Planta, Long> {
 
     @EntityGraph(attributePaths = {"edificio"})
-    Page<Planta> findByBorradoLogicoFalse(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"edificio"})
-    Optional<Planta> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"edificio"})
-    Page<Planta> findByEdificioIdAndBorradoLogicoFalse(Long idEdificio, Pageable pageable);
-
-    @EntityGraph(attributePaths = {"edificio"})
-    Page<Planta> findAll(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"edificio"})
-    Optional<Planta> findById(Long id);
+    @Query("""
+        SELECT p FROM Planta p
+        WHERE
+            (:borradoLogico IS NULL OR p.borradoLogico = :borradoLogico)
+            AND (:idEdificio IS NULL OR p.edificio.id = :idEdificio)
+            AND (:nombre IS NULL OR :nombre = '' OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
+    """)
+    Page<Planta> busquedaAdmin(
+            @Param("idEdificio") Long idEdificio,
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Planta p SET p.borradoLogico = true WHERE p.id = :id")
@@ -36,10 +34,11 @@ public interface PlantaRepository extends JpaRepository<Planta, Long> {
     @Query("UPDATE Planta p SET p.borradoLogico = false WHERE p.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM planta WHERE id_planta = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCaseAndEdificioId(String nombre, Long idEdificio);
+
+    @EntityGraph(attributePaths = {"edificio"})
+    @Query("SELECT p FROM Planta p WHERE p.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(p.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY p.nombre ASC")
+    List<Planta> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

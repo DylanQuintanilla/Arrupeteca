@@ -5,17 +5,15 @@ import com.arrupeteca.dto.response.SalonResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface SalonService {
 
-    Page<SalonResponse> obtenerTodosActivos(Pageable pageable);
+    List<SalonResponse> obtenerTodosActivos(String nombre);
 
-    SalonResponse obtenerPorIdActivo(Long id);
-
-    Page<SalonResponse> obtenerTodos(Pageable pageable);
+    Page<SalonResponse> obtenerTodos(Long idPlanta, String nombre, Boolean borradoLogico, Pageable pageable);
 
     SalonResponse obtenerPorId(Long id);
-
-    Page<SalonResponse> buscarPorPlantaId(Long idPlanta, Pageable pageable);
 
     SalonResponse crear(SalonRequest request);
 

@@ -28,17 +28,18 @@ public class GradoServiceImpl implements GradoService {
     private final GradoMapper gradoMapper;
 
     @Override
-    @Cacheable(value = "grados-activos")
-    public List<GradoResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todos los grados activos en lista plana");
-        return gradoRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "grados-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<GradoResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo grados escolares activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return gradoRepository.buscarActivosPorNombre(filtro).stream()
                 .map(gradoMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<GradoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda de grados con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de grados escolares con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return gradoRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(gradoMapper::toResponse);
@@ -46,17 +47,17 @@ public class GradoServiceImpl implements GradoService {
 
     @Override
     public GradoResponse obtenerPorId(Long id) {
-        log.debug("Buscando grado por ID: {}", id);
+        log.debug("Buscando grados escolares por ID: {}", id);
         return gradoRepository.findById(id)
                 .map(gradoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un grado con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) grado con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "grados-activos", allEntries = true)
     public GradoResponse crear(GradoRequest request) {
-        log.info("Creando nuevo grado con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) grado con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
@@ -64,7 +65,7 @@ public class GradoServiceImpl implements GradoService {
         grado.setNombre(nombreTrimmed);
 
         Grado guardado = gradoRepository.save(grado);
-        log.info("Grado creado exitosamente con ID: {}", guardado.getId());
+        log.info("Grado creado(a) exitosamente con ID: {}", guardado.getId());
         return gradoMapper.toResponse(guardado);
     }
 
@@ -74,7 +75,7 @@ public class GradoServiceImpl implements GradoService {
     public GradoResponse actualizar(Long id, GradoRequest request) {
         log.info("Actualizando grado con ID: {}", id);
         Grado gradoExistente = gradoRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un grado con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) grado con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, gradoExistente);
@@ -83,7 +84,7 @@ public class GradoServiceImpl implements GradoService {
         gradoExistente.setNombre(nombreTrimmed);
 
         Grado actualizado = gradoRepository.save(gradoExistente);
-        log.info("Grado con ID: {} actualizado exitosamente", id);
+        log.info("Grado con ID: {} actualizado(a) exitosamente", id);
         return gradoMapper.toResponse(actualizado);
     }
 
@@ -92,8 +93,8 @@ public class GradoServiceImpl implements GradoService {
         boolean nombreCambio = !esNuevo && !gradoExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && gradoRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar grado: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe un grado con el nombre: " + nombreNuevo);
+            log.warn("Intento de duplicar grados escolares: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) grado con el nombre: " + nombreNuevo);
         }
     }
 
@@ -101,14 +102,13 @@ public class GradoServiceImpl implements GradoService {
     @Transactional
     @CacheEvict(value = "grados-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de grado ID: {} a {}", id, !estado);
-        if (gradoRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un grado con ID: " + id);
+        log.info("Cambiando estado de borrado de grados escolares ID: {} a {}", id, !estado);
+        if (!gradoRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) grado con ID: " + id);
         }
         if (estado) {
             gradoRepository.activar(id);
         } else {
             gradoRepository.desactivar(id);
         }
-    }
-}
+    }}

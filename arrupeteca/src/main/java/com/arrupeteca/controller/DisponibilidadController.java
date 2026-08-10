@@ -39,72 +39,72 @@ public class DisponibilidadController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener disponibilidades activas para dropdowns",
-        description = "Retorna una lista simple no paginada de disponibilidades activas para selects y filtros."
+        summary = "Obtener estados de disponibilidad de ejemplares activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de estados de disponibilidad de ejemplares activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<DisponibilidadResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de disponibilidades activas", disponibilidadService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<DisponibilidadResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de estados de disponibilidad de ejemplares activos(as)", disponibilidadService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener tabla de administración de disponibilidades",
-        description = "Retorna una página de disponibilidades con soporte para filtros por nombre y estado borradoLogico."
+        summary = "Obtener tabla de administración de estados de disponibilidad de ejemplares",
+        description = "Retorna una página de estados de disponibilidad de ejemplares con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<DisponibilidadResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Tabla de disponibilidades", disponibilidadService.obtenerTodos(nombre, borradoLogico, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de estados de disponibilidad de ejemplares", disponibilidadService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener disponibilidad por ID",
-        description = "Busca la información de una disponibilidad por su ID sin importar su estado lógico."
+        summary = "Obtener estados de disponibilidad de ejemplares por ID",
+        description = "Busca la información de un(a) disponibilidad por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<DisponibilidadResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad encontrada", disponibilidadService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad encontrado(a)", disponibilidadService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nueva disponibilidad",
-        description = "Crea una nueva disponibilidad en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) disponibilidad",
+        description = "Crea un(a) nuevo(a) disponibilidad en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<DisponibilidadResponse>> crear(@Valid @RequestBody DisponibilidadRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Disponibilidad creada exitosamente", disponibilidadService.crear(request)));
+                .body(ApiResponse.exito("Disponibilidad creado(a) exitosamente", disponibilidadService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar disponibilidad",
-        description = "Actualiza los campos de una disponibilidad existente mediante una edición completa."
+        description = "Actualiza los campos de un(a) disponibilidad existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<DisponibilidadResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody DisponibilidadRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad actualizada correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad actualizado(a) correctamente",
                 disponibilidadService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar disponibilidad (Borrado lógico)",
-        description = "Oculta la disponibilidad en el catálogo público cambiando su estado a borrado."
+        description = "Oculta el/la disponibilidad en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         disponibilidadService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad desactivada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar disponibilidad",
-        description = "Restaura la visibilidad pública de una disponibilidad previamente desactivada."
+        description = "Restaura la visibilidad pública de un(a) disponibilidad previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         disponibilidadService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad activada correctamente"));
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("Disponibilidad activado(a) correctamente"));
+    }}

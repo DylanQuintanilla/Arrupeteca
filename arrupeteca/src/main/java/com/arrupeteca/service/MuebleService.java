@@ -5,19 +5,15 @@ import com.arrupeteca.dto.response.MuebleResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface MuebleService {
 
-    Page<MuebleResponse> obtenerTodosActivos(Pageable pageable);
+    List<MuebleResponse> obtenerTodosActivos(String nombre);
 
-    MuebleResponse obtenerPorIdActivo(Long id);
-
-    Page<MuebleResponse> busquedaGlobal(String palabra, Pageable pageable);
-
-    Page<MuebleResponse> obtenerTodos(Pageable pageable);
+    Page<MuebleResponse> obtenerTodos(Long idSalon, String nombre, Boolean borradoLogico, Pageable pageable);
 
     MuebleResponse obtenerPorId(Long id);
-
-    Page<MuebleResponse> busquedaMaestraAdmin(Boolean esBorrado, Long idSalon, String termino, Pageable pageable);
 
     MuebleResponse crear(MuebleRequest request);
 

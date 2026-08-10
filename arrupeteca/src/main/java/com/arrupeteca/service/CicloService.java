@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CicloService {
 
-    List<CicloResponse> obtenerTodosActivos();
+    List<CicloResponse> obtenerTodosActivos(String nombre);
 
     Page<CicloResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
@@ -19,5 +19,4 @@ public interface CicloService {
 
     CicloResponse actualizar(Long id, CicloRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

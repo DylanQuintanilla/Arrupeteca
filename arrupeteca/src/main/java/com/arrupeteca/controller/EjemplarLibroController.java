@@ -40,7 +40,7 @@ public class EjemplarLibroController {
         description = "Retorna una página de ejemplares que no están borrados lógicamente."
     )
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"}) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Lista de ejemplares activos", ejemplarLibroService.obtenerTodosActivos(pageable)));
     }
 
@@ -62,7 +62,7 @@ public class EjemplarLibroController {
             @RequestParam(required = false) String palabra,
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"}) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", ejemplarLibroService.busquedaGlobal(palabra, idGenero, idCategoria, pageable)));
     }
 
@@ -72,7 +72,7 @@ public class EjemplarLibroController {
         description = "Retorna una lista paginada de todos los ejemplares sin importar su estado lógico (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"}) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de ejemplares", ejemplarLibroService.obtenerTodos(pageable)));
     }
 
@@ -100,7 +100,7 @@ public class EjemplarLibroController {
             @RequestParam(required = false) Long idEstadoFisico,
             @RequestParam(required = false) Long idDisponibilidad,
             @RequestParam(required = false) String termino,
-            @ParameterObject @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"}) Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 ejemplarLibroService.busquedaMaestraAdmin(esBorrado, idLibro, idGenero, idCategoria, idEtiqueta, idMueble,
                         idEstadoFisico, idDisponibilidad, termino, pageable)));

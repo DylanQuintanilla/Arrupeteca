@@ -40,7 +40,7 @@ public class LibroController {
         description = "Retorna una página de libros registrados que no están borrados lógicamente."
     )
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Lista de libros activos", libroService.obtenerTodosActivos(pageable)));
     }
 
@@ -62,7 +62,7 @@ public class LibroController {
             @RequestParam(required = false) String palabra,
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
-            @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", libroService.busquedaGlobal(palabra, idGenero, idCategoria, pageable)));
     }
 
@@ -72,7 +72,7 @@ public class LibroController {
         description = "Retorna una página de todos los libros en el sistema, incluidos los desactivados (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Historial completo de libros", libroService.obtenerTodos(pageable)));
     }
 
@@ -103,7 +103,7 @@ public class LibroController {
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
-            @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
                 libroService.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEtiqueta, idEditorial, idFormato,
                         idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
@@ -116,7 +116,7 @@ public class LibroController {
     )
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> buscarPorObraId(
             @PathVariable Long idObra,
-            @ParameterObject @PageableDefault(size = 20, sort = "isbn") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Libros de la obra", libroService.buscarPorObraId(idObra, pageable)));
     }
 

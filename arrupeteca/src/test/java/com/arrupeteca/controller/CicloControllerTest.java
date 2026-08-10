@@ -35,24 +35,24 @@ class CicloControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/ciclos - Should return active ciclos list")
     void shouldReturnActiveCiclos() throws Exception {
-        when(cicloService.obtenerTodosActivos()).thenReturn(List.of());
+        when(cicloService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/ciclos"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de ciclos activos"));
+                .andExpect(jsonPath("$.mensaje").value("Lista de ciclos escolares activos(as)"));
     }
 
     @Test
     @DisplayName("GET /api/v1/ciclos/all - Should return ciclos table")
     void shouldReturnAllCiclos() throws Exception {
         Page<CicloResponse> page = new PageImpl<>(List.of());
-        when(cicloService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+        when(cicloService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/ciclos/all"))
+        mockMvc.perform(get("/api/v1/ciclos/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tabla de ciclos"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de ciclos escolares"));
     }
 
     @Test
@@ -61,10 +61,10 @@ class CicloControllerTest extends BaseControllerTest {
         CicloResponse response = new CicloResponse(1L, "Primer ciclo", false);
         when(cicloService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/ciclos/1"))
+        mockMvc.perform(get("/api/v1/ciclos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ciclo encontrado"))
+                .andExpect(jsonPath("$.mensaje").value("Ciclo encontrado(a)"))
                 .andExpect(jsonPath("$.data.nombre").value("Primer ciclo"));
     }
 
@@ -76,7 +76,7 @@ class CicloControllerTest extends BaseControllerTest {
         CicloResponse response = new CicloResponse(1L, "Nuevo", false);
         when(cicloService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/ciclos")
+        mockMvc.perform(post("/api/v1/ciclos/admin")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -93,33 +93,33 @@ class CicloControllerTest extends BaseControllerTest {
         CicloResponse response = new CicloResponse(1L, "Actualizado", false);
         when(cicloService.actualizar(any(Long.class), any(CicloRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/ciclos/1")
+        mockMvc.perform(put("/api/v1/ciclos/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ciclo actualizado correctamente"))
+                .andExpect(jsonPath("$.mensaje").value("Ciclo actualizado(a) correctamente"))
                 .andExpect(jsonPath("$.data.nombre").value("Actualizado"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/ciclos/{id} - Should deactivate ciclo")
     void shouldDeactivateCiclo() throws Exception {
-        mockMvc.perform(delete("/api/v1/ciclos/1")
+        mockMvc.perform(delete("/api/v1/ciclos/admin/1")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ciclo desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Ciclo desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/ciclos/{id}/activar - Should activate ciclo")
     void shouldActivateCiclo() throws Exception {
-        mockMvc.perform(patch("/api/v1/ciclos/1/activar")
+        mockMvc.perform(patch("/api/v1/ciclos/admin/1/activar")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Ciclo activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Ciclo activado(a) correctamente"));
     }
 }

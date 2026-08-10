@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,41 +28,36 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
     private final TipoUsuarioMapper tipoUsuarioMapper;
 
     @Override
-    @Cacheable(value = "tipos-usuario-activos")
-    public Page<TipoUsuarioResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los tipos de usuario activos con paginación: {}", pageable);
-        return tipoUsuarioRepository.findByBorradoLogicoFalse(pageable)
-                .map(tipoUsuarioMapper::toResponse);
-    }
-
-    @Override
-    public TipoUsuarioResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando tipo de usuario activo con ID: {}", id);
-        return tipoUsuarioRepository.findByIdAndBorradoLogicoFalse(id)
+    @Cacheable(value = "tipos-usuario-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<TipoUsuarioResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo tipos de usuario activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return tipoUsuarioRepository.buscarActivosPorNombre(filtro).stream()
                 .map(tipoUsuarioMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de usuario activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<TipoUsuarioResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los tipos de usuario (incluyendo borrados) con paginación: {}", pageable);
-        return tipoUsuarioRepository.findAll(pageable)
+    public Page<TipoUsuarioResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de tipos de usuario con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return tipoUsuarioRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(tipoUsuarioMapper::toResponse);
     }
 
     @Override
     public TipoUsuarioResponse obtenerPorId(Long id) {
-        log.debug("Buscando tipo de usuario con ID: {}", id);
+        log.debug("Buscando tipos de usuario por ID: {}", id);
         return tipoUsuarioRepository.findById(id)
                 .map(tipoUsuarioMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de usuario con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) tipousuario con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "tipos-usuario-activos", allEntries = true)
     public TipoUsuarioResponse crear(TipoUsuarioRequest request) {
-        log.info("Creando nuevo tipo de usuario con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) tipousuario con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
@@ -68,7 +65,7 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
         tipoUsuario.setNombre(nombreTrimmed);
 
         TipoUsuario guardado = tipoUsuarioRepository.save(tipoUsuario);
-        log.info("Tipo de usuario creado exitosamente con ID: {}", guardado.getId());
+        log.info("TipoUsuario creado(a) exitosamente con ID: {}", guardado.getId());
         return tipoUsuarioMapper.toResponse(guardado);
     }
 
@@ -76,32 +73,28 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
     @Transactional
     @CacheEvict(value = "tipos-usuario-activos", allEntries = true)
     public TipoUsuarioResponse actualizar(Long id, TipoUsuarioRequest request) {
-        log.info("Actualizando tipo de usuario con ID: {}", id);
-        TipoUsuario tipoExistente = tipoUsuarioRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un tipo de usuario con ID: " + id));
+        log.info("Actualizando tipousuario con ID: {}", id);
+        TipoUsuario tipoUsuarioExistente = tipoUsuarioRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) tipousuario con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
-        validarUnicidad(nombreTrimmed, tipoExistente);
+        validarUnicidad(nombreTrimmed, tipoUsuarioExistente);
 
-        tipoUsuarioMapper.updateEntity(request, tipoExistente);
-        tipoExistente.setNombre(nombreTrimmed);
+        tipoUsuarioMapper.updateEntity(request, tipoUsuarioExistente);
+        tipoUsuarioExistente.setNombre(nombreTrimmed);
 
-        TipoUsuario actualizado = tipoUsuarioRepository.save(tipoExistente);
-        log.info("Tipo de usuario con ID: {} actualizado exitosamente", id);
+        TipoUsuario actualizado = tipoUsuarioRepository.save(tipoUsuarioExistente);
+        log.info("TipoUsuario con ID: {} actualizado(a) exitosamente", id);
         return tipoUsuarioMapper.toResponse(actualizado);
     }
 
-    private void validarUnicidad(String nombreNuevo, TipoUsuario tipoExistente) {
-        boolean esNuevo = (tipoExistente == null);
-        boolean nombreCambio = !esNuevo && !tipoExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+    private void validarUnicidad(String nombreNuevo, TipoUsuario tipoUsuarioExistente) {
+        boolean esNuevo = (tipoUsuarioExistente == null);
+        boolean nombreCambio = !esNuevo && !tipoUsuarioExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && tipoUsuarioRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar tipo de usuario: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe un tipo de usuario con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otro tipo de usuario con el nombre: " + nombreNuevo);
-            }
+            log.warn("Intento de duplicar tipos de usuario: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) tipousuario con el nombre: " + nombreNuevo);
         }
     }
 
@@ -109,15 +102,13 @@ public class TipoUsuarioServiceImpl implements TipoUsuarioService {
     @Transactional
     @CacheEvict(value = "tipos-usuario-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de tipo de usuario ID: {} a {}", id, !estado);
-        if (tipoUsuarioRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un tipo de usuario con ID: " + id);
+        log.info("Cambiando estado de borrado de tipos de usuario ID: {} a {}", id, !estado);
+        if (!tipoUsuarioRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) tipousuario con ID: " + id);
         }
         if (estado) {
             tipoUsuarioRepository.activar(id);
         } else {
             tipoUsuarioRepository.desactivar(id);
         }
-    }
-
-}
+    }}

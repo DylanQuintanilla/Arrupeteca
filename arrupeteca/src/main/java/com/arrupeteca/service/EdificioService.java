@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.EdificioResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface EdificioService {
 
-    Page<EdificioResponse> obtenerTodosActivos(Pageable pageable);
+    List<EdificioResponse> obtenerTodosActivos(String nombre);
 
-    EdificioResponse obtenerPorIdActivo(Long id);
-
-    Page<EdificioResponse> obtenerTodos(Pageable pageable);
+    Page<EdificioResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     EdificioResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface EdificioService {
 
     EdificioResponse actualizar(Long id, EdificioRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

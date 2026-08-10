@@ -8,6 +8,7 @@ import com.arrupeteca.persistence.entity.Nacionalidad;
 import com.arrupeteca.persistence.repository.NacionalidadRepository;
 import com.arrupeteca.service.NacionalidadService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,70 +28,87 @@ public class NacionalidadServiceImpl implements NacionalidadService {
     private final NacionalidadMapper nacionalidadMapper;
 
     @Override
-    @Cacheable(value = "nacionalidades-activa")
-    public Page<NacionalidadResponse> obtenerTodosActivos(Pageable pageable) {
-        return nacionalidadRepository.findByBorradoLogicoFalse(pageable)
-                .map(nacionalidadMapper::toResponse);
-    }
-
-    @Override
-    public NacionalidadResponse obtenerPorIdActivo(Long id) {
-        return nacionalidadRepository.findByIdAndBorradoLogicoFalse(id)
+    @Cacheable(value = "nacionalidades-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<NacionalidadResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo nacionalidades activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return nacionalidadRepository.buscarActivosPorNombre(filtro).stream()
                 .map(nacionalidadMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una nacionalidad activa con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<NacionalidadResponse> obtenerTodos(Pageable pageable) {
-        return nacionalidadRepository.findAll(pageable)
+    public Page<NacionalidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de nacionalidades con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return nacionalidadRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(nacionalidadMapper::toResponse);
     }
 
     @Override
     public NacionalidadResponse obtenerPorId(Long id) {
+        log.debug("Buscando nacionalidades por ID: {}", id);
         return nacionalidadRepository.findById(id)
                 .map(nacionalidadMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una nacionalidad con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) nacionalidad con ID: " + id));
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "nacionalidades-activa", allEntries = true)
+    @CacheEvict(value = "nacionalidades-activas", allEntries = true)
     public NacionalidadResponse crear(NacionalidadRequest request) {
-        if (nacionalidadRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe una nacionalidad con el nombre: " + request.nombre());
-        }
+        log.info("Creando nuevo(a) nacionalidad con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, null);
+
         Nacionalidad nacionalidad = nacionalidadMapper.toEntity(request);
-        return nacionalidadMapper.toResponse(nacionalidadRepository.save(nacionalidad));
+        nacionalidad.setNombre(nombreTrimmed);
+
+        Nacionalidad guardado = nacionalidadRepository.save(nacionalidad);
+        log.info("Nacionalidad creado(a) exitosamente con ID: {}", guardado.getId());
+        return nacionalidadMapper.toResponse(guardado);
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "nacionalidades-activa", allEntries = true)
+    @CacheEvict(value = "nacionalidades-activas", allEntries = true)
     public NacionalidadResponse actualizar(Long id, NacionalidadRequest request) {
+        log.info("Actualizando nacionalidad con ID: {}", id);
         Nacionalidad nacionalidadExistente = nacionalidadRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una nacionalidad con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) nacionalidad con ID: " + id));
 
-        if (!nacionalidadExistente.getNombre().equalsIgnoreCase(request.nombre())
-                && nacionalidadRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe otra nacionalidad con el nombre: " + request.nombre());
-        }
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, nacionalidadExistente);
 
         nacionalidadMapper.updateEntity(request, nacionalidadExistente);
-        return nacionalidadMapper.toResponse(nacionalidadRepository.save(nacionalidadExistente));
+        nacionalidadExistente.setNombre(nombreTrimmed);
+
+        Nacionalidad actualizado = nacionalidadRepository.save(nacionalidadExistente);
+        log.info("Nacionalidad con ID: {} actualizado(a) exitosamente", id);
+        return nacionalidadMapper.toResponse(actualizado);
+    }
+
+    private void validarUnicidad(String nombreNuevo, Nacionalidad nacionalidadExistente) {
+        boolean esNuevo = (nacionalidadExistente == null);
+        boolean nombreCambio = !esNuevo && !nacionalidadExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+
+        if ((esNuevo || nombreCambio) && nacionalidadRepository.existsByNombreIgnoreCase(nombreNuevo)) {
+            log.warn("Intento de duplicar nacionalidades: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) nacionalidad con el nombre: " + nombreNuevo);
+        }
     }
 
     @Override
     @Transactional
-    @CacheEvict(value = "nacionalidades-activa", allEntries = true)
+    @CacheEvict(value = "nacionalidades-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (nacionalidadRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró una nacionalidad con ID: " + id);
+        log.info("Cambiando estado de borrado de nacionalidades ID: {} a {}", id, !estado);
+        if (!nacionalidadRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) nacionalidad con ID: " + id);
         }
         if (estado) {
             nacionalidadRepository.activar(id);
         } else {
             nacionalidadRepository.desactivar(id);
         }
-    }
-}
+    }}

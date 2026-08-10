@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface GradoRepository extends JpaRepository<Grado, Long> {
 
-    List<Grado> findByBorradoLogicoFalseOrderByNombreAsc();
-
+    
     @Query("SELECT g FROM Grado g WHERE " +
            "(:nombre IS NULL OR LOWER(g.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
            "(:borradoLogico IS NULL OR g.borradoLogico = :borradoLogico)")
@@ -30,10 +29,10 @@ public interface GradoRepository extends JpaRepository<Grado, Long> {
     @Query("UPDATE Grado g SET g.borradoLogico = false WHERE g.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM grado WHERE id_grado = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
+
+    @Query("SELECT g FROM Grado g WHERE g.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(g.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY g.nombre ASC")
+    List<Grado> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

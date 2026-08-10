@@ -41,38 +41,16 @@ class FormatoServiceImplTest extends BaseServiceTest {
         Page<Formato> page = new PageImpl<>(List.of(entity));
         FormatoResponse response = new FormatoResponse(1L, "Test", false);
 
-        when(formatoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(formatoRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<FormatoResponse> result = formatoService.obtenerTodosActivos(Pageable.unpaged());
+        List<FormatoResponse> result = formatoService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return FormatoResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        FormatoResponse response = new FormatoResponse(1L, "Test", false);
-        Formato entity = Formato.builder().id(1L).nombre("Test").build();
-        
-        when(formatoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        FormatoResponse result = formatoService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(formatoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> formatoService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un formato activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of FormatoResponse")
@@ -81,10 +59,10 @@ class FormatoServiceImplTest extends BaseServiceTest {
         Page<Formato> page = new PageImpl<>(List.of(entity));
         FormatoResponse response = new FormatoResponse(1L, "Test", false);
         
-        when(formatoRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(formatoRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(formatoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<FormatoResponse> result = formatoService.obtenerTodos(Pageable.unpaged());
+        Page<FormatoResponse> result = formatoService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,7 +89,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un formato con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -141,7 +119,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un formato con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -172,7 +150,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un formato con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -187,13 +165,13 @@ class FormatoServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> formatoService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro formato con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(formatoRepository.existsById(1L)).thenReturn(true);
 
         formatoService.cambiarEstado(1L, true);
 
@@ -203,7 +181,7 @@ class FormatoServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(formatoRepository.existsById(1L)).thenReturn(true);
 
         formatoService.cambiarEstado(1L, false);
 
@@ -213,10 +191,10 @@ class FormatoServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(formatoRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(formatoRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> formatoService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un formato con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

@@ -1,7 +1,4 @@
 # Estándar de Desarrollo: Controladores Spring Boot para Catálogos (Arrupeteca)
-
-Este documento establece las directrices para el diseño e implementación de la capa de **Controladores REST** en los módulos de **Catálogo** (tablas maestras de referencia, ej. `Categoria`, `Ciclo`, `Disponibilidad`, `EstadoFisico`, `Etiqueta`, `Formato`, `Genero`, `Grado`, `Idioma`, `Nacionalidad`, `Pais`, `Parentesco`, `TipoAutoria`, `TipoUsuario`).
-
 ---
 
 ## 1. Configuración del Controlador REST
@@ -22,13 +19,13 @@ Los endpoints deben respetar la semántica HTTP de manera estricta y retornar la
 
 | Método HTTP | Ruta relativa | Acción | Retorno exitoso |
 | :--- | :--- | :--- | :--- |
-| **GET** | `/` | Obtener listado activo para dropdowns/selects (sin paginación). | `200 OK` $\rightarrow$ `ApiResponse<List<[Entidad]Response>>` |
-| **GET** | `/all` | Obtener tabla de administración (paginado con filtros `nombre` y `borradoLogico`). | `200 OK` $\rightarrow$ `ApiResponse<Page<[Entidad]Response>>` |
-| **GET** | `/{id}` | Obtener registro por ID (activo o inactivo). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
-| **POST** | `/` | Crear nuevo registro. | `201 Created` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
-| **PUT** | `/{id}` | Actualizar completo (Full update). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
-| **DELETE** | `/{id}` | Desactivar (Borrado lógico). | `200 OK` $\rightarrow$ `ApiResponse<Void>` |
-| **PATCH** | `/{id}/activar` | Activar registro desactivado. | `200 OK` $\rightarrow$ `ApiResponse<Void>` |
+| **GET** | `/` | Obtener listado activo para dropdowns y autocompletado (público / soporte a filtro opcional por `nombre`). | `200 OK` $\rightarrow$ `ApiResponse<List<[Entidad]Response>>` |
+| **GET** | `/admin/all` | Obtener tabla de administración (paginado con filtros `nombre` y `borradoLogico`). | `200 OK` $\rightarrow$ `ApiResponse<Page<[Entidad]Response>>` |
+| **GET** | `/admin/{id}` | Obtener registro por ID (activo o inactivo). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
+| **POST** | `/admin` | Crear nuevo registro. | `201 Created` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
+| **PUT** | `/admin/{id}` | Actualizar completo (Full update). | `200 OK` $\rightarrow$ `ApiResponse<[Entidad]Response>` |
+| **DELETE** | `/admin/{id}` | Desactivar (Borrado lógico). | `200 OK` $\rightarrow$ `ApiResponse<Void>` |
+| **PATCH** | `/admin/{id}/activar` | Activar registro desactivado. | `200 OK` $\rightarrow$ `ApiResponse<Void>` |
 
 *Para la respuesta exitosa del POST, utilizar la API fluida:*
 ```java
@@ -41,7 +38,7 @@ return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.exito("...", r
 
 *   **Anotar con `@Operation(summary = "...", description = "...")`**: Obligatorio en todos los métodos para documentar la acción.
 *   **Formatear anotaciones**: Mantener las anotaciones OpenAPI multilínea para cumplir estrictamente con el límite de caracteres.
-*   **Documentación de paginación**: En `/all`, el parámetro `Pageable` debe ir decorado con `@ParameterObject` y `@PageableDefault(size = 20, sort = "nombre")`.
+*   **Documentación de paginación**: En `/admin/all`, el parámetro `Pageable` debe ir decorado con `@ParameterObject` y `@PageableDefault(size = 20, sort = "nombre")`.
 
 ---
 
@@ -89,14 +86,15 @@ public class CategoriaController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener categorías activas para dropdowns",
-        description = "Retorna una lista simple no paginada de categorías activas para selects y filtros."
+        summary = "Obtener categorías activas para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de categorías activas, con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<CategoriaResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<CategoriaResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
         summary = "Obtener tabla de administración de categorías",
         description = "Retorna una página de categorías con soporte para filtros por nombre y estado borradoLogico."
@@ -108,7 +106,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Tabla de categorías", categoriaService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
         summary = "Obtener categoría por ID",
         description = "Busca la información de una categoría por su ID sin importar su estado lógico."
@@ -117,7 +115,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Categoría encontrada", categoriaService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
         summary = "Registrar nueva categoría",
         description = "Crea una nueva categoría en el sistema validando la unicidad del nombre."
@@ -127,7 +125,7 @@ public class CategoriaController {
                 .body(ApiResponse.exito("Categoría creada exitosamente", categoriaService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar categoría",
         description = "Actualiza los campos de una categoría existente mediante una edición completa."
@@ -138,7 +136,7 @@ public class CategoriaController {
                 categoriaService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar categoría (Borrado lógico)",
         description = "Oculta la categoría en el catálogo público cambiando su estado a borrado."
@@ -148,7 +146,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Categoría desactivada correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar categoría",
         description = "Restaura la visibilidad pública de una categoría previamente desactivada."

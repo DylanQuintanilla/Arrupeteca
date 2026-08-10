@@ -24,16 +24,16 @@ class PlantaRepositoryTest extends BaseRepositoryTest {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif1").build());
         Planta entity = Planta.builder().nombre("Planta 1").edificio(edif).build();
         Planta saved = plantaRepository.save(entity);
-        assertThat(plantaRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(plantaRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif2").build());
         plantaRepository.save(Planta.builder().nombre("Test").edificio(edif).build());
-        Page<Planta> page = plantaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Planta> list = plantaRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
@@ -41,6 +41,6 @@ class PlantaRepositoryTest extends BaseRepositoryTest {
     void shouldCountByIdIncludeDeleted() {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif3").build());
         Planta saved = plantaRepository.save(Planta.builder().nombre("Planta3").edificio(edif).borradoLogico(true).build());
-        assertThat(plantaRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(plantaRepository.existsById(saved.getId())).isTrue();
     }
 }

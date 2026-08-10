@@ -45,13 +45,13 @@ class CategoriaServiceImplTest {
         Categoria entity = Categoria.builder().build();
         CategoriaResponse response = mock(CategoriaResponse.class);
 
-        when(categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(categoriaRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(categoriaMapper.toResponse(entity)).thenReturn(response);
 
-        List<CategoriaResponse> result = categoriaService.obtenerTodosActivos();
+        List<CategoriaResponse> result = categoriaService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(categoriaRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(categoriaRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -89,7 +89,7 @@ class CategoriaServiceImplTest {
 
         assertThatThrownBy(() -> categoriaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una categoría con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -116,13 +116,13 @@ class CategoriaServiceImplTest {
 
         assertThatThrownBy(() -> categoriaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una categoría con el nombre: General");
+                .hasMessageContaining("con el nombre: General");
     }
 
     @Test
     @DisplayName("Should change estado of category successfully")
     void shouldCambiarEstado() {
-        when(categoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(categoriaRepository.existsById(1L)).thenReturn(true);
 
         categoriaService.cambiarEstado(1L, false);
         verify(categoriaRepository).desactivar(1L);

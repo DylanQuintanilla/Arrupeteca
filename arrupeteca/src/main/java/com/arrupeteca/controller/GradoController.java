@@ -32,79 +32,79 @@ import java.util.List;
 @RequestMapping("/api/v1/grados")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Tag(name = "Grados", description = "Endpoints para la gestión de grados académicos")
+@Tag(name = "Grados", description = "Endpoints para la gestión de grados escolares")
 public class GradoController {
 
     private final GradoService gradoService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener grados activos para dropdowns",
-        description = "Retorna una lista simple no paginada de grados activos para selects y filtros."
+        summary = "Obtener grados escolares activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de grados escolares activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<GradoResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de grados activos", gradoService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<GradoResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de grados escolares activos(as)", gradoService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener tabla de administración de grados",
-        description = "Retorna una página de grados con soporte para filtros por nombre y estado borradoLogico."
+        summary = "Obtener tabla de administración de grados escolares",
+        description = "Retorna una página de grados escolares con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<GradoResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Tabla de grados", gradoService.obtenerTodos(nombre, borradoLogico, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de grados escolares", gradoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener grado por ID",
-        description = "Busca la información de un grado por su ID sin importar su estado lógico."
+        summary = "Obtener grados escolares por ID",
+        description = "Busca la información de un(a) grado por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<GradoResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Grado encontrado", gradoService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Grado encontrado(a)", gradoService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo grado",
-        description = "Crea un nuevo grado en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) grado",
+        description = "Crea un(a) nuevo(a) grado en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<GradoResponse>> crear(@Valid @RequestBody GradoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Grado creado exitosamente", gradoService.crear(request)));
+                .body(ApiResponse.exito("Grado creado(a) exitosamente", gradoService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar grado",
-        description = "Actualiza los campos de un grado existente mediante una edición completa."
+        description = "Actualiza los campos de un(a) grado existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<GradoResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody GradoRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Grado actualizado correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Grado actualizado(a) correctamente",
                 gradoService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar grado (Borrado lógico)",
-        description = "Oculta el grado en el catálogo público cambiando su estado a borrado."
+        description = "Oculta el/la grado en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         gradoService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Grado desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Grado desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar grado",
-        description = "Restaura la visibilidad pública de un grado previamente desactivado."
+        description = "Restaura la visibilidad pública de un(a) grado previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         gradoService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Grado activado correctamente"));
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("Grado activado(a) correctamente"));
+    }}

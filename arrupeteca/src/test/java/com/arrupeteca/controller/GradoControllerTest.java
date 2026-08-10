@@ -35,24 +35,24 @@ class GradoControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/grados - Should return active grados list")
     void shouldReturnActiveGrados() throws Exception {
-        when(gradoService.obtenerTodosActivos()).thenReturn(List.of());
+        when(gradoService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/grados"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de grados activos"));
+                .andExpect(jsonPath("$.mensaje").value("Lista de grados escolares activos(as)"));
     }
 
     @Test
     @DisplayName("GET /api/v1/grados/all - Should return grados table")
     void shouldReturnAllGrados() throws Exception {
         Page<GradoResponse> page = new PageImpl<>(List.of());
-        when(gradoService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+        when(gradoService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/grados/all"))
+        mockMvc.perform(get("/api/v1/grados/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tabla de grados"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de grados escolares"));
     }
 
     @Test
@@ -61,10 +61,10 @@ class GradoControllerTest extends BaseControllerTest {
         GradoResponse response = new GradoResponse(1L, "Bachillerato General", false);
         when(gradoService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/grados/1"))
+        mockMvc.perform(get("/api/v1/grados/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Grado encontrado"))
+                .andExpect(jsonPath("$.mensaje").value("Grado encontrado(a)"))
                 .andExpect(jsonPath("$.data.nombre").value("Bachillerato General"));
     }
 
@@ -76,7 +76,7 @@ class GradoControllerTest extends BaseControllerTest {
         GradoResponse response = new GradoResponse(1L, "Nuevo", false);
         when(gradoService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/grados")
+        mockMvc.perform(post("/api/v1/grados/admin")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -93,33 +93,33 @@ class GradoControllerTest extends BaseControllerTest {
         GradoResponse response = new GradoResponse(1L, "Actualizado", false);
         when(gradoService.actualizar(any(Long.class), any(GradoRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/grados/1")
+        mockMvc.perform(put("/api/v1/grados/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Grado actualizado correctamente"))
+                .andExpect(jsonPath("$.mensaje").value("Grado actualizado(a) correctamente"))
                 .andExpect(jsonPath("$.data.nombre").value("Actualizado"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/grados/{id} - Should deactivate grado")
     void shouldDeactivateGrado() throws Exception {
-        mockMvc.perform(delete("/api/v1/grados/1")
+        mockMvc.perform(delete("/api/v1/grados/admin/1")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Grado desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Grado desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/grados/{id}/activar - Should activate grado")
     void shouldActivateGrado() throws Exception {
-        mockMvc.perform(patch("/api/v1/grados/1/activar")
+        mockMvc.perform(patch("/api/v1/grados/admin/1/activar")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Grado activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Grado activado(a) correctamente"));
     }
 }

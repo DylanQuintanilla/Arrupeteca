@@ -25,4 +25,6 @@ public interface ResponsableService {
 
     void cambiarEstado(Long id, boolean estado);
 
+
+    Page<ResponsableResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 }

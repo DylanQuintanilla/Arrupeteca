@@ -19,7 +19,7 @@ class EdificioRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Edificio entity = Edificio.builder().nombre("Central").build();
         Edificio saved = edificioRepository.save(entity);
-        assertThat(edificioRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(edificioRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
@@ -28,14 +28,14 @@ class EdificioRepositoryTest extends BaseRepositoryTest {
         edificioRepository.save(Edificio.builder().nombre("E1").borradoLogico(false).build());
         edificioRepository.save(Edificio.builder().nombre("E2").borradoLogico(true).build());
 
-        Page<Edificio> page = edificioRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getTotalElements()).isEqualTo(1);
+        java.util.List<Edificio> list = edificioRepository.buscarActivosPorNombre(null);
+        assertThat(list).hasSize(1);
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Edificio saved = edificioRepository.save(Edificio.builder().nombre("E3").borradoLogico(true).build());
-        assertThat(edificioRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(edificioRepository.existsById(saved.getId())).isTrue();
     }
 }

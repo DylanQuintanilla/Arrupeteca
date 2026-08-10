@@ -35,24 +35,24 @@ class DisponibilidadControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/disponibilidades - Should return active disponibilidades list")
     void shouldReturnActiveDisponibilidades() throws Exception {
-        when(disponibilidadService.obtenerTodosActivos()).thenReturn(List.of());
+        when(disponibilidadService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/disponibilidades"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de disponibilidades activas"));
+                .andExpect(jsonPath("$.mensaje").value("Lista de estados de disponibilidad de ejemplares activos(as)"));
     }
 
     @Test
     @DisplayName("GET /api/v1/disponibilidades/all - Should return disponibilidades table")
     void shouldReturnAllDisponibilidades() throws Exception {
         Page<DisponibilidadResponse> page = new PageImpl<>(List.of());
-        when(disponibilidadService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+        when(disponibilidadService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/disponibilidades/all"))
+        mockMvc.perform(get("/api/v1/disponibilidades/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tabla de disponibilidades"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de estados de disponibilidad de ejemplares"));
     }
 
     @Test
@@ -61,10 +61,10 @@ class DisponibilidadControllerTest extends BaseControllerTest {
         DisponibilidadResponse response = new DisponibilidadResponse(1L, "Disponible", false);
         when(disponibilidadService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/disponibilidades/1"))
+        mockMvc.perform(get("/api/v1/disponibilidades/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Disponibilidad encontrada"))
+                .andExpect(jsonPath("$.mensaje").value("Disponibilidad encontrado(a)"))
                 .andExpect(jsonPath("$.data.nombre").value("Disponible"));
     }
 
@@ -76,7 +76,7 @@ class DisponibilidadControllerTest extends BaseControllerTest {
         DisponibilidadResponse response = new DisponibilidadResponse(1L, "Nuevo", false);
         when(disponibilidadService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/disponibilidades")
+        mockMvc.perform(post("/api/v1/disponibilidades/admin")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -93,33 +93,33 @@ class DisponibilidadControllerTest extends BaseControllerTest {
         DisponibilidadResponse response = new DisponibilidadResponse(1L, "Actualizada", false);
         when(disponibilidadService.actualizar(any(Long.class), any(DisponibilidadRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/disponibilidades/1")
+        mockMvc.perform(put("/api/v1/disponibilidades/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Disponibilidad actualizada correctamente"))
+                .andExpect(jsonPath("$.mensaje").value("Disponibilidad actualizado(a) correctamente"))
                 .andExpect(jsonPath("$.data.nombre").value("Actualizada"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/disponibilidades/{id} - Should deactivate disponibilidad")
     void shouldDeactivateDisponibilidad() throws Exception {
-        mockMvc.perform(delete("/api/v1/disponibilidades/1")
+        mockMvc.perform(delete("/api/v1/disponibilidades/admin/1")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Disponibilidad desactivada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Disponibilidad desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/disponibilidades/{id}/activar - Should activate disponibilidad")
     void shouldActivateDisponibilidad() throws Exception {
-        mockMvc.perform(patch("/api/v1/disponibilidades/1/activar")
+        mockMvc.perform(patch("/api/v1/disponibilidades/admin/1/activar")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Disponibilidad activada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Disponibilidad activado(a) correctamente"));
     }
 }

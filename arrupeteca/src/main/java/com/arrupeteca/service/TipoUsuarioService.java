@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.TipoUsuarioResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface TipoUsuarioService {
 
-    Page<TipoUsuarioResponse> obtenerTodosActivos(Pageable pageable);
+    List<TipoUsuarioResponse> obtenerTodosActivos(String nombre);
 
-    TipoUsuarioResponse obtenerPorIdActivo(Long id);
-
-    Page<TipoUsuarioResponse> obtenerTodos(Pageable pageable);
+    Page<TipoUsuarioResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     TipoUsuarioResponse obtenerPorId(Long id);
 
@@ -19,6 +19,4 @@ public interface TipoUsuarioService {
 
     TipoUsuarioResponse actualizar(Long id, TipoUsuarioRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-
-}
+    void cambiarEstado(Long id, boolean estado);}

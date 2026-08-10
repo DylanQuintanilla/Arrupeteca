@@ -35,7 +35,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/categorias - Should return active categories list")
     void shouldReturnActiveCategories() throws Exception {
-        when(categoriaService.obtenerTodosActivos()).thenReturn(List.of());
+        when(categoriaService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/categorias"))
                 .andExpect(status().isOk())
@@ -47,9 +47,9 @@ class CategoriaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/categorias/all - Should return categories table")
     void shouldReturnAllCategories() throws Exception {
         Page<CategoriaResponse> page = new PageImpl<>(List.of());
-        when(categoriaService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+        when(categoriaService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/categorias/all"))
+        mockMvc.perform(get("/api/v1/categorias/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Tabla de categorías"));
@@ -61,7 +61,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         CategoriaResponse response = new CategoriaResponse(1L, "Existente", false);
         when(categoriaService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/categorias/1"))
+        mockMvc.perform(get("/api/v1/categorias/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.mensaje").value("Categoría encontrada"))
@@ -76,7 +76,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         CategoriaResponse response = new CategoriaResponse(1L, "Nueva", false);
         when(categoriaService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/categorias")
+        mockMvc.perform(post("/api/v1/categorias/admin")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -93,7 +93,7 @@ class CategoriaControllerTest extends BaseControllerTest {
         CategoriaResponse response = new CategoriaResponse(1L, "Actualizada", false);
         when(categoriaService.actualizar(any(Long.class), any(CategoriaRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/categorias/1")
+        mockMvc.perform(put("/api/v1/categorias/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -106,7 +106,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("DELETE /api/v1/categorias/{id} - Should deactivate category")
     void shouldDeactivateCategory() throws Exception {
-        mockMvc.perform(delete("/api/v1/categorias/1")
+        mockMvc.perform(delete("/api/v1/categorias/admin/1")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
@@ -116,7 +116,7 @@ class CategoriaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("PATCH /api/v1/categorias/{id}/activar - Should activate category")
     void shouldActivateCategory() throws Exception {
-        mockMvc.perform(patch("/api/v1/categorias/1/activar")
+        mockMvc.perform(patch("/api/v1/categorias/admin/1/activar")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))

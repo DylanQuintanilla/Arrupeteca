@@ -134,7 +134,7 @@ public class ObraServiceImpl implements ObraService {
     @CacheEvict(value = "obras", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado de obra ID: {} a {}", id, !estado);
-        if (obraRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!obraRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Obra con ID: " + id);
         }
         if (estado) {

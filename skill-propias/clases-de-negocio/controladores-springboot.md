@@ -32,13 +32,10 @@ Todas las clases de negocio (`AutorController`, `ObraController`, `LibroControll
 | **DELETE** | `/{id}` | Desactivar (Borrado lógico `borradoLogico = true`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
 | **PATCH** | `/{id}/activar` | Activar registro (`borradoLogico = false`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
 
-*Notas sobre endpoints específicos*:
-*   `AutorController` incluye de forma adicional `GET /verificar-duplicados` (verificación pre-registro).
-*   `LibroController` incluye de forma adicional `GET /obra/{idObra}` (relación hijo por obra).
-*   Para el estado `201 Created` en el POST, utilizar la sintaxis fluida de Spring:
-```java
-return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.exito("...", resultado));
-```
+*Notas sobre ordenamiento por defecto (`@PageableDefault`)*:
+*   `ObraController`: `@PageableDefault(size = 20, sort = "titulo")` (Alfabético A-Z por título).
+*   `LibroController`: `@PageableDefault(size = 20, sort = "obra.titulo")` (Alfabético A-Z por título de la obra asociada).
+*   `EjemplarLibroController`: `@PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"})` (Alfabético A-Z por obra y luego por ID correlativo del ejemplar).
 
 ---
 
@@ -148,19 +145,20 @@ public class AutorController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada (Admin)",
-        description = "Búsqueda avanzada multi-filtro por estado, género, país y coincidencia de término (solo admin)."
+        description = "Búsqueda avanzada multi-filtro por estado, nacionalidad, país, género, obra cumbre y coincidencia de término (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
             @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idObraCumbre,
             @RequestParam(required = false) Year anioInicio,
             @RequestParam(required = false) Year anioFin,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero,
+                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre,
                         anioInicio, anioFin, termino, pageable)));
     }
 

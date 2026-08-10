@@ -33,8 +33,7 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
            "AND (:idCategoria IS NULL OR EXISTS (SELECT 1 FROM o.categorias c WHERE c.id = :idCategoria)) " +
            "AND (:idEtiqueta IS NULL OR EXISTS (SELECT 1 FROM o.etiquetas e WHERE e.id = :idEtiqueta)) " +
            "AND (:termino IS NULL OR LOWER(l.isbn) LIKE LOWER(CONCAT('%', :termino, '%')) " +
-           "     OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%')) " +
-           "     OR LOWER(ed.nombre) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "     OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:anioInicio IS NULL OR l.anioPublicacion >= :anioInicio) " +
            "AND (:anioFin IS NULL OR l.anioPublicacion <= :anioFin)")
     Page<LibroResumen> busquedaMaestraAdminProyectada(
@@ -77,9 +76,6 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Libro l SET l.borradoLogico = false WHERE l.id = :id")
     void activar(@Param("id") Long id);
-
-    @Query(value = "SELECT COUNT(*) FROM libro WHERE id_libro = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 

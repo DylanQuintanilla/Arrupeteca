@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface EtiquetaRepository extends JpaRepository<Etiqueta, Long> {
 
-    List<Etiqueta> findByBorradoLogicoFalseOrderByNombreAsc();
-
+    
     @Query("SELECT e FROM Etiqueta e WHERE " +
            "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
            "(:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico)")
@@ -30,10 +29,10 @@ public interface EtiquetaRepository extends JpaRepository<Etiqueta, Long> {
     @Query("UPDATE Etiqueta e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM etiqueta WHERE id_etiqueta = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
+
+    @Query("SELECT e FROM Etiqueta e WHERE e.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY e.nombre ASC")
+    List<Etiqueta> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

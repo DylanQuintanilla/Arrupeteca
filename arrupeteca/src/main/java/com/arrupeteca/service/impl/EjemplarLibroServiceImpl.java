@@ -125,7 +125,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     @CacheEvict(value = "ejemplares", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado del ejemplar ID: {} a {}", id, !estado);
-        if (ejemplarLibroRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!ejemplarLibroRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Ejemplar con ID: " + id);
         }
         if (estado) {

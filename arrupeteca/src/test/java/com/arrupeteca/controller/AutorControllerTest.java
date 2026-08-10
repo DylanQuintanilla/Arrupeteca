@@ -157,7 +157,7 @@ class AutorControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/autores/admin/busqueda-maestra - Should perform master search")
     void shouldPerformMasterSearch() throws Exception {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
         mockMvc.perform(get("/api/v1/autores/admin/busqueda-maestra")

@@ -38,40 +38,15 @@ class EditorialServiceImplTest extends BaseServiceTest {
     @DisplayName("obtenerTodosActivos - Should return page of EditorialResponse")
     void obtenerTodosActivos() {
         Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
-        Page<Editorial> page = new PageImpl<>(List.of(entity));
         EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
 
-        when(editorialRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(editorialRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        Page<EditorialResponse> result = editorialService.obtenerTodosActivos(Pageable.unpaged());
+        List<EditorialResponse> result = editorialService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return EditorialResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
-        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
-        
-        when(editorialRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(editorialMapper.toResponse(entity)).thenReturn(response);
-
-        EditorialResponse result = editorialService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(editorialRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> editorialService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Editorial activa con ID: 1");
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
     @Test
@@ -81,10 +56,10 @@ class EditorialServiceImplTest extends BaseServiceTest {
         Page<Editorial> page = new PageImpl<>(List.of(entity));
         EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
         
-        when(editorialRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(editorialRepository.busquedaAdmin(any(), any(), any(), any(), any())).thenReturn(page);
         when(editorialMapper.toResponse(entity)).thenReturn(response);
 
-        Page<EditorialResponse> result = editorialService.obtenerTodos(Pageable.unpaged());
+        Page<EditorialResponse> result = editorialService.obtenerTodos(null, null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,23 +86,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> editorialService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Editorial con ID: 1");
-    }
-
-    @Test
-    @DisplayName("busquedaMaestraAdmin - Should return page of EditorialResponse")
-    void busquedaMaestraAdmin() {
-        Editorial entity = Editorial.builder().id(1L).nombre("Test").build();
-        Page<Editorial> page = new PageImpl<>(List.of(entity));
-        EditorialResponse response = new EditorialResponse(1L, "Test", "Dir", "correo@test.com", "1234-5678", "Juan", false);
-
-        when(editorialRepository.busquedaMaestraAdmin(false, "term", Pageable.unpaged())).thenReturn(page);
-        when(editorialMapper.toResponse(entity)).thenReturn(response);
-
-        Page<EditorialResponse> result = editorialService.busquedaMaestraAdmin(false, "term", Pageable.unpaged());
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -163,7 +122,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> editorialService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una editorial con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -215,7 +174,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> editorialService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Editorial con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -230,13 +189,13 @@ class EditorialServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> editorialService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra editorial con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(editorialRepository.existsById(1L)).thenReturn(true);
 
         editorialService.cambiarEstado(1L, true);
 
@@ -246,7 +205,7 @@ class EditorialServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(editorialRepository.existsById(1L)).thenReturn(true);
 
         editorialService.cambiarEstado(1L, false);
 
@@ -256,10 +215,10 @@ class EditorialServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(editorialRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(editorialRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> editorialService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Editorial con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

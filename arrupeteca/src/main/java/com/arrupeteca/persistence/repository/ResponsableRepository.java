@@ -27,7 +27,12 @@ public interface ResponsableRepository extends JpaRepository<Responsable, Long> 
     @Query("UPDATE Responsable r SET r.borradoLogico = false WHERE r.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM responsable WHERE id_responsable = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
 
+    @Query("SELECT r FROM Responsable r WHERE " +
+           "(:nombre IS NULL OR LOWER(r.nombres) LIKE LOWER(CONCAT('%', :nombre, '%')) OR LOWER(r.apellidos) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
+           "(:borradoLogico IS NULL OR r.borradoLogico = :borradoLogico)")
+    Page<Responsable> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 }

@@ -3,6 +3,9 @@ package com.arrupeteca.security;
 import com.arrupeteca.persistence.entity.TipoUsuario;
 import com.arrupeteca.persistence.entity.Usuario;
 import com.arrupeteca.persistence.repository.UsuarioRepository;
+import com.arrupeteca.service.CategoriaService;
+import org.springframework.data.domain.PageImpl;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,6 +37,9 @@ class SecurityConfigTest {
 
     @MockitoBean
     private UsuarioRepository usuarioRepository;
+
+    @MockitoBean
+    private CategoriaService categoriaService;
 
     @Test
     @DisplayName("Endpoint no autenticado debe retornar 401 Unauthorized con formato JSON")
@@ -83,9 +90,10 @@ class SecurityConfigTest {
         given(usuarioRepository.findByCorreoAndBorradoLogicoFalse("admin@arrupeteca.com"))
                 .willReturn(java.util.Optional.of(usuarioAdmin));
 
+        given(categoriaService.obtenerTodos(any(), any(), any())).willReturn(new PageImpl<>(List.of()));
         String token = jwtService.generateToken(usuarioAdmin);
 
-        mockMvc.perform(get("/api/v1/categorias/all")
+        mockMvc.perform(get("/api/v1/categorias/admin/all")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk());
     }
@@ -105,7 +113,7 @@ class SecurityConfigTest {
 
         String token = jwtService.generateToken(usuarioAlumno);
 
-        mockMvc.perform(get("/api/v1/categorias/all")
+        mockMvc.perform(get("/api/v1/categorias/admin/all")
                 .header("Authorization", "Bearer " + token))
                 .andExpect(status().isForbidden());
     }

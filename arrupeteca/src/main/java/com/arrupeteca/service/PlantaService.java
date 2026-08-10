@@ -5,17 +5,15 @@ import com.arrupeteca.dto.response.PlantaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface PlantaService {
 
-    Page<PlantaResponse> obtenerTodosActivos(Pageable pageable);
+    List<PlantaResponse> obtenerTodosActivos(String nombre);
 
-    PlantaResponse obtenerPorIdActivo(Long id);
-
-    Page<PlantaResponse> obtenerTodos(Pageable pageable);
+    Page<PlantaResponse> obtenerTodos(Long idEdificio, String nombre, Boolean borradoLogico, Pageable pageable);
 
     PlantaResponse obtenerPorId(Long id);
-
-    Page<PlantaResponse> buscarPorEdificioId(Long idEdificio, Pageable pageable);
 
     PlantaResponse crear(PlantaRequest request);
 

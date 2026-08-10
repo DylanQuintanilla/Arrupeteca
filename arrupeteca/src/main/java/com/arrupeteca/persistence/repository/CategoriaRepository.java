@@ -12,7 +12,10 @@ import java.util.List;
 
 public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
 
-    List<Categoria> findByBorradoLogicoFalseOrderByNombreAsc();
+    @Query("SELECT c FROM Categoria c WHERE c.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY c.nombre ASC")
+    List<Categoria> buscarActivosPorNombre(@Param("nombre") String nombre);
 
     @Query("SELECT c FROM Categoria c WHERE " +
            "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
@@ -29,11 +32,6 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Categoria c SET c.borradoLogico = false WHERE c.id = :id")
     void activar(@Param("id") Long id);
-
-    @Query(value = "SELECT COUNT(*) FROM categoria WHERE id_categoria = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
 }

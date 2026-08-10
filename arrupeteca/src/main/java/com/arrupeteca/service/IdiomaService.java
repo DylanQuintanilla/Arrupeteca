@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.IdiomaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface IdiomaService {
 
-    Page<IdiomaResponse> obtenerTodosActivos(Pageable pageable);
+    List<IdiomaResponse> obtenerTodosActivos(String nombre);
 
-    IdiomaResponse obtenerPorIdActivo(Long id);
-
-    Page<IdiomaResponse> obtenerTodos(Pageable pageable);
+    Page<IdiomaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     IdiomaResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface IdiomaService {
 
     IdiomaResponse actualizar(Long id, IdiomaRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

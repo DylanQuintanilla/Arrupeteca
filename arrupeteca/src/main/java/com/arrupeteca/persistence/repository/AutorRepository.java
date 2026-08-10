@@ -30,6 +30,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
            "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
            "AND (:idPais IS NULL OR p.id = :idPais) " +
            "AND (:idGenero IS NULL OR g.id = :idGenero) " +
+           "AND (:idObraCumbre IS NULL OR o.id = :idObraCumbre) " +
            "AND (:termino IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
@@ -39,6 +40,7 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
             @Param("idGenero") Long idGenero,
+            @Param("idObraCumbre") Long idObraCumbre,
             @Param("anioInicio") Year anioInicio,
             @Param("anioFin") Year anioFin,
             @Param("termino") String termino,
@@ -64,9 +66,6 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
     void activar(@Param("id") Long id);
-
-    @Query(value = "SELECT COUNT(*) FROM autor WHERE id_autor = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
 }

@@ -69,7 +69,7 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     void shouldCountByIdIncludeDeleted() {
         EjemplarLibro entity = createValidEjemplar("Count");
         EjemplarLibro saved = ejemplarLibroRepository.save(entity);
-        assertThat(ejemplarLibroRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(ejemplarLibroRepository.existsById(saved.getId())).isTrue();
     }
 
     @Test

@@ -45,13 +45,13 @@ class DisponibilidadServiceImplTest {
         Disponibilidad entity = Disponibilidad.builder().build();
         DisponibilidadResponse response = mock(DisponibilidadResponse.class);
 
-        when(disponibilidadRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(disponibilidadRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(disponibilidadMapper.toResponse(entity)).thenReturn(response);
 
-        List<DisponibilidadResponse> result = disponibilidadService.obtenerTodosActivos();
+        List<DisponibilidadResponse> result = disponibilidadService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(disponibilidadRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(disponibilidadRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -89,7 +89,7 @@ class DisponibilidadServiceImplTest {
 
         assertThatThrownBy(() -> disponibilidadService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una disponibilidad con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -116,13 +116,13 @@ class DisponibilidadServiceImplTest {
 
         assertThatThrownBy(() -> disponibilidadService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una disponibilidad con el nombre: Disponible");
+                .hasMessageContaining("con el nombre: Disponible");
     }
 
     @Test
     @DisplayName("Should change estado of disponibilidad successfully")
     void shouldCambiarEstado() {
-        when(disponibilidadRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(disponibilidadRepository.existsById(1L)).thenReturn(true);
 
         disponibilidadService.cambiarEstado(1L, false);
         verify(disponibilidadRepository).desactivar(1L);

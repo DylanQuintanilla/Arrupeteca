@@ -34,7 +34,7 @@ class PaisControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/paises - Should return active countries")
     void shouldReturnActive() throws Exception {
         Page<PaisResponse> page = new PageImpl<>(List.of());
-        when(paisService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(paisService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/paises"))
                 .andExpect(status().isOk())
@@ -45,9 +45,9 @@ class PaisControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/paises/{id} - Should return country by ID")
     void shouldReturnById() throws Exception {
         PaisResponse response = new PaisResponse(1L, "Test", false);
-        when(paisService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(paisService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/paises/1"))
+        mockMvc.perform(get("/api/v1/paises/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -61,7 +61,7 @@ class PaisControllerTest extends BaseControllerTest {
 
         when(paisService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/paises")
+        mockMvc.perform(post("/api/v1/paises/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class PaisControllerTest extends BaseControllerTest {
 
         when(paisService.actualizar(any(Long.class), any(PaisRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/paises/1")
+        mockMvc.perform(put("/api/v1/paises/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -87,12 +87,12 @@ class PaisControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/paises/admin - Should return all countries for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<PaisResponse> page = new PageImpl<>(List.of());
-        when(paisService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(paisService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/paises/admin"))
+        mockMvc.perform(get("/api/v1/paises/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de países"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de países"));
     }
 
     @Test
@@ -104,24 +104,24 @@ class PaisControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/paises/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("País encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Pais encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/paises/{id} - Should deactivate country")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/paises/1"))
+        mockMvc.perform(delete("/api/v1/paises/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("País desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Pais desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/paises/{id}/activar - Should activate country")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/paises/1/activar"))
+        mockMvc.perform(patch("/api/v1/paises/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("País activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Pais activado(a) correctamente"));
     }
 }

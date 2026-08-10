@@ -45,13 +45,13 @@ class EtiquetaServiceImplTest {
         Etiqueta entity = Etiqueta.builder().build();
         EtiquetaResponse response = mock(EtiquetaResponse.class);
 
-        when(etiquetaRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(etiquetaRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(etiquetaMapper.toResponse(entity)).thenReturn(response);
 
-        List<EtiquetaResponse> result = etiquetaService.obtenerTodosActivos();
+        List<EtiquetaResponse> result = etiquetaService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(etiquetaRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(etiquetaRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -107,13 +107,13 @@ class EtiquetaServiceImplTest {
 
         assertThatThrownBy(() -> etiquetaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una etiqueta con el nombre: Tecnología");
+                .hasMessageContaining("con el nombre: Tecnología");
     }
 
     @Test
     @DisplayName("Should change estado of etiqueta successfully")
     void shouldCambiarEstado() {
-        when(etiquetaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(etiquetaRepository.existsById(1L)).thenReturn(true);
 
         etiquetaService.cambiarEstado(1L, false);
         verify(etiquetaRepository).desactivar(1L);

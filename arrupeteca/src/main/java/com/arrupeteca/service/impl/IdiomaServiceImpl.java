@@ -8,6 +8,7 @@ import com.arrupeteca.persistence.entity.Idioma;
 import com.arrupeteca.persistence.repository.IdiomaRepository;
 import com.arrupeteca.service.IdiomaService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -24,70 +28,87 @@ public class IdiomaServiceImpl implements IdiomaService {
     private final IdiomaMapper idiomaMapper;
 
     @Override
-    @Cacheable(value = "idiomas-activos")
-    public Page<IdiomaResponse> obtenerTodosActivos(Pageable pageable) {
-        return idiomaRepository.findByBorradoLogicoFalse(pageable)
-                .map(idiomaMapper::toResponse);
-    }
-
-    @Override
-    public IdiomaResponse obtenerPorIdActivo(Long id) {
-        return idiomaRepository.findByIdAndBorradoLogicoFalse(id)
+    @Cacheable(value = "idiomas-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<IdiomaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo idiomas activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return idiomaRepository.buscarActivosPorNombre(filtro).stream()
                 .map(idiomaMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un idioma activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<IdiomaResponse> obtenerTodos(Pageable pageable) {
-        return idiomaRepository.findAll(pageable)
+    public Page<IdiomaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de idiomas con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return idiomaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(idiomaMapper::toResponse);
     }
 
     @Override
     public IdiomaResponse obtenerPorId(Long id) {
+        log.debug("Buscando idiomas por ID: {}", id);
         return idiomaRepository.findById(id)
                 .map(idiomaMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un idioma con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) idioma con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "idiomas-activos", allEntries = true)
     public IdiomaResponse crear(IdiomaRequest request) {
-        if (idiomaRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe un idioma con el nombre: " + request.nombre());
-        }
+        log.info("Creando nuevo(a) idioma con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, null);
+
         Idioma idioma = idiomaMapper.toEntity(request);
-        return idiomaMapper.toResponse(idiomaRepository.save(idioma));
+        idioma.setNombre(nombreTrimmed);
+
+        Idioma guardado = idiomaRepository.save(idioma);
+        log.info("Idioma creado(a) exitosamente con ID: {}", guardado.getId());
+        return idiomaMapper.toResponse(guardado);
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "idiomas-activos", allEntries = true)
     public IdiomaResponse actualizar(Long id, IdiomaRequest request) {
+        log.info("Actualizando idioma con ID: {}", id);
         Idioma idiomaExistente = idiomaRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un idioma con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) idioma con ID: " + id));
 
-        if (!idiomaExistente.getNombre().equalsIgnoreCase(request.nombre())
-                && idiomaRepository.existsByNombreIgnoreCase(request.nombre())) {
-            throw new ValidacionNegocioException("Ya existe otro idioma con el nombre: " + request.nombre());
-        }
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, idiomaExistente);
 
         idiomaMapper.updateEntity(request, idiomaExistente);
-        return idiomaMapper.toResponse(idiomaRepository.save(idiomaExistente));
+        idiomaExistente.setNombre(nombreTrimmed);
+
+        Idioma actualizado = idiomaRepository.save(idiomaExistente);
+        log.info("Idioma con ID: {} actualizado(a) exitosamente", id);
+        return idiomaMapper.toResponse(actualizado);
+    }
+
+    private void validarUnicidad(String nombreNuevo, Idioma idiomaExistente) {
+        boolean esNuevo = (idiomaExistente == null);
+        boolean nombreCambio = !esNuevo && !idiomaExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+
+        if ((esNuevo || nombreCambio) && idiomaRepository.existsByNombreIgnoreCase(nombreNuevo)) {
+            log.warn("Intento de duplicar idiomas: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) idioma con el nombre: " + nombreNuevo);
+        }
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "idiomas-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (idiomaRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un idioma con ID: " + id);
+        log.info("Cambiando estado de borrado de idiomas ID: {} a {}", id, !estado);
+        if (!idiomaRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) idioma con ID: " + id);
         }
         if (estado) {
             idiomaRepository.activar(id);
         } else {
             idiomaRepository.desactivar(id);
         }
-    }
-}
+    }}

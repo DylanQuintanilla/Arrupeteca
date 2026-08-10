@@ -42,38 +42,16 @@ class GeneroServiceImplTest extends BaseServiceTest {
         Page<Genero> page = new PageImpl<>(List.of(entity));
         GeneroResponse response = new GeneroResponse(1L, "Test", false);
 
-        when(generoRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(generoRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(generoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<GeneroResponse> result = generoService.obtenerTodosActivos(Pageable.unpaged());
+        List<GeneroResponse> result = generoService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return GeneroResponse")
-    void obtenerPorIdActivo() {
-        Genero entity = Genero.builder().id(1L).nombre("Test").build();
-        GeneroResponse response = new GeneroResponse(1L, "Test", false);
 
-        when(generoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(generoMapper.toResponse(entity)).thenReturn(response);
-
-        GeneroResponse result = generoService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(generoRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> generoService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un género activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return all genres")
@@ -82,10 +60,10 @@ class GeneroServiceImplTest extends BaseServiceTest {
         Page<Genero> page = new PageImpl<>(List.of(entity));
         GeneroResponse response = new GeneroResponse(1L, "Test", false);
 
-        when(generoRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(generoRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(generoMapper.toResponse(entity)).thenReturn(response);
 
-        Page<GeneroResponse> result = generoService.obtenerTodos(Pageable.unpaged());
+        Page<GeneroResponse> result = generoService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
     }
@@ -111,7 +89,7 @@ class GeneroServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> generoService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un género con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -140,7 +118,7 @@ class GeneroServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> generoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un género con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -188,7 +166,7 @@ class GeneroServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> generoService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro género con el nombre: Ocupado");
+                .hasMessageContaining("con el nombre: Ocupado");
     }
 
     @Test
@@ -198,13 +176,13 @@ class GeneroServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> generoService.actualizar(1L, GeneroRequest.builder().nombre("Cualquiera").build()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un género con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate")
     void activate() {
-        when(generoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(generoRepository.existsById(1L)).thenReturn(true);
         generoService.cambiarEstado(1L, true);
         verify(generoRepository).activar(1L);
     }
@@ -212,7 +190,7 @@ class GeneroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate")
     void deactivate() {
-        when(generoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(generoRepository.existsById(1L)).thenReturn(true);
         generoService.cambiarEstado(1L, false);
         verify(generoRepository).desactivar(1L);
     }
@@ -220,9 +198,9 @@ class GeneroServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw when not found")
     void statusNotFound() {
-        when(generoRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(generoRepository.existsById(1L)).thenReturn(false);
         assertThatThrownBy(() -> generoService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un género con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

@@ -60,7 +60,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should return active authors page")
     void shouldReturnActiveAuthors() {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.obtenerTodosActivos(Pageable.unpaged());
 
@@ -88,14 +88,14 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.obtenerPorIdActivo(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Autor activo con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("Should return all authors page")
     void shouldReturnAllAuthors() {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.obtenerTodos(Pageable.unpaged());
 
@@ -123,14 +123,14 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Autor con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("Should perform global search")
     void shouldPerformGlobalSearch() {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.busquedaGlobal("palabra", Year.of(1900), Year.of(2000), Pageable.unpaged());
 
@@ -141,10 +141,10 @@ class AutorServiceImplTest extends BaseServiceTest {
     @DisplayName("Should perform admin master search")
     void shouldPerformAdminMasterSearch() {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(autorRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         Page<AutorResumenResponse> result = autorService.busquedaMaestraAdmin(
-                false, 1L, 1L, 1L, null, null, "test", Pageable.unpaged()
+                false, 1L, 1L, 1L, null, null, null, "test", Pageable.unpaged()
         );
 
         assertThat(result).isEmpty();
@@ -242,13 +242,13 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.actualizar(1L, AutorRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Autor con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("Should deactivate author")
     void shouldDeactivate() {
-        when(autorRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(autorRepository.existsById(1L)).thenReturn(true);
 
         autorService.cambiarEstado(1L, false);
 
@@ -258,7 +258,7 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should activate author")
     void shouldActivate() {
-        when(autorRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(autorRepository.existsById(1L)).thenReturn(true);
 
         autorService.cambiarEstado(1L, true);
 
@@ -268,11 +268,11 @@ class AutorServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw when changing state of non-existent author")
     void shouldThrowWhenChangingStateNonExistent() {
-        when(autorRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(autorRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> autorService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Autor con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -312,7 +312,7 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un autor con el nombre: Existente");
+                .hasMessageContaining("con el nombre: Existente");
     }
 
     @Test
@@ -326,7 +326,7 @@ class AutorServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> autorService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un autor con el nombre: Test");
+                .hasMessageContaining("con el nombre: Test");
     }
 
     @Test

@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface CicloRepository extends JpaRepository<Ciclo, Long> {
 
-    List<Ciclo> findByBorradoLogicoFalseOrderByNombreAsc();
-
+    
     @Query("SELECT c FROM Ciclo c WHERE " +
            "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
            "(:borradoLogico IS NULL OR c.borradoLogico = :borradoLogico)")
@@ -30,10 +29,10 @@ public interface CicloRepository extends JpaRepository<Ciclo, Long> {
     @Query("UPDATE Ciclo c SET c.borradoLogico = false WHERE c.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM ciclo WHERE id_ciclo = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
+
+    @Query("SELECT c FROM Ciclo c WHERE c.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY c.nombre ASC")
+    List<Ciclo> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

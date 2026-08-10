@@ -28,17 +28,18 @@ public class CicloServiceImpl implements CicloService {
     private final CicloMapper cicloMapper;
 
     @Override
-    @Cacheable(value = "ciclos-activos")
-    public List<CicloResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todos los ciclos activos en lista plana");
-        return cicloRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "ciclos-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<CicloResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo ciclos escolares activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return cicloRepository.buscarActivosPorNombre(filtro).stream()
                 .map(cicloMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<CicloResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda de ciclos con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de ciclos escolares con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return cicloRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(cicloMapper::toResponse);
@@ -46,17 +47,17 @@ public class CicloServiceImpl implements CicloService {
 
     @Override
     public CicloResponse obtenerPorId(Long id) {
-        log.debug("Buscando ciclo por ID: {}", id);
+        log.debug("Buscando ciclos escolares por ID: {}", id);
         return cicloRepository.findById(id)
                 .map(cicloMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un ciclo con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) ciclo con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "ciclos-activos", allEntries = true)
     public CicloResponse crear(CicloRequest request) {
-        log.info("Creando nuevo ciclo con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) ciclo con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
@@ -64,7 +65,7 @@ public class CicloServiceImpl implements CicloService {
         ciclo.setNombre(nombreTrimmed);
 
         Ciclo guardado = cicloRepository.save(ciclo);
-        log.info("Ciclo creado exitosamente con ID: {}", guardado.getId());
+        log.info("Ciclo creado(a) exitosamente con ID: {}", guardado.getId());
         return cicloMapper.toResponse(guardado);
     }
 
@@ -74,7 +75,7 @@ public class CicloServiceImpl implements CicloService {
     public CicloResponse actualizar(Long id, CicloRequest request) {
         log.info("Actualizando ciclo con ID: {}", id);
         Ciclo cicloExistente = cicloRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un ciclo con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) ciclo con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, cicloExistente);
@@ -83,7 +84,7 @@ public class CicloServiceImpl implements CicloService {
         cicloExistente.setNombre(nombreTrimmed);
 
         Ciclo actualizado = cicloRepository.save(cicloExistente);
-        log.info("Ciclo con ID: {} actualizado exitosamente", id);
+        log.info("Ciclo con ID: {} actualizado(a) exitosamente", id);
         return cicloMapper.toResponse(actualizado);
     }
 
@@ -92,8 +93,8 @@ public class CicloServiceImpl implements CicloService {
         boolean nombreCambio = !esNuevo && !cicloExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && cicloRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar ciclo: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe un ciclo con el nombre: " + nombreNuevo);
+            log.warn("Intento de duplicar ciclos escolares: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) ciclo con el nombre: " + nombreNuevo);
         }
     }
 
@@ -101,14 +102,13 @@ public class CicloServiceImpl implements CicloService {
     @Transactional
     @CacheEvict(value = "ciclos-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de ciclo ID: {} a {}", id, !estado);
-        if (cicloRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un ciclo con ID: " + id);
+        log.info("Cambiando estado de borrado de ciclos escolares ID: {} a {}", id, !estado);
+        if (!cicloRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) ciclo con ID: " + id);
         }
         if (estado) {
             cicloRepository.activar(id);
         } else {
             cicloRepository.desactivar(id);
         }
-    }
-}
+    }}

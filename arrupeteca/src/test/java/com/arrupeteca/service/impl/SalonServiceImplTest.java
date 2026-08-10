@@ -22,6 +22,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -43,38 +44,16 @@ class SalonServiceImplTest extends BaseServiceTest {
         Page<Salon> page = new PageImpl<>(List.of(entity));
         SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        when(salonRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(salonRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        Page<SalonResponse> result = salonService.obtenerTodosActivos(Pageable.unpaged());
+        List<SalonResponse> result = salonService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return SalonResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
-        Salon entity = Salon.builder().id(1L).nombre("Test").build();
-        
-        when(salonRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        SalonResponse result = salonService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(salonRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> salonService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un salón activo con el ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of SalonResponse")
@@ -83,10 +62,10 @@ class SalonServiceImplTest extends BaseServiceTest {
         Page<Salon> page = new PageImpl<>(List.of(entity));
         SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
 
-        when(salonRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(salonRepository.busquedaAdmin(any(), any(), any(), any())).thenReturn(page);
         when(salonMapper.toResponse(entity)).thenReturn(response);
 
-        Page<SalonResponse> result = salonService.obtenerTodos(Pageable.unpaged());
+        Page<SalonResponse> result = salonService.obtenerTodos(null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -113,23 +92,7 @@ class SalonServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> salonService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un salón con el ID: 1");
-    }
-
-    @Test
-    @DisplayName("buscarPorPlantaId - Should return page of SalonResponse")
-    void buscarPorPlantaId() {
-        Salon entity = Salon.builder().id(1L).nombre("Test").build();
-        Page<Salon> page = new PageImpl<>(List.of(entity));
-        SalonResponse response = new SalonResponse(1L, "Test", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false)));
-
-        when(salonRepository.findByPlantaIdAndBorradoLogicoFalse(1L, Pageable.unpaged())).thenReturn(page);
-        when(salonMapper.toResponse(entity)).thenReturn(response);
-
-        Page<SalonResponse> result = salonService.buscarPorPlantaId(1L, Pageable.unpaged());
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -159,7 +122,7 @@ class SalonServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> salonService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un salón con ese nombre en la planta seleccionada");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
@@ -190,7 +153,7 @@ class SalonServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> salonService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un salón con el ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -205,13 +168,13 @@ class SalonServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> salonService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro salón con ese nombre en la planta seleccionada");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(salonRepository.existsById(1L)).thenReturn(true);
 
         salonService.cambiarEstado(1L, true);
 
@@ -221,7 +184,7 @@ class SalonServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(salonRepository.existsById(1L)).thenReturn(true);
 
         salonService.cambiarEstado(1L, false);
 
@@ -231,10 +194,10 @@ class SalonServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(salonRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(salonRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> salonService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe un salón con el ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

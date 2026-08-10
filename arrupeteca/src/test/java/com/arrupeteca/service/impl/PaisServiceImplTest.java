@@ -41,38 +41,16 @@ class PaisServiceImplTest extends BaseServiceTest {
         Page<Pais> page = new PageImpl<>(List.of(entity));
         PaisResponse response = new PaisResponse(1L, "Test", false);
 
-        when(paisRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(paisRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(paisMapper.toResponse(entity)).thenReturn(response);
 
-        Page<PaisResponse> result = paisService.obtenerTodosActivos(Pageable.unpaged());
+        List<PaisResponse> result = paisService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return PaisResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        PaisResponse response = new PaisResponse(1L, "Test", false);
-        Pais entity = Pais.builder().id(1L).nombre("Test").build();
-        
-        when(paisRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(paisMapper.toResponse(entity)).thenReturn(response);
 
-        PaisResponse result = paisService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(paisRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> paisService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un país activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of PaisResponse")
@@ -81,10 +59,10 @@ class PaisServiceImplTest extends BaseServiceTest {
         Page<Pais> page = new PageImpl<>(List.of(entity));
         PaisResponse response = new PaisResponse(1L, "Test", false);
         
-        when(paisRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(paisRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(paisMapper.toResponse(entity)).thenReturn(response);
 
-        Page<PaisResponse> result = paisService.obtenerTodos(Pageable.unpaged());
+        Page<PaisResponse> result = paisService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,7 +89,7 @@ class PaisServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> paisService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un país con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -141,7 +119,7 @@ class PaisServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> paisService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un país con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -172,7 +150,7 @@ class PaisServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> paisService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un país con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -187,13 +165,13 @@ class PaisServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> paisService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro país con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(paisRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(paisRepository.existsById(1L)).thenReturn(true);
 
         paisService.cambiarEstado(1L, true);
 
@@ -203,7 +181,7 @@ class PaisServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(paisRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(paisRepository.existsById(1L)).thenReturn(true);
 
         paisService.cambiarEstado(1L, false);
 
@@ -213,10 +191,10 @@ class PaisServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(paisRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(paisRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> paisService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un país con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

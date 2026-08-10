@@ -8,45 +8,24 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Optional;
+import java.util.List;
 
 public interface EditorialRepository extends JpaRepository<Editorial, Long> {
 
-    Page<Editorial> findByBorradoLogicoFalse(Pageable pageable);
-
-    Optional<Editorial> findByIdAndBorradoLogicoFalse(Long id);
-
-    @Query(value = """
+    @Query("""
         SELECT e FROM Editorial e
         WHERE
-            ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
-            AND (
-                :termino IS NULL OR :termino = '' OR
-                (
-                    LOWER(e.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(e.correo) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(e.personaContacto) LIKE LOWER(CONCAT('%', :termino, '%'))
-                )
-            )
-    """,
-            countQuery = """
-        SELECT COUNT(e) FROM Editorial e
-        WHERE
-            ( :esBorrado IS NULL OR e.borradoLogico = :esBorrado )
-            AND (
-                :termino IS NULL OR :termino = '' OR
-                (
-                    LOWER(e.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(e.correo) LIKE LOWER(CONCAT('%', :termino, '%')) OR
-                    LOWER(e.personaContacto) LIKE LOWER(CONCAT('%', :termino, '%'))
-                )
-            )
+            (:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico)
+            AND (:nombre IS NULL OR :nombre = '' OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%')))
+            AND (:correo IS NULL OR :correo = '' OR LOWER(e.correo) LIKE LOWER(CONCAT('%', :correo, '%')))
+            AND (:personaContacto IS NULL OR :personaContacto = '' OR LOWER(e.personaContacto) LIKE LOWER(CONCAT('%', :personaContacto, '%')))
     """)
-    Page<Editorial> busquedaMaestraAdmin(
-            @Param("esBorrado") Boolean esBorrado,
-            @Param("termino") String termino,
-            Pageable pageable
-    );
+    Page<Editorial> busquedaAdmin(
+            @Param("nombre") String nombre,
+            @Param("correo") String correo,
+            @Param("personaContacto") String personaContacto,
+            @Param("borradoLogico") Boolean borradoLogico,
+            Pageable pageable);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Editorial e SET e.borradoLogico = true WHERE e.id = :id")
@@ -56,12 +35,12 @@ public interface EditorialRepository extends JpaRepository<Editorial, Long> {
     @Query("UPDATE Editorial e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM editorial WHERE id_editorial = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
 
     boolean existsByCorreoIgnoreCase(String correo);
+
+    @Query("SELECT e FROM Editorial e WHERE e.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY e.nombre ASC")
+    List<Editorial> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

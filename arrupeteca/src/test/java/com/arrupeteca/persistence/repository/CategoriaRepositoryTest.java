@@ -37,7 +37,7 @@ class CategoriaRepositoryTest extends BaseRepositoryTest {
         categoriaRepository.save(Categoria.builder().nombre("Cat 1").borradoLogico(false).build());
         categoriaRepository.save(Categoria.builder().nombre("Cat 3").borradoLogico(true).build());
 
-        List<Categoria> list = categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc();
+        List<Categoria> list = categoriaRepository.buscarActivosPorNombre(null);
 
         assertThat(list).hasSize(2);
         assertThat(list).extracting(Categoria::getNombre)

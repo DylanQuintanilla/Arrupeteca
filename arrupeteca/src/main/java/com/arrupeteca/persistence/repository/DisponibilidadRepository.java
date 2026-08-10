@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, Long> {
 
-    List<Disponibilidad> findByBorradoLogicoFalseOrderByNombreAsc();
-
+    
     @Query("SELECT d FROM Disponibilidad d WHERE " +
            "(:nombre IS NULL OR LOWER(d.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
            "(:borradoLogico IS NULL OR d.borradoLogico = :borradoLogico)")
@@ -30,10 +29,10 @@ public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, 
     @Query("UPDATE Disponibilidad d SET d.borradoLogico = false WHERE d.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM disponibilidad WHERE id_disponibilidad = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
+
+    @Query("SELECT d FROM Disponibilidad d WHERE d.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(d.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY d.nombre ASC")
+    List<Disponibilidad> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

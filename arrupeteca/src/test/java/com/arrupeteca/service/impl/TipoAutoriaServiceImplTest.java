@@ -41,38 +41,15 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
         Page<TipoAutoria> page = new PageImpl<>(List.of(entity));
         TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
 
-        when(tipoAutoriaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(tipoAutoriaRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodosActivos(Pageable.unpaged());
+        List<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return TipoAutoriaResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
-        TipoAutoria entity = TipoAutoria.builder().id(1L).nombre("Test").build();
-        
-        when(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
-
-        TipoAutoriaResponse result = tipoAutoriaService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> tipoAutoriaService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un tipo de autoría activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of TipoAutoriaResponse")
@@ -81,10 +58,10 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
         Page<TipoAutoria> page = new PageImpl<>(List.of(entity));
         TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
 
-        when(tipoAutoriaRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(tipoAutoriaRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(tipoAutoriaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodos(Pageable.unpaged());
+        Page<TipoAutoriaResponse> result = tipoAutoriaService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,7 +88,7 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> tipoAutoriaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un tipo de autoría con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -141,7 +118,7 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> tipoAutoriaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un tipo de autoría con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -172,7 +149,7 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> tipoAutoriaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un tipo de autoría con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -187,13 +164,13 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> tipoAutoriaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro tipo de autoría con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(tipoAutoriaRepository.existsById(1L)).thenReturn(true);
 
         tipoAutoriaService.cambiarEstado(1L, true);
 
@@ -203,7 +180,7 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(tipoAutoriaRepository.existsById(1L)).thenReturn(true);
 
         tipoAutoriaService.cambiarEstado(1L, false);
 
@@ -213,10 +190,10 @@ class TipoAutoriaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(tipoAutoriaRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(tipoAutoriaRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> tipoAutoriaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un tipo de autoría con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

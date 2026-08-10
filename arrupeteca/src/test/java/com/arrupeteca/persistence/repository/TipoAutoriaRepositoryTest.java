@@ -19,21 +19,21 @@ class TipoAutoriaRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         TipoAutoria entity = TipoAutoria.builder().nombre("Principal").build();
         TipoAutoria saved = tipoAutoriaRepository.save(entity);
-        assertThat(tipoAutoriaRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(tipoAutoriaRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         tipoAutoriaRepository.save(TipoAutoria.builder().nombre("Coautor").build());
-        Page<TipoAutoria> page = tipoAutoriaRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<TipoAutoria> list = tipoAutoriaRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         TipoAutoria saved = tipoAutoriaRepository.save(TipoAutoria.builder().nombre("Traductor").borradoLogico(true).build());
-        assertThat(tipoAutoriaRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(tipoAutoriaRepository.existsById(saved.getId())).isTrue();
     }
 }

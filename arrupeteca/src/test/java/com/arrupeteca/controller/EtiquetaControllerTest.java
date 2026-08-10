@@ -35,24 +35,24 @@ class EtiquetaControllerTest extends BaseControllerTest {
     @Test
     @DisplayName("GET /api/v1/etiquetas - Should return active etiquetas list")
     void shouldReturnActiveEtiquetas() throws Exception {
-        when(etiquetaService.obtenerTodosActivos()).thenReturn(List.of());
+        when(etiquetaService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/etiquetas"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de etiquetas activas"));
+                .andExpect(jsonPath("$.mensaje").value("Lista de etiquetas de obras literarias activos(as)"));
     }
 
     @Test
     @DisplayName("GET /api/v1/etiquetas/all - Should return etiquetas table")
     void shouldReturnAllEtiquetas() throws Exception {
         Page<EtiquetaResponse> page = new PageImpl<>(List.of());
-        when(etiquetaService.obtenerTodos(eq(null), eq(null), any(Pageable.class))).thenReturn(page);
+        when(etiquetaService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/etiquetas/all"))
+        mockMvc.perform(get("/api/v1/etiquetas/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tabla de etiquetas"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de etiquetas de obras literarias"));
     }
 
     @Test
@@ -61,10 +61,10 @@ class EtiquetaControllerTest extends BaseControllerTest {
         EtiquetaResponse response = new EtiquetaResponse(1L, "Tecnología", false);
         when(etiquetaService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/etiquetas/1"))
+        mockMvc.perform(get("/api/v1/etiquetas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Etiqueta encontrada"))
+                .andExpect(jsonPath("$.mensaje").value("Etiqueta encontrado(a)"))
                 .andExpect(jsonPath("$.data.nombre").value("Tecnología"));
     }
 
@@ -76,7 +76,7 @@ class EtiquetaControllerTest extends BaseControllerTest {
         EtiquetaResponse response = new EtiquetaResponse(1L, "Nueva", false);
         when(etiquetaService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/etiquetas")
+        mockMvc.perform(post("/api/v1/etiquetas/admin")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
@@ -93,33 +93,33 @@ class EtiquetaControllerTest extends BaseControllerTest {
         EtiquetaResponse response = new EtiquetaResponse(1L, "Actualizada", false);
         when(etiquetaService.actualizar(any(Long.class), any(EtiquetaRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/etiquetas/1")
+        mockMvc.perform(put("/api/v1/etiquetas/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Etiqueta actualizada correctamente"))
+                .andExpect(jsonPath("$.mensaje").value("Etiqueta actualizado(a) correctamente"))
                 .andExpect(jsonPath("$.data.nombre").value("Actualizada"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/etiquetas/{id} - Should deactivate etiqueta")
     void shouldDeactivateEtiqueta() throws Exception {
-        mockMvc.perform(delete("/api/v1/etiquetas/1")
+        mockMvc.perform(delete("/api/v1/etiquetas/admin/1")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Etiqueta desactivada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Etiqueta desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/etiquetas/{id}/activar - Should activate etiqueta")
     void shouldActivateEtiqueta() throws Exception {
-        mockMvc.perform(patch("/api/v1/etiquetas/1/activar")
+        mockMvc.perform(patch("/api/v1/etiquetas/admin/1/activar")
                         .with(csrf()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Etiqueta activada correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Etiqueta activado(a) correctamente"));
     }
 }

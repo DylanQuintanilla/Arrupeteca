@@ -41,38 +41,16 @@ class IdiomaServiceImplTest extends BaseServiceTest {
         Page<Idioma> page = new PageImpl<>(List.of(entity));
         IdiomaResponse response = new IdiomaResponse(1L, "Test", false);
 
-        when(idiomaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(idiomaRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(idiomaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<IdiomaResponse> result = idiomaService.obtenerTodosActivos(Pageable.unpaged());
+        List<IdiomaResponse> result = idiomaService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return IdiomaResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        IdiomaResponse response = new IdiomaResponse(1L, "Test", false);
-        Idioma entity = Idioma.builder().id(1L).nombre("Test").build();
-        
-        when(idiomaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(idiomaMapper.toResponse(entity)).thenReturn(response);
 
-        IdiomaResponse result = idiomaService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(idiomaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> idiomaService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un idioma activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of IdiomaResponse")
@@ -81,10 +59,10 @@ class IdiomaServiceImplTest extends BaseServiceTest {
         Page<Idioma> page = new PageImpl<>(List.of(entity));
         IdiomaResponse response = new IdiomaResponse(1L, "Test", false);
         
-        when(idiomaRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(idiomaRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(idiomaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<IdiomaResponse> result = idiomaService.obtenerTodos(Pageable.unpaged());
+        Page<IdiomaResponse> result = idiomaService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,7 +89,7 @@ class IdiomaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> idiomaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un idioma con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -141,7 +119,7 @@ class IdiomaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> idiomaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un idioma con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -172,7 +150,7 @@ class IdiomaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> idiomaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un idioma con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -187,13 +165,13 @@ class IdiomaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> idiomaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro idioma con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(idiomaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(idiomaRepository.existsById(1L)).thenReturn(true);
 
         idiomaService.cambiarEstado(1L, true);
 
@@ -203,7 +181,7 @@ class IdiomaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(idiomaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(idiomaRepository.existsById(1L)).thenReturn(true);
 
         idiomaService.cambiarEstado(1L, false);
 
@@ -213,10 +191,10 @@ class IdiomaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(idiomaRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(idiomaRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> idiomaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un idioma con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

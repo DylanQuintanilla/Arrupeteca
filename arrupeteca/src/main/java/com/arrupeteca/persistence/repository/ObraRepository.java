@@ -17,8 +17,7 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
            "o.id, o.titulo, o.anioCreacion, o.resumen, o.borradoLogico) " +
            "FROM Obra o " +
            "WHERE (:esBorrado IS NULL OR o.borradoLogico = :esBorrado) " +
-           "AND (:termino IS NULL OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%')) " +
-           "     OR LOWER(o.resumen) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:termino IS NULL OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:anioInicio IS NULL OR o.anioCreacion >= :anioInicio) " +
            "AND (:anioFin IS NULL OR o.anioCreacion <= :anioFin) " +
            "AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)) " +
@@ -45,9 +44,6 @@ public interface ObraRepository extends JpaRepository<Obra, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Obra o SET o.borradoLogico = false WHERE o.id = :id")
     void activar(@Param("id") Long id);
-
-    @Query(value = "SELECT COUNT(*) FROM obra WHERE id_obra = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
 
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 

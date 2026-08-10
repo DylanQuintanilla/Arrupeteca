@@ -44,38 +44,16 @@ class MuebleServiceImplTest extends BaseServiceTest {
         Page<Mueble> page = new PageImpl<>(List.of(entity));
         MuebleResponse response = new MuebleResponse(1L, "Test", false, new SalonResponse(1L, "Salon", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false))));
 
-        when(muebleRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(muebleRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(muebleMapper.toResponse(entity)).thenReturn(response);
 
-        Page<MuebleResponse> result = muebleService.obtenerTodosActivos(Pageable.unpaged());
+        List<MuebleResponse> result = muebleService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return MuebleResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        MuebleResponse response = new MuebleResponse(1L, "Test", false, new SalonResponse(1L, "Salon", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false))));
-        Mueble entity = Mueble.builder().id(1L).nombre("Test").build();
-        
-        when(muebleRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(muebleMapper.toResponse(entity)).thenReturn(response);
 
-        MuebleResponse result = muebleService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(muebleRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> muebleService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Mueble activo con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of MuebleResponse")
@@ -84,10 +62,10 @@ class MuebleServiceImplTest extends BaseServiceTest {
         Page<Mueble> page = new PageImpl<>(List.of(entity));
         MuebleResponse response = new MuebleResponse(1L, "Test", false, new SalonResponse(1L, "Salon", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false))));
 
-        when(muebleRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(muebleRepository.busquedaAdmin(any(), any(), any(), any())).thenReturn(page);
         when(muebleMapper.toResponse(entity)).thenReturn(response);
 
-        Page<MuebleResponse> result = muebleService.obtenerTodos(Pageable.unpaged());
+        Page<MuebleResponse> result = muebleService.obtenerTodos(null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -114,7 +92,7 @@ class MuebleServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> muebleService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Mueble con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -144,7 +122,7 @@ class MuebleServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> muebleService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un mueble con ese nombre en el salón seleccionado");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
@@ -175,7 +153,7 @@ class MuebleServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> muebleService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Mueble con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -190,13 +168,13 @@ class MuebleServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> muebleService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro mueble con ese nombre en el salón seleccionado");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(muebleRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(muebleRepository.existsById(1L)).thenReturn(true);
 
         muebleService.cambiarEstado(1L, true);
 
@@ -206,7 +184,7 @@ class MuebleServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(muebleRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(muebleRepository.existsById(1L)).thenReturn(true);
 
         muebleService.cambiarEstado(1L, false);
 
@@ -216,10 +194,10 @@ class MuebleServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(muebleRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(muebleRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> muebleService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró Mueble con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

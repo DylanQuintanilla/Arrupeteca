@@ -37,7 +37,7 @@ class MuebleControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/muebles - Should return active muebles")
     void shouldReturnActive() throws Exception {
         Page<MuebleResponse> page = new PageImpl<>(List.of());
-        when(muebleService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(muebleService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/muebles"))
                 .andExpect(status().isOk())
@@ -48,9 +48,9 @@ class MuebleControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/muebles/{id} - Should return mueble by ID")
     void shouldReturnById() throws Exception {
         MuebleResponse response = new MuebleResponse(1L, "Test", false, new SalonResponse(1L, "Salon", false, new PlantaResponse(1L, "Planta", false, new EdificioResponse(1L, "Edif", false))));
-        when(muebleService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(muebleService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/muebles/1"))
+        mockMvc.perform(get("/api/v1/muebles/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -64,7 +64,7 @@ class MuebleControllerTest extends BaseControllerTest {
 
         when(muebleService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/muebles")
+        mockMvc.perform(post("/api/v1/muebles/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -79,7 +79,7 @@ class MuebleControllerTest extends BaseControllerTest {
 
         when(muebleService.actualizar(any(Long.class), any(MuebleRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/muebles/1")
+        mockMvc.perform(put("/api/v1/muebles/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -90,12 +90,12 @@ class MuebleControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/muebles/admin - Should return all muebles for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<MuebleResponse> page = new PageImpl<>(List.of());
-        when(muebleService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(muebleService.obtenerTodos(any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/muebles/admin"))
+        mockMvc.perform(get("/api/v1/muebles/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de muebles"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de muebles"));
     }
 
     @Test
@@ -107,24 +107,24 @@ class MuebleControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/muebles/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Mueble encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Mueble encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/muebles/{id} - Should deactivate mueble")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/muebles/1"))
+        mockMvc.perform(delete("/api/v1/muebles/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Mueble desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Mueble desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/muebles/{id}/activar - Should activate mueble")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/muebles/1/activar"))
+        mockMvc.perform(patch("/api/v1/muebles/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Mueble activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Mueble activado(a) correctamente"));
     }
 }

@@ -43,7 +43,7 @@ public class AutorServiceImpl implements AutorService {
     @Override
     public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
         log.debug("Obteniendo todos los autores activos proyectados con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class AutorServiceImpl implements AutorService {
     @Override
     public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
         log.debug("Obteniendo todos los autores proyectados (incluyendo borrados) con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -78,15 +78,15 @@ public class AutorServiceImpl implements AutorService {
     @Override
     public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
         log.debug("Iniciando búsqueda global proyectada: '{}', años: {} - {}", palabra, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, anioInicio, anioFin, palabra, pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, anioInicio, anioFin, palabra, pageable);
     }
 
     @Override
     public Page<AutorResumenResponse> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
             Year anioInicio, Year anioFin, String termino, Pageable pageable) {
         log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}', años: {} - {}", termino, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(esBorrado, idNacionalidad, idPais, idGenero, anioInicio, anioFin, termino, pageable);
+        return autorRepository.busquedaMaestraAdminProyectada(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, termino, pageable);
     }
 
     @Override
@@ -259,7 +259,7 @@ public class AutorServiceImpl implements AutorService {
     @CacheEvict(value = "autores", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado del autor ID: {} a {}", id, !estado);
-        if (autorRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!autorRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
         if (estado) {

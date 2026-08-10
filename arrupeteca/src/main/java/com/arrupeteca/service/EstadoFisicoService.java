@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface EstadoFisicoService {
 
-    List<EstadoFisicoResponse> obtenerTodosActivos();
+    List<EstadoFisicoResponse> obtenerTodosActivos(String nombre);
 
     Page<EstadoFisicoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
@@ -19,5 +19,4 @@ public interface EstadoFisicoService {
 
     EstadoFisicoResponse actualizar(Long id, EstadoFisicoRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

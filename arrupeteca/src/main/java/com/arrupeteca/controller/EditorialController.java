@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,103 +26,88 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/editoriales")
 @RequiredArgsConstructor
-@Tag(name = "Editoriales", description = "Endpoints para la gestión del catálogo de editoriales")
+@CrossOrigin(origins = "*")
+@Tag(name = "Editoriales", description = "Endpoints para la gestión de editoriales")
 public class EditorialController {
 
     private final EditorialService editorialService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener editoriales activas paginadas",
-        description = "Retorna una lista paginada de todas las editoriales activas en el sistema."
+        summary = "Obtener editoriales activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de editoriales activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<EditorialResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activas", editorialService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<EditorialResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de editoriales activos(as)", editorialService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener editorial activa por ID",
-        description = "Busca y retorna una editorial activa por su identificador único."
-    )
-    public ResponseEntity<ApiResponse<EditorialResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada", editorialService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todas las editoriales (Admin)",
-        description = "Retorna el historial completo de editoriales (activas e inactivas) para administradores."
+        summary = "Obtener tabla de administración de editoriales",
+        description = "Retorna una página de editoriales con soporte para filtros por nombre, correo, personaContacto y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<EditorialResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de editoriales", editorialService.obtenerTodos(pageable)));
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String correo,
+            @RequestParam(required = false) String personaContacto,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de editoriales", editorialService.obtenerTodos(nombre, correo, personaContacto, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener editorial por ID (Admin)",
-        description = "Busca y retorna cualquier editorial (activa o inactiva) por su identificador único para administradores."
+        summary = "Obtener editoriales por ID",
+        description = "Busca la información de un(a) editorial por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<EditorialResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrada (admin)", editorialService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Editorial encontrado(a)", editorialService.obtenerPorId(id)));
     }
 
-    @GetMapping("/admin/busqueda-maestra")
+    @PostMapping("/admin")
     @Operation(
-        summary = "Búsqueda maestra de editoriales (Admin)",
-        description = "Realiza una búsqueda avanzada de editoriales filtrando por estado y término clave."
-    )
-    public ResponseEntity<ApiResponse<Page<EditorialResponse>>> busquedaMaestraAdmin(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) String termino,
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                editorialService.busquedaMaestraAdmin(esBorrado, termino, pageable)));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Crear nueva editorial",
-        description = "Crea una nueva editorial validando la unicidad del nombre y del correo."
+        summary = "Registrar nuevo(a) editorial",
+        description = "Crea un(a) nuevo(a) editorial en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<EditorialResponse>> crear(@Valid @RequestBody EditorialRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Editorial creada exitosamente",
-                editorialService.crear(request)), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Editorial creado(a) exitosamente", editorialService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar editorial",
-        description = "Actualiza los datos de una editorial existente."
+        description = "Actualiza los campos de un(a) editorial existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<EditorialResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody EditorialRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Editorial actualizada correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Editorial actualizado(a) correctamente",
                 editorialService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar editorial",
-        description = "Realiza el borrado lógico de una editorial en el sistema."
+        summary = "Desactivar editorial (Borrado lógico)",
+        description = "Oculta el/la editorial en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         editorialService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Editorial desactivada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Editorial desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar editorial",
-        description = "Reactiva una editorial previamente desactivada."
+        description = "Restaura la visibilidad pública de un(a) editorial previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         editorialService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Editorial activada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Editorial activado(a) correctamente"));
     }
 }

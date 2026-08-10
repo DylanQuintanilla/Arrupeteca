@@ -19,21 +19,21 @@ class FormatoRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Formato entity = Formato.builder().nombre("Impreso").build();
         Formato saved = formatoRepository.save(entity);
-        assertThat(formatoRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(formatoRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         formatoRepository.save(Formato.builder().nombre("Test").build());
-        Page<Formato> page = formatoRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Formato> list = formatoRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Formato saved = formatoRepository.save(Formato.builder().nombre("Form3").borradoLogico(true).build());
-        assertThat(formatoRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(formatoRepository.existsById(saved.getId())).isTrue();
     }
 }

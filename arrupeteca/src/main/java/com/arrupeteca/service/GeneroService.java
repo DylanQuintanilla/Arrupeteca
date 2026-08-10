@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.GeneroResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface GeneroService {
 
-    Page<GeneroResponse> obtenerTodosActivos(Pageable pageable);
+    List<GeneroResponse> obtenerTodosActivos(String nombre);
 
-    GeneroResponse obtenerPorIdActivo(Long id);
-
-    Page<GeneroResponse> obtenerTodos(Pageable pageable);
+    Page<GeneroResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     GeneroResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface GeneroService {
 
     GeneroResponse actualizar(Long id, GeneroRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

@@ -34,7 +34,7 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/tipo-autorias - Should return active tipo-autorias")
     void shouldReturnActive() throws Exception {
         Page<TipoAutoriaResponse> page = new PageImpl<>(List.of());
-        when(tipoAutoriaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(tipoAutoriaService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/tipos-autoria"))
                 .andExpect(status().isOk())
@@ -45,9 +45,9 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/tipos-autoria/{id} - Should return tipo-autoria by ID")
     void shouldReturnById() throws Exception {
         TipoAutoriaResponse response = new TipoAutoriaResponse(1L, "Test", false);
-        when(tipoAutoriaService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(tipoAutoriaService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/tipos-autoria/1"))
+        mockMvc.perform(get("/api/v1/tipos-autoria/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -61,7 +61,7 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
 
         when(tipoAutoriaService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/tipos-autoria")
+        mockMvc.perform(post("/api/v1/tipos-autoria/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
 
         when(tipoAutoriaService.actualizar(any(Long.class), any(TipoAutoriaRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/tipos-autoria/1")
+        mockMvc.perform(put("/api/v1/tipos-autoria/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -87,12 +87,12 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/tipos-autoria/admin - Should return all tipo-autorias for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<TipoAutoriaResponse> page = new PageImpl<>(List.of());
-        when(tipoAutoriaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(tipoAutoriaService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/tipos-autoria/admin"))
+        mockMvc.perform(get("/api/v1/tipos-autoria/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de tipos de autoría"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de tipos de autoría"));
     }
 
     @Test
@@ -104,24 +104,24 @@ class TipoAutoriaControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/tipos-autoria/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("TipoAutoria encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/tipos-autoria/{id} - Should deactivate tipo-autoria")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/tipos-autoria/1"))
+        mockMvc.perform(delete("/api/v1/tipos-autoria/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("TipoAutoria desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/tipos-autoria/{id}/activar - Should activate tipo-autoria")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/tipos-autoria/1/activar"))
+        mockMvc.perform(patch("/api/v1/tipos-autoria/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Tipo de autoría activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("TipoAutoria activado(a) correctamente"));
     }
 }

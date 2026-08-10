@@ -22,7 +22,7 @@ public interface AutorService {
     Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable);
 
     Page<AutorResumenResponse> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero,
+            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
             Year anioInicio, Year anioFin, String termino, Pageable pageable);
 
     AutorDetalleResponse crear(AutorRequest request);

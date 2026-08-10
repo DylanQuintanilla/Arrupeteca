@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,88 +23,88 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
-@RequiredArgsConstructor
 @RequestMapping("/api/v1/edificios")
-@Tag(name = "Edificios", description = "Endpoints para la gestión del catálogo de edificios")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+@Tag(name = "Edificios", description = "Endpoints para la gestión de edificios")
 public class EdificioController {
 
     private final EdificioService edificioService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener edificios activos paginados",
-        description = "Retorna una lista paginada de todos los edificios activos en el sistema."
+        summary = "Obtener edificios activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de edificios activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<EdificioResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        Page<EdificioResponse> pagina = edificioService.obtenerTodosActivos(pageable);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de edificios activos", pagina));
+    public ResponseEntity<ApiResponse<List<EdificioResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de edificios activos(as)", edificioService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener edificio activo por ID",
-        description = "Busca y retorna un edificio activo por su identificador único."
+        summary = "Obtener tabla de administración de edificios",
+        description = "Retorna una página de edificios con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<EdificioResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de edificios", edificioService.obtenerTodos(nombre, borradoLogico, pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    @Operation(
+        summary = "Obtener edificios por ID",
+        description = "Busca la información de un(a) edificio por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<EdificioResponse>> obtenerPorId(@PathVariable Long id) {
-        EdificioResponse edificio = edificioService.obtenerPorIdActivo(id);
-        return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado", edificio));
+        return ResponseEntity.ok(ApiResponse.exito("Edificio encontrado(a)", edificioService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Crear nuevo edificio",
-        description = "Crea un nuevo edificio validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) edificio",
+        description = "Crea un(a) nuevo(a) edificio en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<EdificioResponse>> crear(@Valid @RequestBody EdificioRequest request) {
-        EdificioResponse nuevo = edificioService.crear(request);
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Edificio creado exitosamente", nuevo));
+                .body(ApiResponse.exito("Edificio creado(a) exitosamente", edificioService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar edificio",
-        description = "Actualiza los datos de un edificio existente."
+        description = "Actualiza los campos de un(a) edificio existente mediante una edición completa."
     )
-    public ResponseEntity<ApiResponse<EdificioResponse>> actualizar(@PathVariable Long id,
-                                                                    @Valid @RequestBody EdificioRequest request) {
-        EdificioResponse actualizado = edificioService.actualizar(id, request);
-        return ResponseEntity.ok(ApiResponse.exito("Edificio actualizado correctamente", actualizado));
+    public ResponseEntity<ApiResponse<EdificioResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody EdificioRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Edificio actualizado(a) correctamente",
+                edificioService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar edificio",
-        description = "Realiza el borrado lógico de un edificio en el sistema."
+        summary = "Desactivar edificio (Borrado lógico)",
+        description = "Oculta el/la edificio en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         edificioService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Edificio desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Edificio desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar edificio",
-        description = "Reactiva un edificio previamente desactivado."
+        description = "Restaura la visibilidad pública de un(a) edificio previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         edificioService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Edificio activado correctamente"));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los edificios (Admin)",
-        description = "Retorna el historial completo de edificios (activos e inactivos) para administradores."
-    )
-    public ResponseEntity<ApiResponse<Page<EdificioResponse>>> obtenerTodosAdmin(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(
-                ApiResponse.exito("Historial completo de edificios", edificioService.obtenerTodos(pageable))
-        );
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("Edificio activado(a) correctamente"));
+    }}

@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.TipoAutoriaResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface TipoAutoriaService {
 
-    Page<TipoAutoriaResponse> obtenerTodosActivos(Pageable pageable);
+    List<TipoAutoriaResponse> obtenerTodosActivos(String nombre);
 
-    TipoAutoriaResponse obtenerPorIdActivo(Long id);
-
-    Page<TipoAutoriaResponse> obtenerTodos(Pageable pageable);
+    Page<TipoAutoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     TipoAutoriaResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface TipoAutoriaService {
 
     TipoAutoriaResponse actualizar(Long id, TipoAutoriaRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

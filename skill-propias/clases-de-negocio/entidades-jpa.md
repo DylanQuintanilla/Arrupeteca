@@ -66,7 +66,7 @@ El uso de Lombok debe ser riguroso para evitar efectos secundarios indeseados en
 
 Para preservar la integridad histórica ante eliminaciones:
 *   Anotar la entidad con `@SQLDelete(sql = "UPDATE tabla SET borrado_logico = 1 WHERE id_tabla = ?")`.
-*   Definir el atributo `private boolean borradoLogico = false;` mapeado como `@Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")`.
+*   Definir el atributo `private boolean borradoLogico = false;` mapeado como `@Column(name = "borrado_logico", nullable = false)`.
 *   Asegurar que el builder inicialice el estado por defecto anotándolo con `@Builder.Default`.
 
 ---
@@ -159,7 +159,7 @@ public class Autor extends Auditable {
     @Column(name = "biografia", nullable = false, columnDefinition = "TEXT")
     private String biografia;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false)
     @Builder.Default
     private boolean borradoLogico = false;
 
@@ -204,7 +204,7 @@ Antes de dar por terminada la refactorización o creación de una nueva entidad,
    * ¿Están marcadas con `@Builder.Default` e inicializadas por defecto (ej. `= new HashSet<>()`)?
 6. **¿El borrado lógico está bien estructurado?**
    * ¿Tiene `@SQLDelete(sql = "UPDATE ...")`?
-   * ¿El campo `borradoLogico` está anotado con `@Builder.Default` y configurado con la definición de columna `TINYINT DEFAULT 0`?
+   * ¿El campo `borradoLogico` está anotado con `@Builder.Default` y configurado con `@Column(name = "borrado_logico", nullable = false)`?
 7. **¿Se configuraron los índices en `@Table(indexes = ...)`?**
    * En entidades transaccionales de negocio, ¿se declararon los índices compuestos (filtros frecuentes `borrado_logico` + FKs) e individuales (búsquedas por texto u ordenación) directamente en la anotación `@Table`?
 

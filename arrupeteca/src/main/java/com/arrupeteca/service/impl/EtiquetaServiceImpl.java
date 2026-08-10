@@ -28,17 +28,18 @@ public class EtiquetaServiceImpl implements EtiquetaService {
     private final EtiquetaMapper etiquetaMapper;
 
     @Override
-    @Cacheable(value = "etiquetas-activas")
-    public List<EtiquetaResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todas las etiquetas activas en lista plana");
-        return etiquetaRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "etiquetas-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<EtiquetaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo etiquetas de obras literarias activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return etiquetaRepository.buscarActivosPorNombre(filtro).stream()
                 .map(etiquetaMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<EtiquetaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda de etiquetas con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de etiquetas de obras literarias con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return etiquetaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(etiquetaMapper::toResponse);
@@ -46,26 +47,26 @@ public class EtiquetaServiceImpl implements EtiquetaService {
 
     @Override
     public EtiquetaResponse obtenerPorId(Long id) {
-        log.debug("Buscando etiqueta por ID: {}", id);
+        log.debug("Buscando etiquetas de obras literarias por ID: {}", id);
         return etiquetaRepository.findById(id)
                 .map(etiquetaMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una etiqueta con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) etiqueta con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "etiquetas-activas", allEntries = true)
     public EtiquetaResponse crear(EtiquetaRequest request) {
-        log.info("Creando nueva etiqueta con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) etiqueta con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
         Etiqueta etiqueta = etiquetaMapper.toEntity(request);
         etiqueta.setNombre(nombreTrimmed);
 
-        Etiqueta guardada = etiquetaRepository.save(etiqueta);
-        log.info("Etiqueta creada exitosamente con ID: {}", guardada.getId());
-        return etiquetaMapper.toResponse(guardada);
+        Etiqueta guardado = etiquetaRepository.save(etiqueta);
+        log.info("Etiqueta creado(a) exitosamente con ID: {}", guardado.getId());
+        return etiquetaMapper.toResponse(guardado);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class EtiquetaServiceImpl implements EtiquetaService {
     public EtiquetaResponse actualizar(Long id, EtiquetaRequest request) {
         log.info("Actualizando etiqueta con ID: {}", id);
         Etiqueta etiquetaExistente = etiquetaRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una etiqueta con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) etiqueta con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, etiquetaExistente);
@@ -82,9 +83,9 @@ public class EtiquetaServiceImpl implements EtiquetaService {
         etiquetaMapper.updateEntity(request, etiquetaExistente);
         etiquetaExistente.setNombre(nombreTrimmed);
 
-        Etiqueta actualizada = etiquetaRepository.save(etiquetaExistente);
-        log.info("Etiqueta con ID: {} actualizada exitosamente", id);
-        return etiquetaMapper.toResponse(actualizada);
+        Etiqueta actualizado = etiquetaRepository.save(etiquetaExistente);
+        log.info("Etiqueta con ID: {} actualizado(a) exitosamente", id);
+        return etiquetaMapper.toResponse(actualizado);
     }
 
     private void validarUnicidad(String nombreNuevo, Etiqueta etiquetaExistente) {
@@ -92,8 +93,8 @@ public class EtiquetaServiceImpl implements EtiquetaService {
         boolean nombreCambio = !esNuevo && !etiquetaExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && etiquetaRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar etiqueta: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe una etiqueta con el nombre: " + nombreNuevo);
+            log.warn("Intento de duplicar etiquetas de obras literarias: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) etiqueta con el nombre: " + nombreNuevo);
         }
     }
 
@@ -101,14 +102,13 @@ public class EtiquetaServiceImpl implements EtiquetaService {
     @Transactional
     @CacheEvict(value = "etiquetas-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de etiqueta ID: {} a {}", id, !estado);
-        if (etiquetaRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró una etiqueta con ID: " + id);
+        log.info("Cambiando estado de borrado de etiquetas de obras literarias ID: {} a {}", id, !estado);
+        if (!etiquetaRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) etiqueta con ID: " + id);
         }
         if (estado) {
             etiquetaRepository.activar(id);
         } else {
             etiquetaRepository.desactivar(id);
         }
-    }
-}
+    }}

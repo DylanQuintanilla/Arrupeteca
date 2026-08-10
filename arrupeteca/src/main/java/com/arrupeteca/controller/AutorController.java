@@ -90,19 +90,20 @@ public class AutorController {
     @GetMapping("/admin/busqueda-maestra")
     @Operation(
         summary = "Búsqueda avanzada (Admin)",
-        description = "Búsqueda avanzada multi-filtro por estado, género, país y coincidencia de término (solo admin)."
+        description = "Búsqueda avanzada multi-filtro por estado, nacionalidad, país, género, obra cumbre y coincidencia de término (solo admin)."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
             @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
             @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idObraCumbre,
             @RequestParam(required = false) Year anioInicio,
             @RequestParam(required = false) Year anioFin,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero,
+                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre,
                         anioInicio, anioFin, termino, pageable)));
     }
 

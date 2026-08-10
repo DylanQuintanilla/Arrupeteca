@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,93 +23,88 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/parentescos")
 @RequiredArgsConstructor
-@Tag(name = "Parentescos", description = "Endpoints para la gestión del catálogo de parentescos")
+@CrossOrigin(origins = "*")
+@Tag(name = "Parentescos", description = "Endpoints para la gestión de parentescos")
 public class ParentescoController {
 
     private final ParentescoService parentescoService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener parentescos activos",
-        description = "Retorna una página de parentescos registrados que no están borrados lógicamente."
+        summary = "Obtener parentescos activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de parentescos activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<ParentescoResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de parentescos activos", parentescoService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<ParentescoResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de parentescos activos(as)", parentescoService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener detalle de parentesco activo",
-        description = "Busca la información de un parentesco activo por su ID."
-    )
-    public ResponseEntity<ApiResponse<ParentescoResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Parentesco encontrado", parentescoService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los parentescos (Admin)",
-        description = "Retorna todos los parentescos incluyendo los eliminados lógicamente."
+        summary = "Obtener tabla de administración de parentescos",
+        description = "Retorna una página de parentescos con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<ParentescoResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de parentescos", parentescoService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de parentescos", parentescoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener parentesco por ID (Admin)",
-        description = "Busca el detalle de un parentesco por su ID sin importar su estado lógico."
+        summary = "Obtener parentescos por ID",
+        description = "Busca la información de un(a) parentesco por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<ParentescoResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Parentesco encontrado (admin)", parentescoService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Parentesco encontrado(a)", parentescoService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo parentesco",
-        description = "Crea un nuevo parentesco validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) parentesco",
+        description = "Crea un(a) nuevo(a) parentesco en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<ParentescoResponse>> crear(@Valid @RequestBody ParentescoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Parentesco creado exitosamente", parentescoService.crear(request)));
+                .body(ApiResponse.exito("Parentesco creado(a) exitosamente", parentescoService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar parentesco",
-        description = "Actualiza los campos de un parentesco existente."
+        description = "Actualiza los campos de un(a) parentesco existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<ParentescoResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody ParentescoRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Parentesco actualizado correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Parentesco actualizado(a) correctamente",
                 parentescoService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar parentesco (Borrado lógico)",
-        description = "Desactiva el parentesco cambiando su estado a borrado."
+        description = "Oculta el/la parentesco en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         parentescoService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Parentesco desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Parentesco desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar parentesco",
-        description = "Restaura un parentesco previamente desactivado."
+        description = "Restaura la visibilidad pública de un(a) parentesco previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         parentescoService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Parentesco activado correctamente"));
-    }
-
-}
+        return ResponseEntity.ok(ApiResponse.exito("Parentesco activado(a) correctamente"));
+    }}

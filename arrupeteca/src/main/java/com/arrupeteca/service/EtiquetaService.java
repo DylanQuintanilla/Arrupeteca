@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface EtiquetaService {
 
-    List<EtiquetaResponse> obtenerTodosActivos();
+    List<EtiquetaResponse> obtenerTodosActivos(String nombre);
 
     Page<EtiquetaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
@@ -19,5 +19,4 @@ public interface EtiquetaService {
 
     EtiquetaResponse actualizar(Long id, EtiquetaRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

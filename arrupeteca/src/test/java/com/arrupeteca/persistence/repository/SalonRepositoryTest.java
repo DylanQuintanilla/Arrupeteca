@@ -29,17 +29,17 @@ class SalonRepositoryTest extends BaseRepositoryTest {
         Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 1").edificio(edif).build());
         Salon entity = Salon.builder().nombre("Salon 1").planta(planta).build();
         Salon saved = salonRepository.save(entity);
-        assertThat(salonRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(salonRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif2").build());
         Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 2").edificio(edif).build());
         salonRepository.save(Salon.builder().nombre("Test").planta(planta).build());
-        Page<Salon> page = salonRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Salon> list = salonRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
@@ -48,6 +48,6 @@ class SalonRepositoryTest extends BaseRepositoryTest {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif3").build());
         Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 3").edificio(edif).build());
         Salon saved = salonRepository.save(Salon.builder().nombre("Salon3").planta(planta).borradoLogico(true).build());
-        assertThat(salonRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(salonRepository.existsById(saved.getId())).isTrue();
     }
 }

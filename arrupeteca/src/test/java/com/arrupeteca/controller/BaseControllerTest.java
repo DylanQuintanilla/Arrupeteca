@@ -1,5 +1,7 @@
 package com.arrupeteca.controller;
 
+import static org.mockito.ArgumentMatchers.any;
+
 import com.arrupeteca.config.JacksonConfig;
 import com.arrupeteca.persistence.repository.UsuarioRepository;
 import com.arrupeteca.security.CustomUserDetailsService;

@@ -34,18 +34,18 @@ class MuebleRepositoryTest extends BaseRepositoryTest {
         Salon salon = salonRepository.save(Salon.builder().nombre("Salon 1").planta(planta).build());
         Mueble entity = Mueble.builder().nombre("Mueble 1").salon(salon).build();
         Mueble saved = muebleRepository.save(entity);
-        assertThat(muebleRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(muebleRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         Edificio edif = edificioRepository.save(Edificio.builder().nombre("Edif2").build());
         Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 2").edificio(edif).build());
         Salon salon = salonRepository.save(Salon.builder().nombre("Salon 2").planta(planta).build());
         muebleRepository.save(Mueble.builder().nombre("Test").salon(salon).build());
-        Page<Mueble> page = muebleRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Mueble> list = muebleRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
@@ -55,6 +55,6 @@ class MuebleRepositoryTest extends BaseRepositoryTest {
         Planta planta = plantaRepository.save(Planta.builder().nombre("Planta 3").edificio(edif).build());
         Salon salon = salonRepository.save(Salon.builder().nombre("Salon 3").planta(planta).build());
         Mueble saved = muebleRepository.save(Mueble.builder().nombre("Mueble3").salon(salon).borradoLogico(true).build());
-        assertThat(muebleRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(muebleRepository.existsById(saved.getId())).isTrue();
     }
 }

@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -26,41 +28,36 @@ public class ParentescoServiceImpl implements ParentescoService {
     private final ParentescoMapper parentescoMapper;
 
     @Override
-    @Cacheable(value = "parentescos-activos")
-    public Page<ParentescoResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los parentescos activos con paginación: {}", pageable);
-        return parentescoRepository.findByBorradoLogicoFalse(pageable)
-                .map(parentescoMapper::toResponse);
-    }
-
-    @Override
-    public ParentescoResponse obtenerPorIdActivo(Long id) {
-        log.debug("Buscando parentesco activo con ID: {}", id);
-        return parentescoRepository.findByIdAndBorradoLogicoFalse(id)
+    @Cacheable(value = "parentescos-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<ParentescoResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo parentescos activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return parentescoRepository.buscarActivosPorNombre(filtro).stream()
                 .map(parentescoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un parentesco activo con ID: " + id));
+                .toList();
     }
 
     @Override
-    public Page<ParentescoResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los parentescos (incluyendo borrados) con paginación: {}", pageable);
-        return parentescoRepository.findAll(pageable)
+    public Page<ParentescoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de parentescos con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return parentescoRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(parentescoMapper::toResponse);
     }
 
     @Override
     public ParentescoResponse obtenerPorId(Long id) {
-        log.debug("Buscando parentesco con ID: {}", id);
+        log.debug("Buscando parentescos por ID: {}", id);
         return parentescoRepository.findById(id)
                 .map(parentescoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un parentesco con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) parentesco con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "parentescos-activos", allEntries = true)
     public ParentescoResponse crear(ParentescoRequest request) {
-        log.info("Creando nuevo parentesco con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) parentesco con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
@@ -68,7 +65,7 @@ public class ParentescoServiceImpl implements ParentescoService {
         parentesco.setNombre(nombreTrimmed);
 
         Parentesco guardado = parentescoRepository.save(parentesco);
-        log.info("Parentesco creado exitosamente con ID: {}", guardado.getId());
+        log.info("Parentesco creado(a) exitosamente con ID: {}", guardado.getId());
         return parentescoMapper.toResponse(guardado);
     }
 
@@ -78,7 +75,7 @@ public class ParentescoServiceImpl implements ParentescoService {
     public ParentescoResponse actualizar(Long id, ParentescoRequest request) {
         log.info("Actualizando parentesco con ID: {}", id);
         Parentesco parentescoExistente = parentescoRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un parentesco con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) parentesco con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, parentescoExistente);
@@ -87,7 +84,7 @@ public class ParentescoServiceImpl implements ParentescoService {
         parentescoExistente.setNombre(nombreTrimmed);
 
         Parentesco actualizado = parentescoRepository.save(parentescoExistente);
-        log.info("Parentesco con ID: {} actualizado exitosamente", id);
+        log.info("Parentesco con ID: {} actualizado(a) exitosamente", id);
         return parentescoMapper.toResponse(actualizado);
     }
 
@@ -96,12 +93,8 @@ public class ParentescoServiceImpl implements ParentescoService {
         boolean nombreCambio = !esNuevo && !parentescoExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && parentescoRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar parentesco: {}", nombreNuevo);
-            if (esNuevo) {
-                throw new ValidacionNegocioException("Ya existe un parentesco con el nombre: " + nombreNuevo);
-            } else {
-                throw new ValidacionNegocioException("Ya existe otro parentesco con el nombre: " + nombreNuevo);
-            }
+            log.warn("Intento de duplicar parentescos: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) parentesco con el nombre: " + nombreNuevo);
         }
     }
 
@@ -109,15 +102,13 @@ public class ParentescoServiceImpl implements ParentescoService {
     @Transactional
     @CacheEvict(value = "parentescos-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de parentesco ID: {} a {}", id, !estado);
-        if (parentescoRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un parentesco con ID: " + id);
+        log.info("Cambiando estado de borrado de parentescos ID: {} a {}", id, !estado);
+        if (!parentescoRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) parentesco con ID: " + id);
         }
         if (estado) {
             parentescoRepository.activar(id);
         } else {
             parentescoRepository.desactivar(id);
         }
-    }
-
-}
+    }}

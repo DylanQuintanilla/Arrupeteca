@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,14 +45,14 @@ class TipoUsuarioServiceImplTest {
         TipoUsuario entity = TipoUsuario.builder().id(1L).nombre("admin").build();
         TipoUsuarioResponse responseDto = TipoUsuarioResponse.builder().id(1L).nombre("admin").build();
 
-        given(tipoUsuarioRepository.findByBorradoLogicoFalse(pageable))
-                .willReturn(new PageImpl<>(List.of(entity)));
+        given(tipoUsuarioRepository.buscarActivosPorNombre(any()))
+                .willReturn(List.of(entity));
         given(tipoUsuarioMapper.toResponse(entity)).willReturn(responseDto);
 
-        Page<TipoUsuarioResponse> result = tipoUsuarioService.obtenerTodosActivos(pageable);
+        List<TipoUsuarioResponse> result = tipoUsuarioService.obtenerTodosActivos(null);
 
         assertThat(result).hasSize(1);
-        assertThat(result.getContent().get(0).nombre()).isEqualTo("admin");
+        assertThat(result.get(0).nombre()).isEqualTo("admin");
     }
 
     @Test
@@ -81,13 +82,13 @@ class TipoUsuarioServiceImplTest {
 
         assertThatThrownBy(() -> tipoUsuarioService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un tipo de usuario con el nombre");
+                .hasMessageContaining("con el nombre:");
     }
 
     @Test
     @DisplayName("Debe desactivar tipo de usuario")
     void debeDesactivarTipoUsuario() {
-        given(tipoUsuarioRepository.countByIdIncludeDeleted(1L)).willReturn(1L);
+        given(tipoUsuarioRepository.existsById(1L)).willReturn(true);
 
         tipoUsuarioService.cambiarEstado(1L, false);
 

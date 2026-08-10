@@ -34,7 +34,7 @@ class GeneroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/generos - Should return active genres")
     void shouldReturnActive() throws Exception {
         Page<GeneroResponse> page = new PageImpl<>(List.of());
-        when(generoService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(generoService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/generos"))
                 .andExpect(status().isOk())
@@ -45,9 +45,9 @@ class GeneroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/generos/{id} - Should return genre by ID")
     void shouldReturnById() throws Exception {
         GeneroResponse response = new GeneroResponse(1L, "Genero Test", false);
-        when(generoService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(generoService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/generos/1"))
+        mockMvc.perform(get("/api/v1/generos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Genero Test"));
@@ -61,7 +61,7 @@ class GeneroControllerTest extends BaseControllerTest {
 
         when(generoService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/generos")
+        mockMvc.perform(post("/api/v1/generos/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class GeneroControllerTest extends BaseControllerTest {
 
         when(generoService.actualizar(any(Long.class), any(GeneroRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/generos/1")
+        mockMvc.perform(put("/api/v1/generos/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -87,12 +87,12 @@ class GeneroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/generos/admin - Should return all genres for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<GeneroResponse> page = new PageImpl<>(List.of());
-        when(generoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(generoService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/generos/admin"))
+        mockMvc.perform(get("/api/v1/generos/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de géneros"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de géneros literarios"));
     }
 
     @Test
@@ -104,24 +104,24 @@ class GeneroControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/generos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Género encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Genero encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/generos/{id} - Should deactivate genre")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/generos/1"))
+        mockMvc.perform(delete("/api/v1/generos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Género desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Genero desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/generos/{id}/activar - Should activate genre")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/generos/1/activar"))
+        mockMvc.perform(patch("/api/v1/generos/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Género activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Genero activado(a) correctamente"));
     }
 }

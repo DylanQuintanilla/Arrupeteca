@@ -19,21 +19,21 @@ class PaisRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Pais entity = Pais.builder().nombre("El Salvador").build();
         Pais saved = paisRepository.save(entity);
-        assertThat(paisRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(paisRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         paisRepository.save(Pais.builder().nombre("Test").build());
-        Page<Pais> page = paisRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Pais> list = paisRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Pais saved = paisRepository.save(Pais.builder().nombre("Pais3").borradoLogico(true).build());
-        assertThat(paisRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(paisRepository.existsById(saved.getId())).isTrue();
     }
 }

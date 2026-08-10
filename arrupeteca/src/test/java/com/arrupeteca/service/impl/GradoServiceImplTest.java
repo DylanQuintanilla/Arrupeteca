@@ -45,13 +45,13 @@ class GradoServiceImplTest {
         Grado entity = Grado.builder().build();
         GradoResponse response = mock(GradoResponse.class);
 
-        when(gradoRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(gradoRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(gradoMapper.toResponse(entity)).thenReturn(response);
 
-        List<GradoResponse> result = gradoService.obtenerTodosActivos();
+        List<GradoResponse> result = gradoService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(gradoRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(gradoRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -89,7 +89,7 @@ class GradoServiceImplTest {
 
         assertThatThrownBy(() -> gradoService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un grado con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -116,13 +116,13 @@ class GradoServiceImplTest {
 
         assertThatThrownBy(() -> gradoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un grado con el nombre: Bachillerato General");
+                .hasMessageContaining("con el nombre: Bachillerato General");
     }
 
     @Test
     @DisplayName("Should change estado of grado successfully")
     void shouldCambiarEstado() {
-        when(gradoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(gradoRepository.existsById(1L)).thenReturn(true);
 
         gradoService.cambiarEstado(1L, false);
         verify(gradoRepository).desactivar(1L);

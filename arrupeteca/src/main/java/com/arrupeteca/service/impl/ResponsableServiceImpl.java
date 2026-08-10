@@ -135,7 +135,7 @@ public class ResponsableServiceImpl implements ResponsableService {
     @CacheEvict(value = "responsables-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado de responsable ID: {} a {}", id, !estado);
-        if (responsableRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!responsableRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró un responsable con ID: " + id);
         }
         if (estado) {
@@ -145,4 +145,12 @@ public class ResponsableServiceImpl implements ResponsableService {
         }
     }
 
+
+    @Override
+    public Page<ResponsableResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda administrativa de Responsable - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return responsableRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
+                .map(responsableMapper::toResponse);
+    }
 }

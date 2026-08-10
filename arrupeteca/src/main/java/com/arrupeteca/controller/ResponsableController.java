@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -43,6 +44,19 @@ public class ResponsableController {
             @ParameterObject @PageableDefault(size = 20, sort = "nombres") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Lista de responsables activos", responsableService.obtenerTodosActivos(pageable)));
     }
+
+    @GetMapping("/all")
+    @Operation(
+        summary = "Obtener tabla de administración de responsable",
+        description = "Retorna una página de responsable con soporte para filtros por nombre y estado borradoLogico."
+    )
+    public ResponseEntity<ApiResponse<Page<ResponsableResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de responsable", responsableService.obtenerTodos(nombre, borradoLogico, pageable)));
+    }
+
 
     @GetMapping("/{id}")
     @Operation(

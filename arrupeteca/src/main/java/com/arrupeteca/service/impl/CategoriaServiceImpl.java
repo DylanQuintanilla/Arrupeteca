@@ -28,10 +28,11 @@ public class CategoriaServiceImpl implements CategoriaService {
     private final CategoriaMapper categoriaMapper;
 
     @Override
-    @Cacheable(value = "categorias-activas")
-    public List<CategoriaResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todas las categorías activas en lista plana");
-        return categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "categorias-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<CategoriaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo categorías activas (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return categoriaRepository.buscarActivosPorNombre(filtro).stream()
                 .map(categoriaMapper::toResponse)
                 .toList();
     }
@@ -102,7 +103,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @CacheEvict(value = "categorias-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado de categoría ID: {} a {}", id, !estado);
-        if (categoriaRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!categoriaRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró una categoría con ID: " + id);
         }
         if (estado) {

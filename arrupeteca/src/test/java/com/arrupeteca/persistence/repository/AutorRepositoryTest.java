@@ -52,7 +52,7 @@ class AutorRepositoryTest extends BaseRepositoryTest {
         
         autorRepository.save(autor);
         Page<AutorResumenResponse> page = autorRepository.busquedaMaestraAdminProyectada(
-                false, null, null, null, null, null, "Gabriel", PageRequest.of(0, 10));
+                false, null, null, null, null, null, null, "Gabriel", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 
@@ -77,8 +77,8 @@ class AutorRepositoryTest extends BaseRepositoryTest {
         Autor autor = Autor.builder().nombre("Test Status").biografia("Bio").borradoLogico(false).build();
         autorRepository.saveAndFlush(autor);
 
-        long count = autorRepository.countByIdIncludeDeleted(autor.getId());
-        assertThat(count).isEqualTo(1L);
+        boolean count = autorRepository.existsById(autor.getId());
+        assertThat(count).isTrue();
 
         // Deactivate
         autorRepository.desactivar(autor.getId());

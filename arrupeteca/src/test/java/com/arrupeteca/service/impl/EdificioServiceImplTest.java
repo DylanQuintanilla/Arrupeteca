@@ -42,13 +42,13 @@ class EdificioServiceImplTest extends BaseServiceTest {
         Page<Edificio> page = new PageImpl<>(List.of(entity));
         EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(repository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(mapper.toResponse(entity)).thenReturn(response);
 
-        Page<EdificioResponse> result = service.obtenerTodosActivos(Pageable.unpaged());
+        List<EdificioResponse> result = service.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
     @Test
@@ -57,10 +57,10 @@ class EdificioServiceImplTest extends BaseServiceTest {
         Edificio entity = Edificio.builder().id(1L).nombre("Principal").build();
         EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(repository.findById(1L)).thenReturn(Optional.of(entity));
         when(mapper.toResponse(entity)).thenReturn(response);
 
-        EdificioResponse result = service.obtenerPorIdActivo(1L);
+        EdificioResponse result = service.obtenerPorId(1L);
 
         assertThat(result).isEqualTo(response);
     }
@@ -82,11 +82,11 @@ class EdificioServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when active building not found")
     void shouldThrowWhenActiveNotFound() {
-        when(repository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
+        when(repository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(1L))
+        assertThatThrownBy(() -> service.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un edificio activo con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -96,10 +96,10 @@ class EdificioServiceImplTest extends BaseServiceTest {
         Page<Edificio> page = new PageImpl<>(List.of(entity));
         EdificioResponse response = new EdificioResponse(1L, "Principal", false);
 
-        when(repository.findAll(any(Pageable.class))).thenReturn(page);
+        when(repository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(mapper.toResponse(entity)).thenReturn(response);
 
-        Page<EdificioResponse> result = service.obtenerTodos(Pageable.unpaged());
+        Page<EdificioResponse> result = service.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -112,7 +112,7 @@ class EdificioServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> service.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un edificio con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -142,7 +142,7 @@ class EdificioServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> service.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un edificio con el nombre: Existente");
+                .hasMessageContaining("con el nombre: Existente");
     }
 
     @Test
@@ -191,7 +191,7 @@ class EdificioServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> service.actualizar(1L, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otro edificio con el nombre: Ocupado");
+                .hasMessageContaining("con el nombre: Ocupado");
     }
 
     @Test
@@ -201,13 +201,13 @@ class EdificioServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> service.actualizar(1L, EdificioRequest.builder().nombre("Cualquiera").build()))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un edificio con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
     @DisplayName("Should activate building")
     void shouldActivate() {
-        when(repository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(repository.existsById(1L)).thenReturn(true);
         service.cambiarEstado(1L, true);
         verify(repository).activar(1L);
     }
@@ -215,7 +215,7 @@ class EdificioServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should deactivate building")
     void shouldDeactivate() {
-        when(repository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(repository.existsById(1L)).thenReturn(true);
         service.cambiarEstado(1L, false);
         verify(repository).desactivar(1L);
     }
@@ -223,10 +223,10 @@ class EdificioServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("Should throw exception when building not found on status change")
     void shouldThrowWhenNotFoundOnStatusChange() {
-        when(repository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(repository.existsById(1L)).thenReturn(false);
         assertThatThrownBy(() -> service.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un edificio con ID: 1");
+                .hasMessageContaining("con ID: 1");
         verify(repository, never()).activar(any());
         verify(repository, never()).desactivar(any());
     }

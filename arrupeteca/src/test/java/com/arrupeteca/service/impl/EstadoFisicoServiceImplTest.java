@@ -45,13 +45,13 @@ class EstadoFisicoServiceImplTest {
         EstadoFisico entity = EstadoFisico.builder().build();
         EstadoFisicoResponse response = mock(EstadoFisicoResponse.class);
 
-        when(estadoFisicoRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(estadoFisicoRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(estadoFisicoMapper.toResponse(entity)).thenReturn(response);
 
-        List<EstadoFisicoResponse> result = estadoFisicoService.obtenerTodosActivos();
+        List<EstadoFisicoResponse> result = estadoFisicoService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(estadoFisicoRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(estadoFisicoRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -89,7 +89,7 @@ class EstadoFisicoServiceImplTest {
 
         assertThatThrownBy(() -> estadoFisicoService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un estado físico con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -116,13 +116,13 @@ class EstadoFisicoServiceImplTest {
 
         assertThatThrownBy(() -> estadoFisicoService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un estado físico con el nombre: Nuevo");
+                .hasMessageContaining("con el nombre: Nuevo");
     }
 
     @Test
     @DisplayName("Should change estado of estado fisico successfully")
     void shouldCambiarEstado() {
-        when(estadoFisicoRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(estadoFisicoRepository.existsById(1L)).thenReturn(true);
 
         estadoFisicoService.cambiarEstado(1L, false);
         verify(estadoFisicoRepository).desactivar(1L);

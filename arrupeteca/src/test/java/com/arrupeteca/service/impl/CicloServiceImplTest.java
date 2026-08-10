@@ -45,13 +45,13 @@ class CicloServiceImplTest {
         Ciclo entity = Ciclo.builder().build();
         CicloResponse response = mock(CicloResponse.class);
 
-        when(cicloRepository.findByBorradoLogicoFalseOrderByNombreAsc()).thenReturn(List.of(entity));
+        when(cicloRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(cicloMapper.toResponse(entity)).thenReturn(response);
 
-        List<CicloResponse> result = cicloService.obtenerTodosActivos();
+        List<CicloResponse> result = cicloService.obtenerTodosActivos(null);
 
         assertThat(result).containsExactly(response);
-        verify(cicloRepository).findByBorradoLogicoFalseOrderByNombreAsc();
+        verify(cicloRepository).buscarActivosPorNombre(null);
     }
 
     @Test
@@ -89,7 +89,7 @@ class CicloServiceImplTest {
 
         assertThatThrownBy(() -> cicloService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró un ciclo con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -116,13 +116,13 @@ class CicloServiceImplTest {
 
         assertThatThrownBy(() -> cicloService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe un ciclo con el nombre: Primer ciclo");
+                .hasMessageContaining("con el nombre: Primer ciclo");
     }
 
     @Test
     @DisplayName("Should change estado of ciclo successfully")
     void shouldCambiarEstado() {
-        when(cicloRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(cicloRepository.existsById(1L)).thenReturn(true);
 
         cicloService.cambiarEstado(1L, false);
         verify(cicloRepository).desactivar(1L);

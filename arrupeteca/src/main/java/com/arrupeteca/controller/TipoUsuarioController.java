@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,93 +23,88 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/tipos-usuario")
 @RequiredArgsConstructor
-@Tag(name = "Tipos de Usuario", description = "Endpoints para la gestión del catálogo de tipos de usuario")
+@CrossOrigin(origins = "*")
+@Tag(name = "Tipos de Usuario", description = "Endpoints para la gestión de tipos de usuario")
 public class TipoUsuarioController {
 
     private final TipoUsuarioService tipoUsuarioService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener tipos de usuario activos",
-        description = "Retorna una página de tipos de usuario registrados que no están borrados lógicamente."
+        summary = "Obtener tipos de usuario activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de tipos de usuario activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<TipoUsuarioResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de tipos de usuario activos", tipoUsuarioService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<TipoUsuarioResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de tipos de usuario activos(as)", tipoUsuarioService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener detalle de tipo de usuario activo",
-        description = "Busca la información de un tipo de usuario activo por su ID."
-    )
-    public ResponseEntity<ApiResponse<TipoUsuarioResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Tipo de usuario encontrado", tipoUsuarioService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los tipos de usuario (Admin)",
-        description = "Retorna todos los tipos de usuario incluyendo los eliminados lógicamente."
+        summary = "Obtener tabla de administración de tipos de usuario",
+        description = "Retorna una página de tipos de usuario con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<TipoUsuarioResponse>>> obtenerTodos(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de tipos de usuario", tipoUsuarioService.obtenerTodos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de tipos de usuario", tipoUsuarioService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener tipo de usuario por ID (Admin)",
-        description = "Busca el detalle de un tipo de usuario por su ID sin importar su estado lógico."
+        summary = "Obtener tipos de usuario por ID",
+        description = "Busca la información de un(a) tipousuario por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<TipoUsuarioResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Tipo de usuario encontrado (admin)", tipoUsuarioService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("TipoUsuario encontrado(a)", tipoUsuarioService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo tipo de usuario",
-        description = "Crea un nuevo tipo de usuario validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) tipousuario",
+        description = "Crea un(a) nuevo(a) tipousuario en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<TipoUsuarioResponse>> crear(@Valid @RequestBody TipoUsuarioRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Tipo de usuario creado exitosamente", tipoUsuarioService.crear(request)));
+                .body(ApiResponse.exito("TipoUsuario creado(a) exitosamente", tipoUsuarioService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar tipo de usuario",
-        description = "Actualiza los campos de un tipo de usuario existente."
+        summary = "Actualizar tipousuario",
+        description = "Actualiza los campos de un(a) tipousuario existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<TipoUsuarioResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody TipoUsuarioRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Tipo de usuario actualizado correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("TipoUsuario actualizado(a) correctamente",
                 tipoUsuarioService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar tipo de usuario (Borrado lógico)",
-        description = "Desactiva el tipo de usuario cambiando su estado a borrado."
+        summary = "Desactivar tipousuario (Borrado lógico)",
+        description = "Oculta el/la tipousuario en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         tipoUsuarioService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo de usuario desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("TipoUsuario desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar tipo de usuario",
-        description = "Restaura un tipo de usuario previamente desactivado."
+        summary = "Activar tipousuario",
+        description = "Restaura la visibilidad pública de un(a) tipousuario previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         tipoUsuarioService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Tipo de usuario activado correctamente"));
-    }
-
-}
+        return ResponseEntity.ok(ApiResponse.exito("TipoUsuario activado(a) correctamente"));
+    }}

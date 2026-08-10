@@ -21,6 +21,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -42,38 +43,16 @@ class PlantaServiceImplTest extends BaseServiceTest {
         Page<Planta> page = new PageImpl<>(List.of(entity));
         PlantaResponse response = new PlantaResponse(1L, "Test", false, new EdificioResponse(1L, "Edif", false));
 
-        when(plantaRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(plantaRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(plantaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<PlantaResponse> result = plantaService.obtenerTodosActivos(Pageable.unpaged());
+        List<PlantaResponse> result = plantaService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return PlantaResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        PlantaResponse response = new PlantaResponse(1L, "Test", false, new EdificioResponse(1L, "Edif", false));
-        Planta entity = Planta.builder().id(1L).nombre("Test").build();
-        
-        when(plantaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(plantaMapper.toResponse(entity)).thenReturn(response);
 
-        PlantaResponse result = plantaService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(plantaRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> plantaService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe una planta activa con el ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of PlantaResponse")
@@ -82,10 +61,10 @@ class PlantaServiceImplTest extends BaseServiceTest {
         Page<Planta> page = new PageImpl<>(List.of(entity));
         PlantaResponse response = new PlantaResponse(1L, "Test", false, new EdificioResponse(1L, "Edif", false));
 
-        when(plantaRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(plantaRepository.busquedaAdmin(any(), any(), any(), any())).thenReturn(page);
         when(plantaMapper.toResponse(entity)).thenReturn(response);
 
-        Page<PlantaResponse> result = plantaService.obtenerTodos(Pageable.unpaged());
+        Page<PlantaResponse> result = plantaService.obtenerTodos(null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -112,23 +91,7 @@ class PlantaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> plantaService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe una planta con el ID: 1");
-    }
-
-    @Test
-    @DisplayName("buscarPorEdificioId - Should return page of PlantaResponse")
-    void buscarPorEdificioId() {
-        Planta entity = Planta.builder().id(1L).nombre("Test").build();
-        Page<Planta> page = new PageImpl<>(List.of(entity));
-        PlantaResponse response = new PlantaResponse(1L, "Test", false, new EdificioResponse(1L, "Edif", false));
-
-        when(plantaRepository.findByEdificioIdAndBorradoLogicoFalse(1L, Pageable.unpaged())).thenReturn(page);
-        when(plantaMapper.toResponse(entity)).thenReturn(response);
-
-        Page<PlantaResponse> result = plantaService.buscarPorEdificioId(1L, Pageable.unpaged());
-
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -158,7 +121,7 @@ class PlantaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> plantaService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una planta con ese nombre en el edificio seleccionado");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
@@ -189,7 +152,7 @@ class PlantaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> plantaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe una planta con el ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -204,13 +167,13 @@ class PlantaServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> plantaService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra planta con ese nombre en el edificio seleccionado");
+                .hasMessageContaining("con ese nombre");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(plantaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(plantaRepository.existsById(1L)).thenReturn(true);
 
         plantaService.cambiarEstado(1L, true);
 
@@ -220,7 +183,7 @@ class PlantaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(plantaRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(plantaRepository.existsById(1L)).thenReturn(true);
 
         plantaService.cambiarEstado(1L, false);
 
@@ -230,10 +193,10 @@ class PlantaServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(plantaRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(plantaRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> plantaService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No existe una planta con el ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

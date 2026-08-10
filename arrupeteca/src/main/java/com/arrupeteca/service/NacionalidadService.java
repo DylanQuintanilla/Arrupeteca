@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.NacionalidadResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface NacionalidadService {
 
-    Page<NacionalidadResponse> obtenerTodosActivos(Pageable pageable);
+    List<NacionalidadResponse> obtenerTodosActivos(String nombre);
 
-    NacionalidadResponse obtenerPorIdActivo(Long id);
-
-    Page<NacionalidadResponse> obtenerTodos(Pageable pageable);
+    Page<NacionalidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     NacionalidadResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface NacionalidadService {
 
     NacionalidadResponse actualizar(Long id, NacionalidadRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface DisponibilidadService {
 
-    List<DisponibilidadResponse> obtenerTodosActivos();
+    List<DisponibilidadResponse> obtenerTodosActivos(String nombre);
 
     Page<DisponibilidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
@@ -19,5 +19,4 @@ public interface DisponibilidadService {
 
     DisponibilidadResponse actualizar(Long id, DisponibilidadRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

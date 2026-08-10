@@ -56,7 +56,7 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Libro saved = libroRepository.save(createValidLibro("9781107004639"));
-        assertThat(libroRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(libroRepository.existsById(saved.getId())).isTrue();
     }
 
     private Libro createValidLibro(String isbn) {

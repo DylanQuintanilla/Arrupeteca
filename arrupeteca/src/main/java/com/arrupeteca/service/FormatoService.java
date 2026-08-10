@@ -5,13 +5,13 @@ import com.arrupeteca.dto.response.FormatoResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface FormatoService {
 
-    Page<FormatoResponse> obtenerTodosActivos(Pageable pageable);
+    List<FormatoResponse> obtenerTodosActivos(String nombre);
 
-    FormatoResponse obtenerPorIdActivo(Long id);
-
-    Page<FormatoResponse> obtenerTodos(Pageable pageable);
+    Page<FormatoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
     FormatoResponse obtenerPorId(Long id);
 
@@ -19,5 +19,4 @@ public interface FormatoService {
 
     FormatoResponse actualizar(Long id, FormatoRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

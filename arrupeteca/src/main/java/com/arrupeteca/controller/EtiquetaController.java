@@ -39,72 +39,72 @@ public class EtiquetaController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener etiquetas activas para dropdowns",
-        description = "Retorna una lista simple no paginada de etiquetas activas para selects y filtros."
+        summary = "Obtener etiquetas de obras literarias activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de etiquetas de obras literarias activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<EtiquetaResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de etiquetas activas", etiquetaService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<EtiquetaResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de etiquetas de obras literarias activos(as)", etiquetaService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener tabla de administración de etiquetas",
-        description = "Retorna una página de etiquetas con soporte para filtros por nombre y estado borradoLogico."
+        summary = "Obtener tabla de administración de etiquetas de obras literarias",
+        description = "Retorna una página de etiquetas de obras literarias con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<EtiquetaResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Tabla de etiquetas", etiquetaService.obtenerTodos(nombre, borradoLogico, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de etiquetas de obras literarias", etiquetaService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener etiqueta por ID",
-        description = "Busca la información de una etiqueta por su ID sin importar su estado lógico."
+        summary = "Obtener etiquetas de obras literarias por ID",
+        description = "Busca la información de un(a) etiqueta por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<EtiquetaResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Etiqueta encontrada", etiquetaService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Etiqueta encontrado(a)", etiquetaService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nueva etiqueta",
-        description = "Crea una nueva etiqueta en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) etiqueta",
+        description = "Crea un(a) nuevo(a) etiqueta en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<EtiquetaResponse>> crear(@Valid @RequestBody EtiquetaRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Etiqueta creada exitosamente", etiquetaService.crear(request)));
+                .body(ApiResponse.exito("Etiqueta creado(a) exitosamente", etiquetaService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar etiqueta",
-        description = "Actualiza los campos de una etiqueta existente mediante una edición completa."
+        description = "Actualiza los campos de un(a) etiqueta existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<EtiquetaResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody EtiquetaRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Etiqueta actualizada correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Etiqueta actualizado(a) correctamente",
                 etiquetaService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar etiqueta (Borrado lógico)",
-        description = "Oculta la etiqueta en el catálogo público cambiando su estado a borrado."
+        description = "Oculta el/la etiqueta en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         etiquetaService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Etiqueta desactivada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Etiqueta desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar etiqueta",
-        description = "Restaura la visibilidad pública de una etiqueta previamente desactivada."
+        description = "Restaura la visibilidad pública de un(a) etiqueta previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         etiquetaService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Etiqueta activada correctamente"));
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("Etiqueta activado(a) correctamente"));
+    }}

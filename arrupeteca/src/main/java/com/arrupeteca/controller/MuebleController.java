@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -25,112 +26,87 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/v1/muebles")
 @RequiredArgsConstructor
-@Tag(name = "Muebles", description = "Endpoints para la gestión del catálogo de muebles")
+@CrossOrigin(origins = "*")
+@Tag(name = "Muebles", description = "Endpoints para la gestión de muebles")
 public class MuebleController {
 
     private final MuebleService muebleService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener muebles activos paginados",
-        description = "Retorna una lista paginada de todos los muebles activos en el sistema."
+        summary = "Obtener muebles activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de muebles activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<MuebleResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos", muebleService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<MuebleResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de muebles activos(as)", muebleService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener mueble activo por ID",
-        description = "Busca y retorna un mueble activo por su identificador único."
-    )
-    public ResponseEntity<ApiResponse<MuebleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Mueble encontrado", muebleService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/global")
-    @Operation(
-        summary = "Búsqueda global de muebles",
-        description = "Busca muebles activos filtrando por palabra clave en su nombre."
-    )
-    public ResponseEntity<ApiResponse<Page<MuebleResponse>>> busquedaGlobal(
-            @RequestParam String palabra,
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", muebleService.busquedaGlobal(palabra, pageable)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los muebles (Admin)",
-        description = "Retorna el historial completo de muebles (activos e inactivos) para administradores."
+        summary = "Obtener tabla de administración de muebles",
+        description = "Retorna una página de muebles con soporte para filtros por idSalon, nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<MuebleResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de muebles", muebleService.obtenerTodos(pageable)));
+            @RequestParam(required = false) Long idSalon,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de muebles", muebleService.obtenerTodos(idSalon, nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener mueble por ID (Admin)",
-        description = "Busca y retorna cualquier mueble (activo o inactivo) por su identificador único para administradores."
+        summary = "Obtener muebles por ID",
+        description = "Busca la información de un(a) mueble por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<MuebleResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Mueble encontrado (admin)", muebleService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Mueble encontrado(a)", muebleService.obtenerPorId(id)));
     }
 
-    @GetMapping("/admin/busqueda-maestra")
+    @PostMapping("/admin")
     @Operation(
-        summary = "Búsqueda maestra de muebles (Admin)",
-        description = "Permite filtrar muebles por estado de borrado, salón o término de búsqueda."
-    )
-    public ResponseEntity<ApiResponse<Page<MuebleResponse>>> busquedaMaestraAdmin(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idSalon,
-            @RequestParam(required = false) String termino,
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                muebleService.busquedaMaestraAdmin(esBorrado, idSalon, termino, pageable)));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Crear nuevo mueble",
-        description = "Crea un nuevo mueble dentro de un salón validando la unicidad del nombre por salón."
+        summary = "Registrar nuevo(a) mueble",
+        description = "Crea un(a) nuevo(a) mueble en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<MuebleResponse>> crear(@Valid @RequestBody MuebleRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Mueble creado exitosamente", muebleService.crear(request)), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Mueble creado(a) exitosamente", muebleService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar mueble",
-        description = "Actualiza los datos de un mueble existente."
+        description = "Actualiza los campos de un(a) mueble existente mediante una edición completa."
     )
-    public ResponseEntity<ApiResponse<MuebleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody MuebleRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Mueble actualizado correctamente", muebleService.actualizar(id, request)));
+    public ResponseEntity<ApiResponse<MuebleResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody MuebleRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Mueble actualizado(a) correctamente",
+                muebleService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar mueble",
-        description = "Realiza el borrado lógico de un mueble en el sistema."
+        summary = "Desactivar mueble (Borrado lógico)",
+        description = "Oculta el/la mueble en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         muebleService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Mueble desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Mueble desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar mueble",
-        description = "Reactiva un mueble previamente desactivado."
+        description = "Restaura la visibilidad pública de un(a) mueble previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         muebleService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Mueble activado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Mueble activado(a) correctamente"));
     }
 }

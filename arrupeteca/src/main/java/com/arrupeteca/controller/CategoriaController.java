@@ -39,14 +39,15 @@ public class CategoriaController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener categorías activas para dropdowns",
-        description = "Retorna una lista simple no paginada de categorías activas para selects y filtros."
+        summary = "Obtener categorías activas para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de categorías activas, con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<CategoriaResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<CategoriaResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de categorías activas", categoriaService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
         summary = "Obtener tabla de administración de categorías",
         description = "Retorna una página de categorías con soporte para filtros por nombre y estado borradoLogico."
@@ -58,7 +59,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Tabla de categorías", categoriaService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
         summary = "Obtener categoría por ID",
         description = "Busca la información de una categoría por su ID sin importar su estado lógico."
@@ -67,7 +68,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Categoría encontrada", categoriaService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
         summary = "Registrar nueva categoría",
         description = "Crea una nueva categoría en el sistema validando la unicidad del nombre."
@@ -77,7 +78,7 @@ public class CategoriaController {
                 .body(ApiResponse.exito("Categoría creada exitosamente", categoriaService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar categoría",
         description = "Actualiza los campos de una categoría existente mediante una edición completa."
@@ -88,7 +89,7 @@ public class CategoriaController {
                 categoriaService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar categoría (Borrado lógico)",
         description = "Oculta la categoría en el catálogo público cambiando su estado a borrado."
@@ -98,7 +99,7 @@ public class CategoriaController {
         return ResponseEntity.ok(ApiResponse.exito("Categoría desactivada correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar categoría",
         description = "Restaura la visibilidad pública de una categoría previamente desactivada."

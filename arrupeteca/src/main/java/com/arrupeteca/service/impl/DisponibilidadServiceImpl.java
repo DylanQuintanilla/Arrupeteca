@@ -28,17 +28,18 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     private final DisponibilidadMapper disponibilidadMapper;
 
     @Override
-    @Cacheable(value = "disponibilidades-activas")
-    public List<DisponibilidadResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todas las disponibilidades activas en lista plana");
-        return disponibilidadRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "disponibilidades-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<DisponibilidadResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo estados de disponibilidad de ejemplares activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return disponibilidadRepository.buscarActivosPorNombre(filtro).stream()
                 .map(disponibilidadMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<DisponibilidadResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda de disponibilidades con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de estados de disponibilidad de ejemplares con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return disponibilidadRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(disponibilidadMapper::toResponse);
@@ -46,26 +47,26 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
 
     @Override
     public DisponibilidadResponse obtenerPorId(Long id) {
-        log.debug("Buscando disponibilidad por ID: {}", id);
+        log.debug("Buscando estados de disponibilidad de ejemplares por ID: {}", id);
         return disponibilidadRepository.findById(id)
                 .map(disponibilidadMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una disponibilidad con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) disponibilidad con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "disponibilidades-activas", allEntries = true)
     public DisponibilidadResponse crear(DisponibilidadRequest request) {
-        log.info("Creando nueva disponibilidad con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) disponibilidad con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
         Disponibilidad disponibilidad = disponibilidadMapper.toEntity(request);
         disponibilidad.setNombre(nombreTrimmed);
 
-        Disponibilidad guardada = disponibilidadRepository.save(disponibilidad);
-        log.info("Disponibilidad creada exitosamente con ID: {}", guardada.getId());
-        return disponibilidadMapper.toResponse(guardada);
+        Disponibilidad guardado = disponibilidadRepository.save(disponibilidad);
+        log.info("Disponibilidad creado(a) exitosamente con ID: {}", guardado.getId());
+        return disponibilidadMapper.toResponse(guardado);
     }
 
     @Override
@@ -74,7 +75,7 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     public DisponibilidadResponse actualizar(Long id, DisponibilidadRequest request) {
         log.info("Actualizando disponibilidad con ID: {}", id);
         Disponibilidad disponibilidadExistente = disponibilidadRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una disponibilidad con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) disponibilidad con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, disponibilidadExistente);
@@ -82,9 +83,9 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
         disponibilidadMapper.updateEntity(request, disponibilidadExistente);
         disponibilidadExistente.setNombre(nombreTrimmed);
 
-        Disponibilidad actualizada = disponibilidadRepository.save(disponibilidadExistente);
-        log.info("Disponibilidad con ID: {} actualizada exitosamente", id);
-        return disponibilidadMapper.toResponse(actualizada);
+        Disponibilidad actualizado = disponibilidadRepository.save(disponibilidadExistente);
+        log.info("Disponibilidad con ID: {} actualizado(a) exitosamente", id);
+        return disponibilidadMapper.toResponse(actualizado);
     }
 
     private void validarUnicidad(String nombreNuevo, Disponibilidad disponibilidadExistente) {
@@ -92,8 +93,8 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
         boolean nombreCambio = !esNuevo && !disponibilidadExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && disponibilidadRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar disponibilidad: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe una disponibilidad con el nombre: " + nombreNuevo);
+            log.warn("Intento de duplicar estados de disponibilidad de ejemplares: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) disponibilidad con el nombre: " + nombreNuevo);
         }
     }
 
@@ -101,14 +102,13 @@ public class DisponibilidadServiceImpl implements DisponibilidadService {
     @Transactional
     @CacheEvict(value = "disponibilidades-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de disponibilidad ID: {} a {}", id, !estado);
-        if (disponibilidadRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró una disponibilidad con ID: " + id);
+        log.info("Cambiando estado de borrado de estados de disponibilidad de ejemplares ID: {} a {}", id, !estado);
+        if (!disponibilidadRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) disponibilidad con ID: " + id);
         }
         if (estado) {
             disponibilidadRepository.activar(id);
         } else {
             disponibilidadRepository.desactivar(id);
         }
-    }
-}
+    }}

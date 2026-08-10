@@ -19,21 +19,21 @@ class NacionalidadRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFindById() {
         Nacionalidad entity = Nacionalidad.builder().nombre("Salvadoreña").build();
         Nacionalidad saved = nacionalidadRepository.save(entity);
-        assertThat(nacionalidadRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(nacionalidadRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         nacionalidadRepository.save(Nacionalidad.builder().nombre("Test").build());
-        Page<Nacionalidad> page = nacionalidadRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Nacionalidad> list = nacionalidadRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
     @DisplayName("Should count physical entries including deleted")
     void shouldCountByIdIncludeDeleted() {
         Nacionalidad saved = nacionalidadRepository.save(Nacionalidad.builder().nombre("Nac3").borradoLogico(true).build());
-        assertThat(nacionalidadRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(nacionalidadRepository.existsById(saved.getId())).isTrue();
     }
 }

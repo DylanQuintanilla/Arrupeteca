@@ -34,7 +34,7 @@ class FormatoControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/formatos - Should return active formats")
     void shouldReturnActive() throws Exception {
         Page<FormatoResponse> page = new PageImpl<>(List.of());
-        when(formatoService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(formatoService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/formatos"))
                 .andExpect(status().isOk())
@@ -45,9 +45,9 @@ class FormatoControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/formatos/{id} - Should return format by ID")
     void shouldReturnById() throws Exception {
         FormatoResponse response = new FormatoResponse(1L, "Test", false);
-        when(formatoService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(formatoService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/formatos/1"))
+        mockMvc.perform(get("/api/v1/formatos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -61,7 +61,7 @@ class FormatoControllerTest extends BaseControllerTest {
 
         when(formatoService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/formatos")
+        mockMvc.perform(post("/api/v1/formatos/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class FormatoControllerTest extends BaseControllerTest {
 
         when(formatoService.actualizar(any(Long.class), any(FormatoRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/formatos/1")
+        mockMvc.perform(put("/api/v1/formatos/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -87,12 +87,12 @@ class FormatoControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/formatos/admin - Should return all formats for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<FormatoResponse> page = new PageImpl<>(List.of());
-        when(formatoService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(formatoService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/formatos/admin"))
+        mockMvc.perform(get("/api/v1/formatos/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de formatos"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de formatos de libros"));
     }
 
     @Test
@@ -104,24 +104,24 @@ class FormatoControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/formatos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Formato encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Formato encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/formatos/{id} - Should deactivate format")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/formatos/1"))
+        mockMvc.perform(delete("/api/v1/formatos/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Formato desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Formato desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/formatos/{id}/activar - Should activate format")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/formatos/1/activar"))
+        mockMvc.perform(patch("/api/v1/formatos/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Formato activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Formato activado(a) correctamente"));
     }
 }

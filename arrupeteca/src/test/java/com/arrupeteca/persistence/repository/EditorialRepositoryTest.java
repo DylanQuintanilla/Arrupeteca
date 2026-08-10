@@ -24,20 +24,20 @@ class EditorialRepositoryTest extends BaseRepositoryTest {
                 .personaContacto("Juan")
                 .build();
         Editorial saved = editorialRepository.save(entity);
-        assertThat(editorialRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(editorialRepository.findById(saved.getId())).isPresent();
     }
 
     @Test
-    @DisplayName("findByBorradoLogicoFalse - Should return page of entities")
-    void findByBorradoLogicoFalse() {
+    @DisplayName("buscarActivosPorNombre - Should return page of entities")
+    void buscarActivosPorNombre() {
         editorialRepository.save(Editorial.builder()
                 .nombre("Test")
                 .correo("test@editorial.com")
                 .telefono("1111-2222")
                 .personaContacto("Pedro")
                 .build());
-        Page<Editorial> page = editorialRepository.findByBorradoLogicoFalse(PageRequest.of(0, 10));
-        assertThat(page.getContent()).isNotEmpty();
+        java.util.List<Editorial> list = editorialRepository.buscarActivosPorNombre(null);
+        assertThat(list).isNotEmpty();
     }
 
     @Test
@@ -50,6 +50,6 @@ class EditorialRepositoryTest extends BaseRepositoryTest {
                 .personaContacto("Maria")
                 .borradoLogico(true)
                 .build());
-        assertThat(editorialRepository.countByIdIncludeDeleted(saved.getId())).isEqualTo(1L);
+        assertThat(editorialRepository.existsById(saved.getId())).isTrue();
     }
 }

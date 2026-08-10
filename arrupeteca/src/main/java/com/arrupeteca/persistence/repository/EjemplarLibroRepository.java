@@ -59,8 +59,5 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
     @Query("UPDATE EjemplarLibro e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM ejemplar_libro WHERE id_ejemplar_libro = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
     boolean existsByIdAndBorradoLogicoFalse(Long id);
 }

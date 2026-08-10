@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface GradoService {
 
-    List<GradoResponse> obtenerTodosActivos();
+    List<GradoResponse> obtenerTodosActivos(String nombre);
 
     Page<GradoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
@@ -19,5 +19,4 @@ public interface GradoService {
 
     GradoResponse actualizar(Long id, GradoRequest request);
 
-    void cambiarEstado(Long id, boolean estado);
-}
+    void cambiarEstado(Long id, boolean estado);}

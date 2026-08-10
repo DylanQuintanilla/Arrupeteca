@@ -34,7 +34,7 @@ class IdiomaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/idiomas - Should return active languages")
     void shouldReturnActive() throws Exception {
         Page<IdiomaResponse> page = new PageImpl<>(List.of());
-        when(idiomaService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(idiomaService.obtenerTodosActivos(any())).thenReturn(List.of());
 
         mockMvc.perform(get("/api/v1/idiomas"))
                 .andExpect(status().isOk())
@@ -45,9 +45,9 @@ class IdiomaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/idiomas/{id} - Should return language by ID")
     void shouldReturnById() throws Exception {
         IdiomaResponse response = new IdiomaResponse(1L, "Test", false);
-        when(idiomaService.obtenerPorIdActivo(1L)).thenReturn(response);
+        when(idiomaService.obtenerPorId(1L)).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/idiomas/1"))
+        mockMvc.perform(get("/api/v1/idiomas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.nombre").value("Test"));
@@ -61,7 +61,7 @@ class IdiomaControllerTest extends BaseControllerTest {
 
         when(idiomaService.crear(any())).thenReturn(response);
 
-        mockMvc.perform(post("/api/v1/idiomas")
+        mockMvc.perform(post("/api/v1/idiomas/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -76,7 +76,7 @@ class IdiomaControllerTest extends BaseControllerTest {
 
         when(idiomaService.actualizar(any(Long.class), any(IdiomaRequest.class))).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/idiomas/1")
+        mockMvc.perform(put("/api/v1/idiomas/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -87,12 +87,12 @@ class IdiomaControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/idiomas/admin - Should return all languages for admin")
     void shouldReturnAllAdmin() throws Exception {
         Page<IdiomaResponse> page = new PageImpl<>(List.of());
-        when(idiomaService.obtenerTodos(any(Pageable.class))).thenReturn(page);
+        when(idiomaService.obtenerTodos(any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/idiomas/admin"))
+        mockMvc.perform(get("/api/v1/idiomas/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo de idiomas"));
+                .andExpect(jsonPath("$.mensaje").value("Tabla de idiomas"));
     }
 
     @Test
@@ -104,24 +104,24 @@ class IdiomaControllerTest extends BaseControllerTest {
         mockMvc.perform(get("/api/v1/idiomas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Idioma encontrado (admin)"));
+                .andExpect(jsonPath("$.mensaje").value("Idioma encontrado(a)"));
     }
 
     @Test
     @DisplayName("DELETE /api/v1/idiomas/{id} - Should deactivate language")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/idiomas/1"))
+        mockMvc.perform(delete("/api/v1/idiomas/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Idioma desactivado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Idioma desactivado(a) correctamente"));
     }
 
     @Test
     @DisplayName("PATCH /api/v1/idiomas/{id}/activar - Should activate language")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/idiomas/1/activar"))
+        mockMvc.perform(patch("/api/v1/idiomas/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Idioma activado correctamente"));
+                .andExpect(jsonPath("$.mensaje").value("Idioma activado(a) correctamente"));
     }
 }

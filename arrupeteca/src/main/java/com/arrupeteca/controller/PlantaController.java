@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,100 +23,90 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/plantas")
 @RequiredArgsConstructor
-@Tag(name = "Plantas", description = "Endpoints para la gestión del catálogo de plantas de edificios")
+@CrossOrigin(origins = "*")
+@Tag(name = "Plantas", description = "Endpoints para la gestión de plantas de edificios")
 public class PlantaController {
 
     private final PlantaService plantaService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener plantas activas paginadas",
-        description = "Retorna una lista paginada de todas las plantas activas en el sistema."
+        summary = "Obtener plantas de edificios activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de plantas de edificios activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<PlantaResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de plantas activas", plantaService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<PlantaResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de plantas de edificios activos(as)", plantaService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener planta activa por ID",
-        description = "Busca y retorna una planta activa por su identificador único."
-    )
-    public ResponseEntity<ApiResponse<PlantaResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Planta encontrada", plantaService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todas las plantas (Admin)",
-        description = "Retorna el historial completo de plantas (activas e inactivas) para administradores."
+        summary = "Obtener tabla de administración de plantas de edificios",
+        description = "Retorna una página de plantas de edificios con soporte para filtros por idEdificio, nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<PlantaResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de plantas", plantaService.obtenerTodos(pageable)));
+            @RequestParam(required = false) Long idEdificio,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de plantas de edificios", plantaService.obtenerTodos(idEdificio, nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener planta por ID (Admin)",
-        description = "Busca y retorna cualquier planta (activa o inactiva) por su identificador único para administradores."
+        summary = "Obtener plantas de edificios por ID",
+        description = "Busca la información de un(a) planta por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<PlantaResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Planta encontrada (admin)", plantaService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Planta encontrado(a)", plantaService.obtenerPorId(id)));
     }
 
-    @GetMapping("/edificio/{idEdificio}")
+    @PostMapping("/admin")
     @Operation(
-        summary = "Buscar plantas por ID de edificio",
-        description = "Retorna las plantas activas asociadas a un edificio específico."
-    )
-    public ResponseEntity<ApiResponse<Page<PlantaResponse>>> buscarPorEdificioId(
-            @PathVariable Long idEdificio,
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Plantas del edificio", plantaService.buscarPorEdificioId(idEdificio, pageable)));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Crear nueva planta",
-        description = "Crea una nueva planta dentro de un edificio validando la unicidad del nombre por edificio."
+        summary = "Registrar nuevo(a) planta",
+        description = "Crea un(a) nuevo(a) planta en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<PlantaResponse>> crear(@Valid @RequestBody PlantaRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Planta creada exitosamente", plantaService.crear(request)), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Planta creado(a) exitosamente", plantaService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar planta",
-        description = "Actualiza los datos de una planta existente."
+        description = "Actualiza los campos de un(a) planta existente mediante una edición completa."
     )
-    public ResponseEntity<ApiResponse<PlantaResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody PlantaRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Planta actualizada correctamente", plantaService.actualizar(id, request)));
+    public ResponseEntity<ApiResponse<PlantaResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody PlantaRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Planta actualizado(a) correctamente",
+                plantaService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar planta",
-        description = "Realiza el borrado lógico de una planta en el sistema."
+        summary = "Desactivar planta (Borrado lógico)",
+        description = "Oculta el/la planta en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         plantaService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Planta desactivada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Planta desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar planta",
-        description = "Reactiva una planta previamente desactivada."
+        description = "Restaura la visibilidad pública de un(a) planta previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         plantaService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Planta activada correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Planta activado(a) correctamente"));
     }
 }

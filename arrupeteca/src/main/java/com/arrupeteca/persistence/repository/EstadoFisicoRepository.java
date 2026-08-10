@@ -12,8 +12,7 @@ import java.util.List;
 
 public interface EstadoFisicoRepository extends JpaRepository<EstadoFisico, Long> {
 
-    List<EstadoFisico> findByBorradoLogicoFalseOrderByNombreAsc();
-
+    
     @Query("SELECT e FROM EstadoFisico e WHERE " +
            "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) AND " +
            "(:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico)")
@@ -30,10 +29,10 @@ public interface EstadoFisicoRepository extends JpaRepository<EstadoFisico, Long
     @Query("UPDATE EstadoFisico e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
 
-    @Query(value = "SELECT COUNT(*) FROM estado_fisico WHERE id_estado_fisico = :id", nativeQuery = true)
-    long countByIdIncludeDeleted(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
-
     boolean existsByNombreIgnoreCase(String nombre);
+
+    @Query("SELECT e FROM EstadoFisico e WHERE e.borradoLogico = false AND " +
+           "(:nombre IS NULL OR LOWER(e.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +
+           "ORDER BY e.nombre ASC")
+    List<EstadoFisico> buscarActivosPorNombre(@Param("nombre") String nombre);
 }

@@ -1,7 +1,5 @@
 # Estándar de Desarrollo: Servicios Spring Boot para Catálogos (Arrupeteca)
 
-Este documento establece las directrices para el diseño e implementación de la capa de **Servicio** (Lógica de Negocio) en los módulos de **Catálogo** (tablas maestras de referencia, ej. `Categoria`, `Ciclo`, `Disponibilidad`, `Edificio`, `Editorial`, `EstadoFisico`, `Etiqueta`, `Formato`, `Genero`, `Grado`, `Idioma`, `Nacionalidad`, `Pais`, `Parentesco`, `TipoAutoria`, `TipoUsuario`).
-
 ---
 
 ## 1. Configuración de Clase y Dependencias
@@ -17,10 +15,10 @@ La clase de implementación del servicio (`[Entidad]ServiceImpl`) debe configura
 
 ## 2. Estrategia de Caché de Catálogos
 
-*   **Caché de listado activo**: Cachear la lista completa de elementos activos para rápida respuesta en dropdowns:
+*   **Caché de listado activo dinámico**: Cachear la lista de elementos activos con soporte a clave dinámica (`nombre`):
     ```java
-    @Cacheable(value = "categorias-activas")
-    public List<CategoriaResponse> obtenerTodosActivos() { ... }
+    @Cacheable(value = "categorias-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<CategoriaResponse> obtenerTodosActivos(String nombre) { ... }
     ```
 *   **Desalojo total (`allEntries = true`)**: En los métodos que alteren el catálogo (`crear`, `actualizar`, `cambiarEstado`), se debe desalojar la caché completa de listados:
     ```java
@@ -63,17 +61,18 @@ public class CategoriaServiceImpl implements CategoriaService {
     private final CategoriaMapper categoriaMapper;
 
     @Override
-    @Cacheable(value = "categorias-activas")
-    public List<CategoriaResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todas las categorías activas en lista plana");
-        return categoriaRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "categorias-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<CategoriaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo categorías activas (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return categoriaRepository.buscarActivosPorNombre(filtro).stream()
                 .map(categoriaMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<CategoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda administrativa de categorías - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de categorías con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return categoriaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(categoriaMapper::toResponse);
@@ -137,7 +136,7 @@ public class CategoriaServiceImpl implements CategoriaService {
     @CacheEvict(value = "categorias-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
         log.info("Cambiando estado de borrado de categoría ID: {} a {}", id, !estado);
-        if (categoriaRepository.countByIdIncludeDeleted(id) == 0) {
+        if (!categoriaRepository.existsById(id)) {
             throw new ValidacionNegocioException("No se encontró una categoría con ID: " + id);
         }
         if (estado) {

@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface CategoriaService {
 
-    List<CategoriaResponse> obtenerTodosActivos();
+    List<CategoriaResponse> obtenerTodosActivos(String nombre);
 
     Page<CategoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 

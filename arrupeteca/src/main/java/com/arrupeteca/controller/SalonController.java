@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -22,100 +23,90 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/salones")
 @RequiredArgsConstructor
-@Tag(name = "Salones", description = "Endpoints para la gestión del catálogo de salones")
+@CrossOrigin(origins = "*")
+@Tag(name = "Salones", description = "Endpoints para la gestión de salones")
 public class SalonController {
 
     private final SalonService salonService;
 
     @GetMapping
     @Operation(
-        summary = "Obtener salones activos paginados",
-        description = "Retorna una lista paginada de todos los salones activos en el sistema."
+        summary = "Obtener salones activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de salones activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<Page<SalonResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de salones activos", salonService.obtenerTodosActivos(pageable)));
+    public ResponseEntity<ApiResponse<List<SalonResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de salones activos(as)", salonService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener salón activo por ID",
-        description = "Busca y retorna un salón activo por su identificador único."
-    )
-    public ResponseEntity<ApiResponse<SalonResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Salón encontrado", salonService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los salones (Admin)",
-        description = "Retorna el historial completo de salones (activos e inactivas) para administradores."
+        summary = "Obtener tabla de administración de salones",
+        description = "Retorna una página de salones con soporte para filtros por idPlanta, nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<SalonResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de salones", salonService.obtenerTodos(pageable)));
+            @RequestParam(required = false) Long idPlanta,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean borradoLogico,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de salones", salonService.obtenerTodos(idPlanta, nombre, borradoLogico, pageable)));
     }
 
     @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener salón por ID (Admin)",
-        description = "Busca y retorna cualquier salón (activo o inactivo) por su identificador único para administradores."
+        summary = "Obtener salones por ID",
+        description = "Busca la información de un(a) salon por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<SalonResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Salón encontrado (admin)", salonService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Salon encontrado(a)", salonService.obtenerPorId(id)));
     }
 
-    @GetMapping("/planta/{idPlanta}")
+    @PostMapping("/admin")
     @Operation(
-        summary = "Buscar salones por ID de planta",
-        description = "Retorna los salones activos asociados a una planta específica."
-    )
-    public ResponseEntity<ApiResponse<Page<SalonResponse>>> buscarPorPlantaId(
-            @PathVariable Long idPlanta,
-            @ParameterObject @PageableDefault(size = 10, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Salones de la planta", salonService.buscarPorPlantaId(idPlanta, pageable)));
-    }
-
-    @PostMapping
-    @Operation(
-        summary = "Crear nuevo salón",
-        description = "Crea un nuevo salón dentro de una planta validando la unicidad del nombre por planta."
+        summary = "Registrar nuevo(a) salon",
+        description = "Crea un(a) nuevo(a) salon en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<SalonResponse>> crear(@Valid @RequestBody SalonRequest request) {
-        return new ResponseEntity<>(ApiResponse.exito("Salón creado exitosamente", salonService.crear(request)), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.exito("Salon creado(a) exitosamente", salonService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar salón",
-        description = "Actualiza los datos de un salón existente."
+        summary = "Actualizar salon",
+        description = "Actualiza los campos de un(a) salon existente mediante una edición completa."
     )
-    public ResponseEntity<ApiResponse<SalonResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody SalonRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Salón actualizado correctamente", salonService.actualizar(id, request)));
+    public ResponseEntity<ApiResponse<SalonResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody SalonRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Salon actualizado(a) correctamente",
+                salonService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar salón",
-        description = "Realiza el borrado lógico de un salón en el sistema."
+        summary = "Desactivar salon (Borrado lógico)",
+        description = "Oculta el/la salon en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         salonService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Salón desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Salon desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar salón",
-        description = "Reactiva un salón previamente desactivado."
+        summary = "Activar salon",
+        description = "Restaura la visibilidad pública de un(a) salon previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         salonService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Salón activado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Salon activado(a) correctamente"));
     }
 }

@@ -39,72 +39,72 @@ public class CicloController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener ciclos activos para dropdowns",
-        description = "Retorna una lista simple no paginada de ciclos activos para selects y filtros."
+        summary = "Obtener ciclos escolares activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de ciclos escolares activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<CicloResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de ciclos activos", cicloService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<CicloResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de ciclos escolares activos(as)", cicloService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener tabla de administración de ciclos",
-        description = "Retorna una página de ciclos con soporte para filtros por nombre y estado borradoLogico."
+        summary = "Obtener tabla de administración de ciclos escolares",
+        description = "Retorna una página de ciclos escolares con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<CicloResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Tabla de ciclos", cicloService.obtenerTodos(nombre, borradoLogico, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de ciclos escolares", cicloService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener ciclo por ID",
-        description = "Busca la información de un ciclo por su ID sin importar su estado lógico."
+        summary = "Obtener ciclos escolares por ID",
+        description = "Busca la información de un(a) ciclo por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<CicloResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo encontrado", cicloService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("Ciclo encontrado(a)", cicloService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo ciclo",
-        description = "Crea un nuevo ciclo en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) ciclo",
+        description = "Crea un(a) nuevo(a) ciclo en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<CicloResponse>> crear(@Valid @RequestBody CicloRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Ciclo creado exitosamente", cicloService.crear(request)));
+                .body(ApiResponse.exito("Ciclo creado(a) exitosamente", cicloService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar ciclo",
-        description = "Actualiza los campos de un ciclo existente mediante una edición completa."
+        description = "Actualiza los campos de un(a) ciclo existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<CicloResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody CicloRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo actualizado correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("Ciclo actualizado(a) correctamente",
                 cicloService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
         summary = "Desactivar ciclo (Borrado lógico)",
-        description = "Oculta el ciclo en el catálogo público cambiando su estado a borrado."
+        description = "Oculta el/la ciclo en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         cicloService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("Ciclo desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
         summary = "Activar ciclo",
-        description = "Restaura la visibilidad pública de un ciclo previamente desactivado."
+        description = "Restaura la visibilidad pública de un(a) ciclo previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         cicloService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Ciclo activado correctamente"));
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("Ciclo activado(a) correctamente"));
+    }}

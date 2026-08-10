@@ -39,72 +39,72 @@ public class EstadoFisicoController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener estados físicos activos para dropdowns",
-        description = "Retorna una lista simple no paginada de estados físicos activos para selects y filtros."
+        summary = "Obtener estados físicos de ejemplares activos(as) para dropdowns y autocompletado",
+        description = "Retorna una lista no paginada de estados físicos de ejemplares activos(as), con soporte opcional para filtrado por nombre."
     )
-    public ResponseEntity<ApiResponse<List<EstadoFisicoResponse>>> obtenerTodosActivos() {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de estados físicos activos", estadoFisicoService.obtenerTodosActivos()));
+    public ResponseEntity<ApiResponse<List<EstadoFisicoResponse>>> obtenerTodosActivos(
+            @RequestParam(required = false) String nombre) {
+        return ResponseEntity.ok(ApiResponse.exito("Lista de estados físicos de ejemplares activos(as)", estadoFisicoService.obtenerTodosActivos(nombre)));
     }
 
-    @GetMapping("/all")
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener tabla de administración de estados físicos",
-        description = "Retorna una página de estados físicos con soporte para filtros por nombre y estado borradoLogico."
+        summary = "Obtener tabla de administración de estados físicos de ejemplares",
+        description = "Retorna una página de estados físicos de ejemplares con soporte para filtros por nombre y estado borradoLogico."
     )
     public ResponseEntity<ApiResponse<Page<EstadoFisicoResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Tabla de estados físicos", estadoFisicoService.obtenerTodos(nombre, borradoLogico, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Tabla de estados físicos de ejemplares", estadoFisicoService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Obtener estado físico por ID",
-        description = "Busca la información de un estado físico por su ID sin importar su estado lógico."
+        summary = "Obtener estados físicos de ejemplares por ID",
+        description = "Busca la información de un(a) estadofisico por su ID sin importar su estado lógico."
     )
     public ResponseEntity<ApiResponse<EstadoFisicoResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico encontrado", estadoFisicoService.obtenerPorId(id)));
+        return ResponseEntity.ok(ApiResponse.exito("EstadoFisico encontrado(a)", estadoFisicoService.obtenerPorId(id)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo estado físico",
-        description = "Crea un nuevo estado físico en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo(a) estadofisico",
+        description = "Crea un(a) nuevo(a) estadofisico en el sistema validando la unicidad del nombre."
     )
     public ResponseEntity<ApiResponse<EstadoFisicoResponse>> crear(@Valid @RequestBody EstadoFisicoRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Estado físico creado exitosamente", estadoFisicoService.crear(request)));
+                .body(ApiResponse.exito("EstadoFisico creado(a) exitosamente", estadoFisicoService.crear(request)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar estado físico",
-        description = "Actualiza los campos de un estado físico existente mediante una edición completa."
+        summary = "Actualizar estadofisico",
+        description = "Actualiza los campos de un(a) estadofisico existente mediante una edición completa."
     )
     public ResponseEntity<ApiResponse<EstadoFisicoResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody EstadoFisicoRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico actualizado correctamente",
+        return ResponseEntity.ok(ApiResponse.exito("EstadoFisico actualizado(a) correctamente",
                 estadoFisicoService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar estado físico (Borrado lógico)",
-        description = "Oculta el estado físico en el catálogo público cambiando su estado a borrado."
+        summary = "Desactivar estadofisico (Borrado lógico)",
+        description = "Oculta el/la estadofisico en el catálogo público cambiando su estado a borrado."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         estadoFisicoService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico desactivado correctamente"));
+        return ResponseEntity.ok(ApiResponse.exito("EstadoFisico desactivado(a) correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar estado físico",
-        description = "Restaura la visibilidad pública de un estado físico previamente desactivado."
+        summary = "Activar estadofisico",
+        description = "Restaura la visibilidad pública de un(a) estadofisico previamente desactivado(a)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         estadoFisicoService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Estado físico activado correctamente"));
-    }
-}
+        return ResponseEntity.ok(ApiResponse.exito("EstadoFisico activado(a) correctamente"));
+    }}

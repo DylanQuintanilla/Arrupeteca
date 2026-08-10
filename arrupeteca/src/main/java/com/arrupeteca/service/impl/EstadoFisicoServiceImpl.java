@@ -28,17 +28,18 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
     private final EstadoFisicoMapper estadoFisicoMapper;
 
     @Override
-    @Cacheable(value = "estados-fisicos-activos")
-    public List<EstadoFisicoResponse> obtenerTodosActivos() {
-        log.debug("Obteniendo todos los estados físicos activos en lista plana");
-        return estadoFisicoRepository.findByBorradoLogicoFalseOrderByNombreAsc().stream()
+    @Cacheable(value = "estados-fisicos-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<EstadoFisicoResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo estados físicos de ejemplares activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return estadoFisicoRepository.buscarActivosPorNombre(filtro).stream()
                 .map(estadoFisicoMapper::toResponse)
                 .toList();
     }
 
     @Override
     public Page<EstadoFisicoResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
-        log.debug("Búsqueda de estados físicos con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        log.debug("Búsqueda de estados físicos de ejemplares con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
         String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
         return estadoFisicoRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
                 .map(estadoFisicoMapper::toResponse);
@@ -46,17 +47,17 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
 
     @Override
     public EstadoFisicoResponse obtenerPorId(Long id) {
-        log.debug("Buscando estado físico por ID: {}", id);
+        log.debug("Buscando estados físicos de ejemplares por ID: {}", id);
         return estadoFisicoRepository.findById(id)
                 .map(estadoFisicoMapper::toResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un estado físico con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) estadofisico con ID: " + id));
     }
 
     @Override
     @Transactional
     @CacheEvict(value = "estados-fisicos-activos", allEntries = true)
     public EstadoFisicoResponse crear(EstadoFisicoRequest request) {
-        log.info("Creando nuevo estado físico con nombre: {}", request.nombre());
+        log.info("Creando nuevo(a) estadofisico con nombre: {}", request.nombre());
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, null);
 
@@ -64,7 +65,7 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
         estadoFisico.setNombre(nombreTrimmed);
 
         EstadoFisico guardado = estadoFisicoRepository.save(estadoFisico);
-        log.info("Estado físico creado exitosamente con ID: {}", guardado.getId());
+        log.info("EstadoFisico creado(a) exitosamente con ID: {}", guardado.getId());
         return estadoFisicoMapper.toResponse(guardado);
     }
 
@@ -72,9 +73,9 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
     @Transactional
     @CacheEvict(value = "estados-fisicos-activos", allEntries = true)
     public EstadoFisicoResponse actualizar(Long id, EstadoFisicoRequest request) {
-        log.info("Actualizando estado físico con ID: {}", id);
+        log.info("Actualizando estadofisico con ID: {}", id);
         EstadoFisico estadoFisicoExistente = estadoFisicoRepository.findById(id)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un estado físico con ID: " + id));
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) estadofisico con ID: " + id));
 
         String nombreTrimmed = request.nombre().trim();
         validarUnicidad(nombreTrimmed, estadoFisicoExistente);
@@ -83,7 +84,7 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
         estadoFisicoExistente.setNombre(nombreTrimmed);
 
         EstadoFisico actualizado = estadoFisicoRepository.save(estadoFisicoExistente);
-        log.info("Estado físico con ID: {} actualizado exitosamente", id);
+        log.info("EstadoFisico con ID: {} actualizado(a) exitosamente", id);
         return estadoFisicoMapper.toResponse(actualizado);
     }
 
@@ -92,8 +93,8 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
         boolean nombreCambio = !esNuevo && !estadoFisicoExistente.getNombre().equalsIgnoreCase(nombreNuevo);
 
         if ((esNuevo || nombreCambio) && estadoFisicoRepository.existsByNombreIgnoreCase(nombreNuevo)) {
-            log.warn("Intento de duplicar estado físico: {}", nombreNuevo);
-            throw new ValidacionNegocioException("Ya existe un estado físico con el nombre: " + nombreNuevo);
+            log.warn("Intento de duplicar estados físicos de ejemplares: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) estadofisico con el nombre: " + nombreNuevo);
         }
     }
 
@@ -101,14 +102,13 @@ public class EstadoFisicoServiceImpl implements EstadoFisicoService {
     @Transactional
     @CacheEvict(value = "estados-fisicos-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        log.info("Cambiando estado de borrado de estado físico ID: {} a {}", id, !estado);
-        if (estadoFisicoRepository.countByIdIncludeDeleted(id) == 0) {
-            throw new ValidacionNegocioException("No se encontró un estado físico con ID: " + id);
+        log.info("Cambiando estado de borrado de estados físicos de ejemplares ID: {} a {}", id, !estado);
+        if (!estadoFisicoRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) estadofisico con ID: " + id);
         }
         if (estado) {
             estadoFisicoRepository.activar(id);
         } else {
             estadoFisicoRepository.desactivar(id);
         }
-    }
-}
+    }}

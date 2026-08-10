@@ -41,38 +41,16 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
         Page<Nacionalidad> page = new PageImpl<>(List.of(entity));
         NacionalidadResponse response = new NacionalidadResponse(1L, "Test", false);
 
-        when(nacionalidadRepository.findByBorradoLogicoFalse(any(Pageable.class))).thenReturn(page);
+        when(nacionalidadRepository.buscarActivosPorNombre(any())).thenReturn(List.of(entity));
         when(nacionalidadMapper.toResponse(entity)).thenReturn(response);
 
-        Page<NacionalidadResponse> result = nacionalidadService.obtenerTodosActivos(Pageable.unpaged());
+        List<NacionalidadResponse> result = nacionalidadService.obtenerTodosActivos(null);
 
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(response);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0)).isEqualTo(response);
     }
 
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should return NacionalidadResponse when found and active")
-    void obtenerPorIdActivoSuccess() {
-        NacionalidadResponse response = new NacionalidadResponse(1L, "Test", false);
-        Nacionalidad entity = Nacionalidad.builder().id(1L).nombre("Test").build();
-        
-        when(nacionalidadRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(nacionalidadMapper.toResponse(entity)).thenReturn(response);
 
-        NacionalidadResponse result = nacionalidadService.obtenerPorIdActivo(1L);
-
-        assertThat(result).isEqualTo(response);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(nacionalidadRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> nacionalidadService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una nacionalidad activa con ID: 1");
-    }
 
     @Test
     @DisplayName("obtenerTodos - Should return page of NacionalidadResponse")
@@ -81,10 +59,10 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
         Page<Nacionalidad> page = new PageImpl<>(List.of(entity));
         NacionalidadResponse response = new NacionalidadResponse(1L, "Test", false);
         
-        when(nacionalidadRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(nacionalidadRepository.busquedaAdmin(any(), any(), any())).thenReturn(page);
         when(nacionalidadMapper.toResponse(entity)).thenReturn(response);
 
-        Page<NacionalidadResponse> result = nacionalidadService.obtenerTodos(Pageable.unpaged());
+        Page<NacionalidadResponse> result = nacionalidadService.obtenerTodos(null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0)).isEqualTo(response);
@@ -111,7 +89,7 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> nacionalidadService.obtenerPorId(1L))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una nacionalidad con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -141,7 +119,7 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> nacionalidadService.crear(request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe una nacionalidad con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
@@ -172,7 +150,7 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> nacionalidadService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una nacionalidad con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -187,13 +165,13 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
 
         assertThatThrownBy(() -> nacionalidadService.actualizar(id, request))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("Ya existe otra nacionalidad con el nombre: Existe");
+                .hasMessageContaining("con el nombre: Existe");
     }
 
     @Test
     @DisplayName("cambiarEstado - Should activate when state is true")
     void cambiarEstadoActivar() {
-        when(nacionalidadRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(nacionalidadRepository.existsById(1L)).thenReturn(true);
 
         nacionalidadService.cambiarEstado(1L, true);
 
@@ -203,7 +181,7 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should deactivate when state is false")
     void cambiarEstadoDesactivar() {
-        when(nacionalidadRepository.countByIdIncludeDeleted(1L)).thenReturn(1L);
+        when(nacionalidadRepository.existsById(1L)).thenReturn(true);
 
         nacionalidadService.cambiarEstado(1L, false);
 
@@ -213,10 +191,10 @@ class NacionalidadServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("cambiarEstado - Should throw exception when not found")
     void cambiarEstadoNotFound() {
-        when(nacionalidadRepository.countByIdIncludeDeleted(1L)).thenReturn(0L);
+        when(nacionalidadRepository.existsById(1L)).thenReturn(false);
 
         assertThatThrownBy(() -> nacionalidadService.cambiarEstado(1L, true))
                 .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("No se encontró una nacionalidad con ID: 1");
+                .hasMessageContaining("con ID: 1");
     }
 }

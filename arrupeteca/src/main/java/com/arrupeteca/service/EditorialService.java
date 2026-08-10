@@ -5,17 +5,15 @@ import com.arrupeteca.dto.response.EditorialResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface EditorialService {
 
-    Page<EditorialResponse> obtenerTodosActivos(Pageable pageable);
+    List<EditorialResponse> obtenerTodosActivos(String nombre);
 
-    EditorialResponse obtenerPorIdActivo(Long id);
-
-    Page<EditorialResponse> obtenerTodos(Pageable pageable);
+    Page<EditorialResponse> obtenerTodos(String nombre, String correo, String personaContacto, Boolean borradoLogico, Pageable pageable);
 
     EditorialResponse obtenerPorId(Long id);
-
-    Page<EditorialResponse> busquedaMaestraAdmin(Boolean esBorrado, String termino, Pageable pageable);
 
     EditorialResponse crear(EditorialRequest request);
 
