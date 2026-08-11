@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,62 +33,13 @@ public class ObraController {
 
     private final ObraService obraService;
 
-    @GetMapping
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Obtener todas las obras activas",
-        description = "Retorna una página de obras que no están borradas lógicamente."
+        summary = "Búsqueda de administración de obras",
+        description = "Búsqueda multi-filtro por estado lógico, género, categoría, etiqueta, rango de años y coincidencia de término (solo admin)."
     )
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20, sort = "titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de obras activas", obraService.obtenerTodosActivos(pageable)));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(
-        summary = "Obtener detalle de obra activa por ID",
-        description = "Retorna el detalle completo de una obra activa (incluyendo géneros, categorías y autores)."
-    )
-    public ResponseEntity<ApiResponse<ObraDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Obra encontrada", obraService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/global")
-    @Operation(
-        summary = "Búsqueda global de obras",
-        description = "Realiza una búsqueda global por palabra clave coincidente en título o resumen de obras activas."
-    )
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaGlobal(
-            @RequestParam String palabra,
-            @ParameterObject @PageableDefault(size = 20, sort = "titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", obraService.busquedaGlobal(palabra, pageable)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener historial completo de obras (Admin)",
-        description = "Retorna todas las obras registradas, incluyendo las eliminadas lógicamente (solo para administradores)."
-    )
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de obras", obraService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener detalle de obra por ID (Admin)",
-        description = "Busca y retorna el detalle de cualquier obra (activa o borrada) por su identificador (solo para administradores)."
-    )
-    public ResponseEntity<ApiResponse<ObraDetalleResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Obra encontrada (admin)", obraService.obtenerPorId(id)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    @Operation(
-        summary = "Búsqueda maestra multi-filtro (Admin)",
-        description = "Búsqueda avanzada de obras con filtros de estado lógico, género, categoría, etiqueta, rango de años y coincidencia de término (solo para administradores)."
-    )
-    public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaMaestraAdmin(
-            @RequestParam(required = false) Boolean esBorrado,
+    public ResponseEntity<ApiResponse<Page<ObraResumen>>> busquedaAdmin(
+            @RequestParam(required = false) Boolean borradoLogico,
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
             @RequestParam(required = false) Long idEtiqueta,
@@ -97,45 +47,66 @@ public class ObraController {
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                obraService.busquedaMaestraAdmin(esBorrado, idGenero, idCategoria, idEtiqueta, termino, anioInicio, anioFin, pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda de administración de obras",
+                obraService.busquedaAdmin(borradoLogico, idGenero, idCategoria, idEtiqueta, termino, anioInicio, anioFin, pageable)));
     }
 
-    @PostMapping
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Registrar nueva obra",
-        description = "Crea una nueva obra en el sistema con sus relaciones de géneros, categorías y autores asignados."
+        summary = "Obtener detalle de obra por ID (Admin)",
+        description = "Busca y retorna el detalle de cualquier obra (activa o borrada) por su identificador (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<ObraDetalleResponse>> busquedaAdminPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Obra encontrada (admin)", obraService.busquedaAdminPorId(id)));
+    }
+
+    @GetMapping("/admin/verificar-duplicados")
+    @Operation(
+        summary = "Verificar duplicados de obras (Admin)",
+        description = "Busca obras con títulos similares en el catálogo (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<java.util.List<ObraResumen>>> buscarDuplicados(
+            @RequestParam String termino,
+            @RequestParam(required = false) Long idExcluir) {
+        return ResponseEntity.ok(ApiResponse.exito("Verificación completada", obraService.buscarDuplicados(termino, idExcluir)));
+    }
+
+    @PostMapping("/admin")
+    @Operation(
+        summary = "Registrar nueva obra (Admin)",
+        description = "Crea una nueva obra en el sistema con sus relaciones asignadas (solo admin)."
     )
     public ResponseEntity<ApiResponse<ObraDetalleResponse>> crear(@Valid @RequestBody ObraRequest request) {
         return new ResponseEntity<>(ApiResponse.exito("Obra creada exitosamente", obraService.crear(request)), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar obra existente",
-        description = "Actualiza los datos y relaciones de una obra existente validando el bloqueo optimista."
+        summary = "Actualizar obra existente (Admin)",
+        description = "Actualiza los datos y relaciones de una obra existente validando el bloqueo optimista (solo admin)."
     )
     public ResponseEntity<ApiResponse<ObraDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody ObraRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Obra actualizada correctamente", obraService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar obra (Borrado lógico)",
-        description = "Desactiva lógicamente una obra en el catálogo público."
+        summary = "Desactivar obra (Admin)",
+        description = "Desactiva lógicamente una obra en el catálogo público (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         obraService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Obra desactivada correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar obra",
-        description = "Reactiva una obra previamente borrada lógicamente."
+        summary = "Activar obra (Admin)",
+        description = "Reactiva una obra previamente borrada lógicamente (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         obraService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Obra activada correctamente"));
     }
 }
+

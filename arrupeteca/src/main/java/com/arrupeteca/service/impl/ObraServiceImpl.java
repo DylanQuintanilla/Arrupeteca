@@ -49,48 +49,22 @@ public class ObraServiceImpl implements ObraService {
     private final ObraMapper obraMapper;
 
     @Override
-    public Page<ObraResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo obras activas proyectadas paginadas: {}", pageable);
-        return obraRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
+    public Page<ObraResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idGenero, Long idCategoria, Long idEtiqueta,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda maestra de obras admin: borradoLogico={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
+                borradoLogico, idGenero, idCategoria, idEtiqueta, termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return obraRepository.busqueda(borradoLogico, idGenero, idCategoria, idEtiqueta, term, anioInicio, anioFin, pageable);
     }
 
     @Override
-    @Cacheable(value = "obras", key = "#id")
-    public ObraDetalleResponse obtenerPorIdActivo(Long id) {
-        log.debug("Obteniendo obra activa por ID: {}", id);
-        return obraRepository.findByIdAndBorradoLogicoFalse(id)
-                .map(obraMapper::toDetalleResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra activa con ID: " + id));
-    }
-
-    @Override
-    public Page<ObraResumen> busquedaGlobal(String palabra, Pageable pageable) {
-        log.debug("Búsqueda global proyectada de obras por '{}' con paginación: {}", palabra, pageable);
-        return obraRepository.busquedaMaestraAdminProyectada(false, null, null, null, palabra, null, null, pageable);
-    }
-
-    @Override
-    public Page<ObraResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todas las obras proyectadas (Admin) paginadas: {}", pageable);
-        return obraRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
-    }
-
-    @Override
-    public ObraDetalleResponse obtenerPorId(Long id) {
+    public ObraDetalleResponse busquedaAdminPorId(Long id) {
         log.debug("Obteniendo obra por ID (Admin): {}", id);
-        return obraRepository.findById(id)
+        return obraRepository.busquedaPorId(id, null)
                 .map(obraMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra con ID: " + id));
-    }
-
-    @Override
-    public Page<ObraResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idGenero, Long idCategoria, Long idEtiqueta, String termino, Integer anioInicio, Integer anioFin,
-            Pageable pageable) {
-        log.debug("Búsqueda maestra de obras admin proyectada: esBorrado={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
-                esBorrado, idGenero, idCategoria, idEtiqueta, termino);
-        return obraRepository.busquedaMaestraAdminProyectada(
-                esBorrado, idGenero, idCategoria, idEtiqueta, termino, anioInicio, anioFin, pageable);
     }
 
     @Override
@@ -103,7 +77,7 @@ public class ObraServiceImpl implements ObraService {
         Obra obra = obraMapper.toEntity(request);
         asignarRelaciones(obra, request);
 
-        Obra guardada = obraRepository.save(obra);
+        Obra guardada = obraRepository.saveAndFlush(obra);
         log.info("Obra creada exitosamente con ID: {}", guardada.getId());
         return obraMapper.toDetalleResponse(guardada);
     }
@@ -113,7 +87,7 @@ public class ObraServiceImpl implements ObraService {
     @CacheEvict(value = "obras", key = "#id")
     public ObraDetalleResponse actualizar(Long id, ObraRequest request) {
         log.info("Actualizando obra con ID: {}", id);
-        Obra obraExistente = obraRepository.findById(id)
+        Obra obraExistente = obraRepository.busquedaPorId(id, null)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra con ID: " + id));
 
         validarActualizacion(request, obraExistente);
@@ -124,7 +98,7 @@ public class ObraServiceImpl implements ObraService {
         obraMapper.updateEntity(request, obraExistente);
         asignarRelaciones(obraExistente, request);
 
-        Obra actualizada = obraRepository.save(obraExistente);
+        Obra actualizada = obraRepository.saveAndFlush(obraExistente);
         log.info("Obra con ID: {} actualizada exitosamente", id);
         return obraMapper.toDetalleResponse(actualizada);
     }
@@ -287,5 +261,17 @@ public class ObraServiceImpl implements ObraService {
         if (!errores.isEmpty()) {
             throw new ValidacionNegocioException(errores);
         }
+    }
+
+    @Override
+    public List<ObraResumen> buscarDuplicados(String termino, Long idExcluir) {
+        if (termino == null || termino.isBlank()) {
+            return List.of();
+        }
+        log.debug("Buscando duplicados de obra para el término: '{}'", termino);
+        return obraRepository.buscarDuplicados(termino.trim(), idExcluir, org.springframework.data.domain.Sort.by("titulo"))
+                .stream()
+                .map(obraMapper::toResumen)
+                .toList();
     }
 }

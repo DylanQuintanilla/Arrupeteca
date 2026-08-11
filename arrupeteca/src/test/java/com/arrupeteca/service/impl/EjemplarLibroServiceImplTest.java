@@ -30,6 +30,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -58,80 +59,30 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     private EjemplarLibroServiceImpl service;
 
     @Test
-    @DisplayName("obtenerTodosActivos - Should return summary page")
-    void shouldReturnActive() {
-        EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
-        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
-
-        Page<EjemplarLibroResumen> result = service.obtenerTodosActivos(Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(summary);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Success and NotFound")
-    void shouldReturnById() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        EjemplarLibroDetalleResponse detail = mock(EjemplarLibroDetalleResponse.class);
-        when(repository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
-        when(mapper.toDetalleResponse(any())).thenReturn(detail);
-
-        assertThat(service.obtenerPorIdActivo(1L)).isEqualTo(detail);
-
-        when(repository.findByIdAndBorradoLogicoFalse(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorIdActivo(2L)).isInstanceOf(ValidacionNegocioException.class);
-    }
-
-    @Test
-    @DisplayName("busquedaGlobal - Should return summary page")
-    void shouldSearchGlobally() {
-        EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
-        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
-
-        Page<EjemplarLibroResumen> result = service.busquedaGlobal("term", 1L, 1L, Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(summary);
-    }
-
-    @Test
-    @DisplayName("obtenerTodos - Should return all page")
-    void shouldReturnAll() {
-        EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
-        Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
-        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
-
-        Page<EjemplarLibroResumen> result = service.obtenerTodos(Pageable.unpaged());
-
-        assertThat(result.getContent()).containsExactly(summary);
-    }
-
-    @Test
-    @DisplayName("obtenerPorId - Success and NotFound")
-    void shouldReturnByIdAdmin() {
-        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
-        EjemplarLibroDetalleResponse detail = mock(EjemplarLibroDetalleResponse.class);
-        when(repository.findById(1L)).thenReturn(Optional.of(entity));
-        when(mapper.toDetalleResponse(any())).thenReturn(detail);
-
-        assertThat(service.obtenerPorId(1L)).isEqualTo(detail);
-
-        when(repository.findById(2L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> service.obtenerPorId(2L)).isInstanceOf(ValidacionNegocioException.class);
-    }
-
-    @Test
-    @DisplayName("busquedaMaestraAdmin - All branches")
-    void shouldPerformMasterSearch() {
+    @DisplayName("busquedaAdmin - All branches")
+    void busquedaAdmin() {
         EjemplarLibroResumen summary = mock(EjemplarLibroResumen.class);
         Page<EjemplarLibroResumen> page = new PageImpl<>(List.of(summary));
         
-        when(repository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(repository.busqueda(eq(false), any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(page);
 
-        Page<EjemplarLibroResumen> result = service.busquedaMaestraAdmin(false, 1L, 1L, 1L, 1L, 1L, 1L, 1L, "term", Pageable.unpaged());
+        Page<EjemplarLibroResumen> result = service.busquedaAdmin(false, 1L, 1L, 1L, 1L, 1L, 1L, 1L, "term", Pageable.unpaged());
         assertThat(result.getContent()).containsExactly(summary);
+    }
+
+    @Test
+    @DisplayName("busquedaAdminPorId - Success and NotFound")
+    void busquedaAdminPorId() {
+        EjemplarLibro entity = EjemplarLibro.builder().id(1L).build();
+        EjemplarLibroDetalleResponse detail = mock(EjemplarLibroDetalleResponse.class);
+        when(repository.busquedaPorId(1L, null)).thenReturn(Optional.of(entity));
+        when(mapper.toDetalleResponse(any())).thenReturn(detail);
+
+        assertThat(service.busquedaAdminPorId(1L)).isEqualTo(detail);
+
+        when(repository.busquedaPorId(2L, null)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.busquedaAdminPorId(2L)).isInstanceOf(ValidacionNegocioException.class);
     }
 
     @Test
@@ -151,7 +102,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
                 .build();
 
         when(mapper.toEntity(any())).thenReturn(entity);
-        when(repository.save(any())).thenReturn(entity);
+        when(repository.saveAndFlush(any())).thenReturn(entity);
         when(mapper.toDetalleResponse(any())).thenReturn(mock(EjemplarLibroDetalleResponse.class));
         when(libroRepository.findById(1L)).thenReturn(Optional.of(libro));
         when(muebleRepository.findById(2L)).thenReturn(Optional.of(mueble));
@@ -159,7 +110,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
         when(disponibilidadRepository.findById(1L)).thenReturn(Optional.of(disp));
 
         service.crear(request);
-        verify(repository).save(entity);
+        verify(repository).saveAndFlush(entity);
     }
 
     @Test
@@ -174,8 +125,8 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
                 .version(0L)
                 .build();
 
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
-        when(repository.save(any())).thenReturn(existing);
+        when(repository.busquedaPorId(1L, null)).thenReturn(Optional.of(existing));
+        when(repository.saveAndFlush(any())).thenReturn(existing);
         when(mapper.toDetalleResponse(any())).thenReturn(mock(EjemplarLibroDetalleResponse.class));
         when(libroRepository.findById(1L)).thenReturn(Optional.of(Libro.builder().build()));
         when(muebleRepository.findById(2L)).thenReturn(Optional.of(Mueble.builder().build()));
@@ -184,7 +135,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
 
         service.actualizar(1L, request);
 
-        when(repository.findById(2L)).thenReturn(Optional.empty());
+        when(repository.busquedaPorId(2L, null)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.actualizar(2L, request)).isInstanceOf(ValidacionNegocioException.class);
     }
 
@@ -205,7 +156,7 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
     @DisplayName("asignarRelaciones - Exception branches")
     void shouldThrowWhenRelationNotFound() {
         EjemplarLibro existing = EjemplarLibro.builder().id(1L).version(0L).build();
-        when(repository.findById(1L)).thenReturn(Optional.of(existing));
+        when(repository.busquedaPorId(1L, null)).thenReturn(Optional.of(existing));
         when(libroRepository.findById(2L)).thenReturn(Optional.empty());
 
         EjemplarLibroRequest reqLibro = EjemplarLibroRequest.builder()
@@ -237,3 +188,4 @@ class EjemplarLibroServiceImplTest extends BaseServiceTest {
                 });
     }
 }
+

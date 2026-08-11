@@ -47,8 +47,8 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should find active with pagination")
     void shouldFindActive() {
         libroRepository.save(createValidLibro("9781107004634"));
-        Page<LibroResumen> page = libroRepository.busquedaMaestraAdminProyectada(
-                false, null, null, null, null, null, null, null, null, null, null, null, PageRequest.of(0, 10));
+        Page<LibroResumen> page = libroRepository.busqueda(
+                false, null, null, null, null, null, null, null, null, null, null, null, null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 
@@ -57,6 +57,13 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     void shouldCountByIdIncludeDeleted() {
         Libro saved = libroRepository.save(createValidLibro("9781107004639"));
         assertThat(libroRepository.existsById(saved.getId())).isTrue();
+    }
+
+    @Test
+    @DisplayName("Should find libro by id using busquedaPorId")
+    void shouldFindById() {
+        Libro saved = libroRepository.save(createValidLibro("9780132350884"));
+        assertThat(libroRepository.busquedaPorId(saved.getId(), false)).isPresent();
     }
 
     private Libro createValidLibro(String isbn) {

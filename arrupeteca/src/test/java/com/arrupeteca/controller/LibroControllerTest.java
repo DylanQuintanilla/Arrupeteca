@@ -23,7 +23,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,7 +38,7 @@ class LibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/libros - Should return active books")
     void shouldReturnActive() throws Exception {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(libroService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros"))
                 .andExpect(status().isOk())
@@ -56,7 +55,7 @@ class LibroControllerTest extends BaseControllerTest {
                 .ciclo(CicloResponse.builder().id(1L).nombre("Ciclo").build())
                 .creadoPor("admin").modificadoPor("admin")
                 .idiomas(Collections.emptySet()).build();
-        when(libroService.obtenerPorIdActivo(1L)).thenReturn(detail);
+        when(libroService.busquedaGlobalPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/libros/1"))
                 .andExpect(status().isOk())
@@ -65,7 +64,46 @@ class LibroControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/libros - Should create book")
+    @DisplayName("GET /api/v1/libros/obra/{idObra} - Should return books by work ID")
+    void shouldReturnByObraId() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.buscarPorObraId(any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/libros/obra/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros/admin/all - Should return all books for admin")
+    void shouldReturnAllForAdmin() throws Exception {
+        Page<LibroResumen> page = new PageImpl<>(List.of());
+        when(libroService.busquedaAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+
+        mockMvc.perform(get("/api/v1/libros/admin/all"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros/admin/{id} - Should return book by ID for admin")
+    void shouldReturnByIdForAdmin() throws Exception {
+        LibroDetalleResponse detail = LibroDetalleResponse.builder()
+                .id(1L).isbn("123").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
+                .version(0L).borradoLogico(false)
+                .grado(GradoResponse.builder().id(1L).nombre("G").build())
+                .ciclo(CicloResponse.builder().id(1L).nombre("C").build())
+                .creadoPor("A").modificadoPor("A")
+                .idiomas(Collections.emptySet()).build();
+        when(libroService.busquedaAdminPorId(1L)).thenReturn(detail);
+
+        mockMvc.perform(get("/api/v1/libros/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/libros/admin - Should create book")
     void shouldCreate() throws Exception {
         LibroRequest request = LibroRequest.builder()
                 .isbn(org.openapitools.jackson.nullable.JsonNullable.of("9780596520687"))
@@ -85,7 +123,7 @@ class LibroControllerTest extends BaseControllerTest {
                 .idiomas(Collections.emptySet()).build();
         when(libroService.crear(any())).thenReturn(detail);
 
-        mockMvc.perform(post("/api/v1/libros")
+        mockMvc.perform(post("/api/v1/libros/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -93,7 +131,7 @@ class LibroControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/libros/{id} - Should update book")
+    @DisplayName("PATCH /api/v1/libros/admin/{id} - Should update book")
     void shouldUpdate() throws Exception {
         LibroRequest request = LibroRequest.builder()
                 .isbn(org.openapitools.jackson.nullable.JsonNullable.of("9780596520687"))
@@ -114,7 +152,7 @@ class LibroControllerTest extends BaseControllerTest {
                 .idiomas(Collections.emptySet()).build();
         when(libroService.actualizar(any(Long.class), any(LibroRequest.class))).thenReturn(detail);
 
-        mockMvc.perform(patch("/api/v1/libros/1")
+        mockMvc.perform(patch("/api/v1/libros/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -122,79 +160,19 @@ class LibroControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/libros/global - Should perform global search")
-    void shouldPerformGlobalSearch() throws Exception {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/libros/global").param("palabra", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/admin - Should return all books for admin")
-    void shouldReturnAllForAdmin() throws Exception {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.obtenerTodos(any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/libros/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/admin/{id} - Should return book by ID for admin")
-    void shouldReturnByIdForAdmin() throws Exception {
-        LibroDetalleResponse detail = LibroDetalleResponse.builder()
-                .id(1L).isbn("123").anioPublicacion(2021).precio(BigDecimal.TEN).urlImagen("U").mora(BigDecimal.ONE)
-                .version(0L).borradoLogico(false)
-                .grado(GradoResponse.builder().id(1L).nombre("G").build())
-                .ciclo(CicloResponse.builder().id(1L).nombre("C").build())
-                .creadoPor("A").modificadoPor("A")
-                .idiomas(Collections.emptySet()).build();
-        when(libroService.obtenerPorId(1L)).thenReturn(detail);
-
-        mockMvc.perform(get("/api/v1/libros/admin/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/admin/busqueda-maestra - Should perform master search")
-    void shouldPerformMasterSearch() throws Exception {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/libros/admin/busqueda-maestra"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/libros/obra/{idObra} - Should return books by work ID")
-    void shouldReturnByObraId() throws Exception {
-        Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.buscarPorObraId(any(), any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/libros/obra/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("DELETE /api/v1/libros/{id} - Should deactivate book")
+    @DisplayName("DELETE /api/v1/libros/admin/{id} - Should deactivate book")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/libros/1"))
+        mockMvc.perform(delete("/api/v1/libros/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/libros/{id}/activar - Should activate book")
+    @DisplayName("PATCH /api/v1/libros/admin/{id}/activar - Should activate book")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/libros/1/activar"))
+        mockMvc.perform(patch("/api/v1/libros/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true));
     }
 }
+

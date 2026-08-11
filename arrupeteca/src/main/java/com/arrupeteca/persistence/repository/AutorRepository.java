@@ -26,17 +26,17 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
            "LEFT JOIN a.nacionalidad n " +
            "LEFT JOIN a.generoPrincipal g " +
            "LEFT JOIN a.obraCumbre o " +
-           "WHERE (:esBorrado IS NULL OR a.borradoLogico = :esBorrado) " +
+           "WHERE (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico) " +
            "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
            "AND (:idPais IS NULL OR p.id = :idPais) " +
            "AND (:idGenero IS NULL OR g.id = :idGenero) " +
            "AND (:idObraCumbre IS NULL OR o.id = :idObraCumbre) " +
-           "AND (:termino IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND (:termino IS NULL OR :termino = '' OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
            "AND (:anioFin IS NULL OR a.anioNacimiento <= :anioFin)")
-    Page<AutorResumenResponse> busquedaMaestraAdminProyectada(
-            @Param("esBorrado") Boolean esBorrado,
+    Page<AutorResumenResponse> busqueda(
+            @Param("borradoLogico") Boolean borradoLogico,
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
             @Param("idGenero") Long idGenero,
@@ -47,17 +47,15 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("SELECT a FROM Autor a WHERE a.id = :id AND (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico)")
+    Optional<Autor> busquedaPorId(@Param("id") Long id, @Param("borradoLogico") Boolean borradoLogico);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query("SELECT a FROM Autor a " +
            "WHERE (LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "   OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:idExcluir IS NULL OR a.id != :idExcluir)")
     List<Autor> buscarDuplicados(@Param("termino") String termino, @Param("idExcluir") Long idExcluir, Sort sort);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<Autor> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<Autor> findById(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")

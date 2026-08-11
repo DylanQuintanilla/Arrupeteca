@@ -8,21 +8,20 @@ import org.springframework.data.domain.Pageable;
 
 public interface LibroService {
 
-    Page<LibroResumen> obtenerTodosActivos(Pageable pageable);
+    Page<LibroResumen> busquedaGlobal(
+            String termino, Long idAutor, Long idGenero, Long idCategoria,
+            Long idEditorial, Integer anioInicio, Integer anioFin,
+            Pageable pageable);
 
-    LibroDetalleResponse obtenerPorIdActivo(Long id);
+    LibroDetalleResponse busquedaGlobalPorId(Long id);
 
-    Page<LibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable);
-
-    Page<LibroResumen> obtenerTodos(Pageable pageable);
-
-    LibroDetalleResponse obtenerPorId(Long id);
-
-    Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEtiqueta,
+    Page<LibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
             Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
             String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable);
+
+    LibroDetalleResponse busquedaAdminPorId(Long id);
 
     Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable);
 
@@ -32,3 +31,4 @@ public interface LibroService {
 
     void cambiarEstado(Long id, boolean estado);
 }
+

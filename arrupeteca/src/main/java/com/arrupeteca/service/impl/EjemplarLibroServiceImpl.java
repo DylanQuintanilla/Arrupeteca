@@ -38,54 +38,23 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     private final DisponibilidadRepository disponibilidadRepository;
 
     @Override
-    public Page<EjemplarLibroResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo ejemplares activos proyectados paginados: {}", pageable);
-        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
-                false, null, null, null, null, null, null, null, null, pageable);
-    }
-
-    @Override
-    @Cacheable(value = "ejemplares", key = "#id")
-    public EjemplarLibroDetalleResponse obtenerPorIdActivo(Long id) {
-        log.debug("Obteniendo ejemplar activo por ID: {}", id);
-        return ejemplarLibroRepository.findByIdAndBorradoLogicoFalse(id)
-                .map(ejemplarLibroMapper::toDetalleResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Ejemplar activo con ID: " + id));
-    }
-
-    @Override
-    public Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
-        log.debug("Búsqueda global proyectada de ejemplares por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
-                false, null, idGenero, idCategoria, null, null, null, null, palabra, pageable);
-    }
-
-    @Override
-    public Page<EjemplarLibroResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los ejemplares proyectados paginados: {}", pageable);
-        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
-                null, null, null, null, null, null, null, null, null, pageable);
-    }
-
-    @Override
-    public EjemplarLibroDetalleResponse obtenerPorId(Long id) {
-        log.debug("Obteniendo ejemplar por ID: {}", id);
-        return ejemplarLibroRepository.findById(id)
-                .map(ejemplarLibroMapper::toDetalleResponse)
-                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Ejemplar con ID: " + id));
-    }
-
-    @Override
-    public Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
+    public Page<EjemplarLibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
             Long idMueble, Long idEstadoFisico, Long idDisponibilidad,
             String termino, Pageable pageable) {
+        log.debug("Búsqueda de ejemplares para admin proyectada: borradoLogico={}, idLibro={}, idEtiqueta={}", borradoLogico, idLibro, idEtiqueta);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return ejemplarLibroRepository.busqueda(
+                borradoLogico, idLibro, idGenero, idCategoria, idEtiqueta,
+                idMueble, idEstadoFisico, idDisponibilidad, term, pageable);
+    }
 
-        log.debug("Búsqueda maestra de ejemplares para admin proyectada: esBorrado={}, idLibro={}, idEtiqueta={}", esBorrado, idLibro, idEtiqueta);
-
-        return ejemplarLibroRepository.busquedaMaestraAdminProyectada(
-                esBorrado, idLibro, idGenero, idCategoria, idEtiqueta,
-                idMueble, idEstadoFisico, idDisponibilidad, termino, pageable);
+    @Override
+    public EjemplarLibroDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Obteniendo ejemplar por ID: {}", id);
+        return ejemplarLibroRepository.busquedaPorId(id, null)
+                .map(ejemplarLibroMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Ejemplar con ID: " + id));
     }
 
     @Override
@@ -97,7 +66,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         EjemplarLibro ejemplar = ejemplarLibroMapper.toEntity(request);
         asignarRelaciones(ejemplar, request);
 
-        EjemplarLibro guardado = ejemplarLibroRepository.save(ejemplar);
+        EjemplarLibro guardado = ejemplarLibroRepository.saveAndFlush(ejemplar);
         log.info("Ejemplar de libro creado exitosamente con ID: {}", guardado.getId());
         return ejemplarLibroMapper.toDetalleResponse(guardado);
     }
@@ -107,7 +76,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
     @CacheEvict(value = "ejemplares", key = "#id")
     public EjemplarLibroDetalleResponse actualizar(Long id, EjemplarLibroRequest request) {
         log.info("Actualizando ejemplar de libro con ID: {}", id);
-        EjemplarLibro ejemplarExistente = ejemplarLibroRepository.findById(id)
+        EjemplarLibro ejemplarExistente = ejemplarLibroRepository.busquedaPorId(id, null)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Ejemplar con ID: " + id));
 
         validarActualizacion(request, ejemplarExistente);
@@ -115,7 +84,7 @@ public class EjemplarLibroServiceImpl implements EjemplarLibroService {
         ejemplarLibroMapper.updateEntity(request, ejemplarExistente);
         asignarRelaciones(ejemplarExistente, request);
 
-        EjemplarLibro actualizado = ejemplarLibroRepository.save(ejemplarExistente);
+        EjemplarLibro actualizado = ejemplarLibroRepository.saveAndFlush(ejemplarExistente);
         log.info("Ejemplar de libro con ID: {} actualizado exitosamente", id);
         return ejemplarLibroMapper.toDetalleResponse(actualizado);
     }

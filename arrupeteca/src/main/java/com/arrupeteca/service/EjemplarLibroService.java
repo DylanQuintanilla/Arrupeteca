@@ -8,20 +8,12 @@ import org.springframework.data.domain.Pageable;
 
 public interface EjemplarLibroService {
 
-    Page<EjemplarLibroResumen> obtenerTodosActivos(Pageable pageable);
-
-    EjemplarLibroDetalleResponse obtenerPorIdActivo(Long id);
-
-    Page<EjemplarLibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable);
-
-    Page<EjemplarLibroResumen> obtenerTodos(Pageable pageable);
-
-    EjemplarLibroDetalleResponse obtenerPorId(Long id);
-
-    Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
+    Page<EjemplarLibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
             Long idMueble, Long idEstadoFisico, Long idDisponibilidad,
             String termino, Pageable pageable);
+
+    EjemplarLibroDetalleResponse busquedaAdminPorId(Long id);
 
     EjemplarLibroDetalleResponse crear(EjemplarLibroRequest request);
 
@@ -29,3 +21,4 @@ public interface EjemplarLibroService {
 
     void cambiarEstado(Long id, boolean estado);
 }
+

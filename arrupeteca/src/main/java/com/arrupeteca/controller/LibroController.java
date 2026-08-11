@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,12 +35,20 @@ public class LibroController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener libros activos paginados",
-        description = "Retorna una página de libros registrados que no están borrados lógicamente."
+        summary = "Búsqueda global de libros activos",
+        description = "Permite buscar libros activos por término (ISBN o título de obra), autor, género, categoría, editorial y rango de años de publicación."
     )
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodosActivos(
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaGlobal(
+            @RequestParam(required = false) String termino,
+            @RequestParam(required = false) Long idAutor,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idCategoria,
+            @RequestParam(required = false) Long idEditorial,
+            @RequestParam(required = false) Integer anioInicio,
+            @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de libros activos", libroService.obtenerTodosActivos(pageable)));
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda pública de libros activos",
+                libroService.busquedaGlobal(termino, idAutor, idGenero, idCategoria, idEditorial, anioInicio, anioFin, pageable)));
     }
 
     @GetMapping("/{id}")
@@ -49,64 +56,8 @@ public class LibroController {
         summary = "Obtener detalle de libro activo por ID",
         description = "Busca y retorna el detalle completo de un libro activo por su identificador único."
     )
-    public ResponseEntity<ApiResponse<LibroDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Libro encontrado", libroService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/global")
-    @Operation(
-        summary = "Búsqueda global de libros",
-        description = "Permite buscar libros por término coincidente en ISBN, título de obra, editorial o formato, y filtrar por género y categoría de la obra."
-    )
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @RequestParam(required = false) Long idGenero,
-            @RequestParam(required = false) Long idCategoria,
-            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda global", libroService.busquedaGlobal(palabra, idGenero, idCategoria, pageable)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener todos los libros (Admin)",
-        description = "Retorna una página de todos los libros en el sistema, incluidos los desactivados (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de libros", libroService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener detalle de libro por ID (Admin)",
-        description = "Busca el detalle de cualquier libro en el sistema sin importar su estado lógico (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<LibroDetalleResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Libro encontrado (admin)", libroService.obtenerPorId(id)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    @Operation(
-        summary = "Búsqueda avanzada de libros (Admin)",
-        description = "Búsqueda avanzada de libros mediante múltiples filtros opcionales incluidos género, categoría y etiqueta (sólo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaMaestraAdmin(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idObra,
-            @RequestParam(required = false) Long idGenero,
-            @RequestParam(required = false) Long idCategoria,
-            @RequestParam(required = false) Long idEtiqueta,
-            @RequestParam(required = false) Long idEditorial,
-            @RequestParam(required = false) Long idFormato,
-            @RequestParam(required = false) Long idGrado,
-            @RequestParam(required = false) Long idCiclo,
-            @RequestParam(required = false) String termino,
-            @RequestParam(required = false) Integer anioInicio,
-            @RequestParam(required = false) Integer anioFin,
-            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                libroService.busquedaMaestraAdmin(esBorrado, idObra, idGenero, idCategoria, idEtiqueta, idEditorial, idFormato,
-                        idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> busquedaGlobalPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Libro activo encontrado", libroService.busquedaGlobalPorId(id)));
     }
 
     @GetMapping("/obra/{idObra}")
@@ -120,42 +71,77 @@ public class LibroController {
         return ResponseEntity.ok(ApiResponse.exito("Libros de la obra", libroService.buscarPorObraId(idObra, pageable)));
     }
 
-    @PostMapping
+    @GetMapping("/admin/all")
     @Operation(
-        summary = "Registrar nuevo libro",
-        description = "Crea un libro en el sistema validando unicidad de ISBN y relaciones asociadas."
+        summary = "Búsqueda de administración de libros",
+        description = "Búsqueda avanzada de libros mediante múltiples filtros opcionales (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaAdmin(
+            @RequestParam(required = false) Boolean borradoLogico,
+            @RequestParam(required = false) Long idObra,
+            @RequestParam(required = false) Long idAutor,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idCategoria,
+            @RequestParam(required = false) Long idEtiqueta,
+            @RequestParam(required = false) Long idEditorial,
+            @RequestParam(required = false) Long idFormato,
+            @RequestParam(required = false) Long idGrado,
+            @RequestParam(required = false) Long idCiclo,
+            @RequestParam(required = false) String termino,
+            @RequestParam(required = false) Integer anioInicio,
+            @RequestParam(required = false) Integer anioFin,
+            @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda de administración de libros",
+                libroService.busquedaAdmin(borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, idEditorial, idFormato,
+                        idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
+    }
+
+    @GetMapping("/admin/{id}")
+    @Operation(
+        summary = "Obtener detalle de libro por ID (Admin)",
+        description = "Busca el detalle de cualquier libro en el sistema sin importar su estado lógico (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<LibroDetalleResponse>> busquedaAdminPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Libro encontrado (admin)", libroService.busquedaAdminPorId(id)));
+    }
+
+    @PostMapping("/admin")
+    @Operation(
+        summary = "Registrar nuevo libro (Admin)",
+        description = "Crea un libro en el sistema validando unicidad de ISBN y relaciones asociadas (solo admin)."
     )
     public ResponseEntity<ApiResponse<LibroDetalleResponse>> crear(@Valid @RequestBody LibroRequest request) {
         return new ResponseEntity<>(ApiResponse.exito("Libro creado exitosamente", libroService.crear(request)), HttpStatus.CREATED);
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar libro",
-        description = "Actualiza los atributos y relaciones de un libro existente controlando concurrencia."
+        summary = "Actualizar libro (Admin)",
+        description = "Actualiza los atributos y relaciones de un libro existente controlando concurrencia (solo admin)."
     )
     public ResponseEntity<ApiResponse<LibroDetalleResponse>> actualizar(
             @PathVariable Long id, @Valid @RequestBody LibroRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Libro actualizado correctamente", libroService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar libro (Borrado lógico)",
-        description = "Desactiva lógicamente un libro en el catálogo público."
+        summary = "Desactivar libro (Admin)",
+        description = "Desactiva lógicamente un libro en el catálogo público (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         libroService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Libro desactivado correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar libro",
-        description = "Reactiva un libro desactivado lógicamente."
+        summary = "Activar libro (Admin)",
+        description = "Reactiva un libro desactivado lógicamente (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         libroService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Libro activado correctamente"));
     }
 }
+

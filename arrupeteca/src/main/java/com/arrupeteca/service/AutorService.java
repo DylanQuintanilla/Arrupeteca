@@ -11,19 +11,17 @@ import java.util.List;
 
 public interface AutorService {
 
-    Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable);
-
-    AutorDetalleResponse obtenerPorIdActivo(Long id);
-
-    Page<AutorResumenResponse> obtenerTodos(Pageable pageable);
-
-    AutorDetalleResponse obtenerPorId(Long id);
-
-    Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable);
-
-    Page<AutorResumenResponse> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+    Page<AutorResumenResponse> busquedaGlobal(
+            Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
             Year anioInicio, Year anioFin, String termino, Pageable pageable);
+
+    AutorDetalleResponse busquedaGlobalPorId(Long id);
+
+    Page<AutorResumenResponse> busquedaAdmin(
+            Boolean borradoLogico, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable);
+
+    AutorDetalleResponse busquedaAdminPorId(Long id);
 
     AutorDetalleResponse crear(AutorRequest request);
 

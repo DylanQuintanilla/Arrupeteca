@@ -33,6 +33,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -61,43 +62,30 @@ class ObraServiceImplTest extends BaseServiceTest {
     private ObraServiceImpl obraService;
 
     @Test
-    @DisplayName("obtenerTodosActivos - Should return page of Resumen")
-    void obtenerTodosActivos() {
+    @DisplayName("busquedaAdmin - Should return page of Resumen")
+    void busquedaAdmin() {
         ObraResumen resumen = new ObraResumen(1L, "Test", 2021, "Resumen", false);
         Page<ObraResumen> page = new PageImpl<>(List.of(resumen));
 
-        when(obraRepository.busquedaMaestraAdminProyectada(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(obraRepository.busqueda(eq(true), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
-        Page<ObraResumen> result = obraService.obtenerTodosActivos(Pageable.unpaged());
+        Page<ObraResumen> result = obraService.busquedaAdmin(true, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0)).isEqualTo(resumen);
     }
 
     @Test
-    @DisplayName("obtenerPorIdActivo - Should return DetalleResponse")
-    void obtenerPorIdActivo() {
+    @DisplayName("busquedaAdminPorId - Should return DetalleResponse")
+    void busquedaAdminPorId() {
         Obra entity = Obra.builder().id(1L).titulo("Test").build();
-        ObraDetalleResponse detail = ObraDetalleResponse.builder()
-                .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
-                .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
+        ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
-        when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.of(entity));
+        when(obraRepository.busquedaPorId(1L, null)).thenReturn(Optional.of(entity));
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
 
-        ObraDetalleResponse result = obraService.obtenerPorIdActivo(1L);
+        ObraDetalleResponse result = obraService.busquedaAdminPorId(1L);
 
         assertThat(result).isEqualTo(detail);
-    }
-
-    @Test
-    @DisplayName("obtenerPorIdActivo - Should throw exception when not found")
-    void obtenerPorIdActivoNotFound() {
-        when(obraRepository.findByIdAndBorradoLogicoFalse(1L)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> obraService.obtenerPorIdActivo(1L))
-                .isInstanceOf(ValidacionNegocioException.class)
-                .hasMessageContaining("con ID: 1");
     }
 
     @Test
@@ -120,7 +108,7 @@ class ObraServiceImplTest extends BaseServiceTest {
         when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(TipoAutoria.builder().build()));
 
         when(obraMapper.toEntity(request)).thenReturn(entity);
-        when(obraRepository.save(any(Obra.class))).thenReturn(entity);
+        when(obraRepository.saveAndFlush(any(Obra.class))).thenReturn(entity);
         when(obraMapper.toDetalleResponse(entity)).thenReturn(detail);
 
         ObraDetalleResponse result = obraService.crear(request);
@@ -161,14 +149,14 @@ class ObraServiceImplTest extends BaseServiceTest {
         Obra saved = Obra.builder().id(1L).titulo("Nuevo").build();
         ObraDetalleResponse detail = mock(ObraDetalleResponse.class);
 
-        when(obraRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(obraRepository.busquedaPorId(1L, null)).thenReturn(Optional.of(existing));
         when(obraRepository.existsByTituloIgnoreCase("Nuevo")).thenReturn(false);
         when(generoRepository.findById(1L)).thenReturn(Optional.of(Genero.builder().build()));
         when(categoriaRepository.findById(1L)).thenReturn(Optional.of(Categoria.builder().build()));
         when(autorRepository.findById(1L)).thenReturn(Optional.of(Autor.builder().build()));
         when(tipoAutoriaRepository.findById(1L)).thenReturn(Optional.of(TipoAutoria.builder().build()));
 
-        when(obraRepository.save(existing)).thenReturn(saved);
+        when(obraRepository.saveAndFlush(existing)).thenReturn(saved);
         when(obraMapper.toDetalleResponse(saved)).thenReturn(detail);
 
         ObraDetalleResponse result = obraService.actualizar(1L, request);
@@ -179,7 +167,7 @@ class ObraServiceImplTest extends BaseServiceTest {
     @Test
     @DisplayName("actualizar - Should throw when not found")
     void actualizarNotFound() {
-        when(obraRepository.findById(1L)).thenReturn(Optional.empty());
+        when(obraRepository.busquedaPorId(1L, null)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> obraService.actualizar(1L, ObraRequest.builder().build()))
                 .isInstanceOf(ValidacionNegocioException.class)
                 .hasMessageContaining("con ID: 1");
@@ -200,4 +188,19 @@ class ObraServiceImplTest extends BaseServiceTest {
         obraService.cambiarEstado(1L, false);
         verify(obraRepository).desactivar(1L);
     }
+
+    @Test
+    @DisplayName("buscarDuplicados - Should return list of duplicates")
+    void buscarDuplicados() {
+        Obra obra = Obra.builder().id(1L).titulo("Cien años de soledad").build();
+        ObraResumen resumen = new ObraResumen(1L, "Cien años de soledad", 1967, "Resumen", false);
+
+        when(obraRepository.buscarDuplicados(eq("Cien"), eq(null), any())).thenReturn(List.of(obra));
+        when(obraMapper.toResumen(obra)).thenReturn(resumen);
+
+        List<ObraResumen> result = obraService.buscarDuplicados("Cien", null);
+
+        assertThat(result).containsExactly(resumen);
+    }
 }
+

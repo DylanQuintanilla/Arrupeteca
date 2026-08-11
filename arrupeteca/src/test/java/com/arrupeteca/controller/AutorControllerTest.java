@@ -23,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -34,51 +33,70 @@ class AutorControllerTest extends BaseControllerTest {
     private AutorService autorService;
 
     @Test
-    @DisplayName("GET /api/v1/autores - Should return active authors")
-    void shouldReturnActive() throws Exception {
+    @DisplayName("GET /api/v1/autores - Should perform global search of active authors")
+    void shouldPerformGlobalSearch() throws Exception {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
+        when(autorService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/autores"))
+        mockMvc.perform(get("/api/v1/autores")
+                        .param("termino", "test")
+                        .param("anioInicio", "1900")
+                        .param("anioFin", "2000"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Lista de autores activos"));
+                .andExpect(jsonPath("$.mensaje").value("Resultados de búsqueda pública de autores activos"));
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/{id} - Should return author by ID")
-    void shouldReturnById() throws Exception {
+    @DisplayName("GET /api/v1/autores/{id} - Should return active author by ID")
+    void shouldReturnGlobalById() throws Exception {
         AutorDetalleResponse detalle = AutorDetalleResponse.builder()
                 .id(1L)
                 .nombre("Autor Test")
                 .biografia("Bio")
                 .build();
-        when(autorService.obtenerPorIdActivo(1L)).thenReturn(detalle);
+        when(autorService.busquedaGlobalPorId(1L)).thenReturn(detalle);
 
         mockMvc.perform(get("/api/v1/autores/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Autor encontrado"))
+                .andExpect(jsonPath("$.mensaje").value("Autor activo encontrado"))
                 .andExpect(jsonPath("$.data.nombre").value("Autor Test"));
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/global - Should perform global search")
-    void shouldPerformGlobalSearch() throws Exception {
+    @DisplayName("GET /api/v1/autores/admin/all - Should perform admin search")
+    void shouldPerformAdminSearch() throws Exception {
         Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.busquedaGlobal(any(), any(), any(), any())).thenReturn(page);
+        when(autorService.busquedaAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class)))
+                .thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/autores/global")
-                        .param("palabra", "test")
-                        .param("inicio", "1900")
-                        .param("fin", "2000"))
+        mockMvc.perform(get("/api/v1/autores/admin/all")
+                        .param("termino", "test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados de búsqueda"));
+                .andExpect(jsonPath("$.mensaje").value("Resultados de búsqueda de administración de autores"));
     }
 
     @Test
-    @DisplayName("POST /api/v1/autores - Should create author")
+    @DisplayName("GET /api/v1/autores/admin/{id} - Should return author by ID for admin")
+    void shouldReturnByIdAdmin() throws Exception {
+        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
+                .id(1L)
+                .nombre("Autor Test")
+                .biografia("Bio")
+                .build();
+        when(autorService.busquedaAdminPorId(1L)).thenReturn(detalle);
+
+        mockMvc.perform(get("/api/v1/autores/admin/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.mensaje").value("Autor encontrado (admin)"))
+                .andExpect(jsonPath("$.data.nombre").value("Autor Test"));
+    }
+
+    @Test
+    @DisplayName("POST /api/v1/autores/admin - Should create author for admin")
     void shouldCreate() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .nombre(JsonNullable.of("Nuevo"))
@@ -92,7 +110,7 @@ class AutorControllerTest extends BaseControllerTest {
                 .build();
         when(autorService.crear(any())).thenReturn(detalle);
 
-        mockMvc.perform(post("/api/v1/autores")
+        mockMvc.perform(post("/api/v1/autores/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -101,7 +119,7 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/autores/{id} - Should update author")
+    @DisplayName("PATCH /api/v1/autores/admin/{id} - Should update author for admin")
     void shouldUpdate() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .nombre(JsonNullable.of("Actualizado"))
@@ -115,7 +133,7 @@ class AutorControllerTest extends BaseControllerTest {
                 .build();
         when(autorService.actualizar(any(Long.class), any(AutorRequest.class))).thenReturn(detalle);
 
-        mockMvc.perform(patch("/api/v1/autores/1")
+        mockMvc.perform(patch("/api/v1/autores/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -124,72 +142,29 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/autores/{id} - Should deactivate author")
+    @DisplayName("DELETE /api/v1/autores/admin/{id} - Should deactivate author for admin")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/autores/1"))
+        mockMvc.perform(delete("/api/v1/autores/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Autor desactivado"));
+                .andExpect(jsonPath("$.mensaje").value("Autor desactivado correctamente"));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/autores/{id}/activar - Should activate author")
+    @DisplayName("PATCH /api/v1/autores/admin/{id}/activar - Should activate author for admin")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/autores/1/activar"))
+        mockMvc.perform(patch("/api/v1/autores/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Autor activado"));
+                .andExpect(jsonPath("$.mensaje").value("Autor activado correctamente"));
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/admin - Should return all authors for admin")
-    void shouldReturnAllAdmin() throws Exception {
-        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.obtenerTodos(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/autores/admin"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Historial completo"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/autores/admin/busqueda-maestra - Should perform master search")
-    void shouldPerformMasterSearch() throws Exception {
-        Page<AutorResumenResponse> page = new PageImpl<>(List.of());
-        when(autorService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/autores/admin/busqueda-maestra")
-                        .param("termino", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Resultados búsqueda maestra"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/autores/admin/{id} - Should return author by ID for admin")
-    void shouldReturnByIdAdmin() throws Exception {
-        AutorDetalleResponse detalle = AutorDetalleResponse.builder()
-                .id(1L)
-                .nombre("Autor Test")
-                .biografia("Bio")
-                .build();
-        when(autorService.obtenerPorId(1L)).thenReturn(detalle);
-
-        mockMvc.perform(get("/api/v1/autores/admin/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.mensaje").value("Autor encontrado (admin)"))
-                .andExpect(jsonPath("$.data.nombre").value("Autor Test"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/autores/verificar-duplicados - Should verify duplicates")
+    @DisplayName("GET /api/v1/autores/admin/verificar-duplicados - Should verify duplicates for admin")
     void shouldVerifyDuplicates() throws Exception {
         when(autorService.buscarDuplicados(any(), any())).thenReturn(List.of());
 
-        mockMvc.perform(get("/api/v1/autores/verificar-duplicados")
+        mockMvc.perform(get("/api/v1/autores/admin/verificar-duplicados")
                         .param("termino", "test"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
@@ -197,13 +172,13 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/v1/autores - Should return 400 Bad Request when request is invalid")
+    @DisplayName("POST /api/v1/autores/admin - Should return 400 Bad Request when request is invalid")
     void shouldReturnBadRequestWhenCreatingInvalid() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .nombre(JsonNullable.of("A".repeat(101))) // Nombre demasiado largo
                 .build();
 
-        mockMvc.perform(post("/api/v1/autores")
+        mockMvc.perform(post("/api/v1/autores/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())
@@ -211,13 +186,13 @@ class AutorControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/autores/{id} - Should return 400 Bad Request when request is invalid")
+    @DisplayName("PATCH /api/v1/autores/admin/{id} - Should return 400 Bad Request when request is invalid")
     void shouldReturnBadRequestWhenUpdatingInvalid() throws Exception {
         AutorRequest request = AutorRequest.builder()
                 .anioNacimiento(JsonNullable.of(Year.now().plusYears(1))) // Año futuro
                 .build();
 
-        mockMvc.perform(patch("/api/v1/autores/1")
+        mockMvc.perform(patch("/api/v1/autores/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest())

@@ -9,30 +9,30 @@ Este documento establece las directrices, convenciones y mejores prácticas para
 Todo controlador REST de Arrupeteca debe seguir las siguientes reglas de anotación y configuración:
 
 *   **`@RestController`**: Registra la clase como un controlador de tipo REST que retorna respuestas en formato JSON.
-*   **`@RequestMapping("/api/v1/recurso")`**: Define el prefijo de la ruta del API. Debe seguir la convención `/api/v1/` seguido del nombre del recurso en plural (ej. `/api/v1/autores`, `/api/v1/libros`).
+*   **`@RequestMapping("/api/v1/recurso")`**: Define el prefijo de la ruta del API. Debe seguir la convención `/api/v1/` seguido del nombre del recurso en plural (ej. `/api/v1/autores`, `/api/v1/obras`, `/api/v1/libros`).
 *   **`@RequiredArgsConstructor`**: Inyecta los servicios colaboradores de forma automática por constructor vía Lombok (los colaboradores deben declararse como `private final`).
 *   **`@Tag(name = "Recurso", description = "...")`**: Anotación de OpenAPI obligatoria para agrupar y describir los endpoints de este controlador en la UI de Swagger.
 
 ---
 
-## 2. Semántica HTTP y Estructura de Endpoints Estándar (10 Endpoints Base)
+## 2. Semántica HTTP y Estructura de Endpoints (Estructura con Seguridad `/admin`)
 
-Todas las clases de negocio (`AutorController`, `ObraController`, `LibroController`, `EjemplarLibroController`) deben implementar de forma homogénea los **10 endpoints base obligatorios**:
+Las clases de negocio (`AutorController`, `ObraController`, `LibroController`, `EjemplarLibroController`) estructuran sus endpoints asegurando que **únicamente las búsquedas públicas permanezcan en las rutas raíz**, mientras que **todas las operaciones de administración incluyen el prefijo `/admin`** para ser protegidas automáticamente por Spring Security:
 
-| Método HTTP | Ruta relativa | Acción REST | Códigos de Estado | Formato de Retorno |
+| Método HTTP | Ruta relativa | Acción REST | Alcance de Permisos | Formato de Retorno |
 | :--- | :--- | :--- | :--- | :--- |
-| **GET** | `/` | Obtener listado público activo. | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
-| **GET** | `/{id}` | Obtener detalle público activo. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **GET** | `/global` | Búsqueda global pública por coincidencia. | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
-| **GET** | `/admin` | Obtener historial completo (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
-| **GET** | `/admin/{id}` | Obtener detalle por ID (Admin). | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **GET** | `/admin/busqueda-maestra` | Búsqueda avanzada multi-filtro (Admin). | `200 OK` | `ApiResponse<Page<[Entidad]Resumen>>` |
-| **POST** | `/` | Crear nuevo registro. | `201 Created`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **PATCH** | `/{id}` | Actualizar parcial con `JsonNullable`. | `200 OK`, `400 Bad Request` | `ApiResponse<[Entidad]DetalleResponse>` |
-| **DELETE** | `/{id}` | Desactivar (Borrado lógico `borradoLogico = true`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
-| **PATCH** | `/{id}/activar` | Activar registro (`borradoLogico = false`). | `200 OK`, `400 Bad Request` | `ApiResponse<Void>` |
+| **GET** | `/` | Búsqueda global pública activa y autocompletes. | Público (`permitAll`) | `ApiResponse<Page<[Entidad]Resumen>>` |
+| **GET** | `/{id}` | Obtener detalle público activo. | Público (`permitAll`) | `ApiResponse<[Entidad]DetalleResponse>` |
+| **GET** | `/admin/all` | Búsqueda y tabla de administración. | Admin (`hasRole('ADMIN')`) | `ApiResponse<Page<[Entidad]Resumen>>` |
+| **GET** | `/admin/{id}` | Obtener detalle por ID (Admin). | Admin (`hasRole('ADMIN')`) | `ApiResponse<[Entidad]DetalleResponse>` |
+| **GET** | `/admin/verificar-duplicados` | Verificar registros similares. | Admin (`hasRole('ADMIN')`) | `ApiResponse<List<[Entidad]Resumen>>` |
+| **POST** | `/admin` | Crear nuevo registro. | Admin (`hasRole('ADMIN')`) | `ApiResponse<[Entidad]DetalleResponse>` |
+| **PATCH** | `/admin/{id}` | Actualizar parcial con `JsonNullable`. | Admin (`hasRole('ADMIN')`) | `ApiResponse<[Entidad]DetalleResponse>` |
+| **DELETE** | `/admin/{id}` | Desactivar (Borrado lógico `borradoLogico = true`). | Admin (`hasRole('ADMIN')`) | `ApiResponse<Void>` |
+| **PATCH** | `/admin/{id}/activar` | Activar registro (`borradoLogico = false`). | Admin (`hasRole('ADMIN')`) | `ApiResponse<Void>` |
 
 *Notas sobre ordenamiento por defecto (`@PageableDefault`)*:
+*   `AutorController`: `@PageableDefault(size = 20, sort = "nombre")` (Alfabético A-Z por nombre).
 *   `ObraController`: `@PageableDefault(size = 20, sort = "titulo")` (Alfabético A-Z por título).
 *   `LibroController`: `@PageableDefault(size = 20, sort = "obra.titulo")` (Alfabético A-Z por título de la obra asociada).
 *   `EjemplarLibroController`: `@PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"})` (Alfabético A-Z por obra y luego por ID correlativo del ejemplar).
@@ -93,62 +93,10 @@ public class AutorController {
 
     @GetMapping
     @Operation(
-        summary = "Obtener autores activos",
-        description = "Retorna una página de autores registrados que no están borrados lógicamente."
-    )
-    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> obtenerTodosActivos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Lista de autores activos", autorService.obtenerTodosActivos(pageable)));
-    }
-
-    @GetMapping("/{id}")
-    @Operation(
-        summary = "Obtener detalle de autor activo",
-        description = "Busca la información detallada de un autor por su ID si está activo."
-    )
-    public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorIdActivo(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Autor encontrado", autorService.obtenerPorIdActivo(id)));
-    }
-
-    @GetMapping("/admin")
-    @Operation(
-        summary = "Obtener historial de autores (Admin)",
-        description = "Retorna todos los autores incluyendo eliminados lógicamente (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> obtenerTodos(
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo", autorService.obtenerTodos(pageable)));
-    }
-
-    @GetMapping("/admin/{id}")
-    @Operation(
-        summary = "Obtener autor por ID (Admin)",
-        description = "Busca el detalle de un autor por su ID sin importar su estado lógico (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<AutorDetalleResponse>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.obtenerPorId(id)));
-    }
-
-    @GetMapping("/global")
-    @Operation(
-        summary = "Búsqueda global de autores",
-        description = "Busca autores por coincidencia parcial de texto y rango de año de nacimiento."
+        summary = "Búsqueda global de autores activos",
+        description = "Retorna una página de autores activos permitiendo filtrar por término (nombre/seudónimo), período de vida, país, nacionalidad, género u obra cumbre."
     )
     public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @RequestParam(required = false) Year inicio,
-            @RequestParam(required = false) Year fin,
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", autorService.busquedaGlobal(palabra, inicio, fin, pageable)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    @Operation(
-        summary = "Búsqueda avanzada (Admin)",
-        description = "Búsqueda avanzada multi-filtro por estado, nacionalidad, país, género, obra cumbre y coincidencia de término (solo admin)."
-    )
-    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaMaestraAdmin(
-            @RequestParam(required = false) Boolean esBorrado,
             @RequestParam(required = false) Long idNacionalidad,
             @RequestParam(required = false) Long idPais,
             @RequestParam(required = false) Long idGenero,
@@ -157,15 +105,52 @@ public class AutorController {
             @RequestParam(required = false) Year anioFin,
             @RequestParam(required = false) String termino,
             @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra",
-                autorService.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre,
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda pública de autores activos",
+                autorService.busquedaGlobal(idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, termino, pageable)));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(
+        summary = "Obtener detalle de autor activo",
+        description = "Busca la información detallada de un autor por su ID únicamente si está activo."
+    )
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> busquedaGlobalPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Autor activo encontrado", autorService.busquedaGlobalPorId(id)));
+    }
+
+    @GetMapping("/admin/all")
+    @Operation(
+        summary = "Búsqueda de administración de autores",
+        description = "Búsqueda completa multi-filtro por borrado lógico, país, nacionalidad, género, obra cumbre, período de vida y término de coincidencia (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<Page<AutorResumenResponse>>> busquedaAdmin(
+            @RequestParam(required = false) Boolean borradoLogico,
+            @RequestParam(required = false) Long idNacionalidad,
+            @RequestParam(required = false) Long idPais,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idObraCumbre,
+            @RequestParam(required = false) Year anioInicio,
+            @RequestParam(required = false) Year anioFin,
+            @RequestParam(required = false) String termino,
+            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda de administración de autores",
+                autorService.busquedaAdmin(borradoLogico, idNacionalidad, idPais, idGenero, idObraCumbre,
                         anioInicio, anioFin, termino, pageable)));
     }
 
-    @GetMapping("/verificar-duplicados")
+    @GetMapping("/admin/{id}")
     @Operation(
-        summary = "Verificar duplicados",
-        description = "Busca autores con nombres o seudónimos similares en el sistema."
+        summary = "Obtener autor por ID (Admin)",
+        description = "Busca el detalle de un autor por su ID sin importar su estado de borrado lógico (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<AutorDetalleResponse>> busquedaAdminPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Autor encontrado (admin)", autorService.busquedaAdminPorId(id)));
+    }
+
+    @GetMapping("/admin/verificar-duplicados")
+    @Operation(
+        summary = "Verificar duplicados (Admin)",
+        description = "Busca autores con nombres o seudónimos similares en el sistema (solo admin)."
     )
     public ResponseEntity<ApiResponse<List<AutorResumenResponse>>> buscarDuplicados(
             @RequestParam String termino,
@@ -173,43 +158,43 @@ public class AutorController {
         return ResponseEntity.ok(ApiResponse.exito("Verificación completada", autorService.buscarDuplicados(termino, idExcluir)));
     }
 
-    @PostMapping
+    @PostMapping("/admin")
     @Operation(
-        summary = "Registrar nuevo autor",
-        description = "Crea un nuevo autor en el sistema validando la unicidad del nombre."
+        summary = "Registrar nuevo autor (Admin)",
+        description = "Crea un nuevo autor en el sistema validando la unicidad del nombre (solo admin)."
     )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> crear(@Valid @RequestBody AutorRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.exito("Autor creado exitosamente", autorService.crear(request)));
     }
 
-    @PatchMapping("/{id}")
+    @PatchMapping("/admin/{id}")
     @Operation(
-        summary = "Actualizar autor",
-        description = "Actualiza los campos de un autor existente y valida su versión de bloqueo optimista."
+        summary = "Actualizar autor (Admin)",
+        description = "Actualiza los campos de un autor existente y valida su versión de bloqueo optimista (solo admin)."
     )
     public ResponseEntity<ApiResponse<AutorDetalleResponse>> actualizar(@PathVariable Long id, @Valid @RequestBody AutorRequest request) {
         return ResponseEntity.ok(ApiResponse.exito("Autor actualizado correctamente", autorService.actualizar(id, request)));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
     @Operation(
-        summary = "Desactivar autor (Borrado lógico)",
-        description = "Oculta el autor en el catálogo público cambiando su estado a borrado."
+        summary = "Desactivar autor (Admin)",
+        description = "Oculta el autor en el catálogo público cambiando su estado a borrado (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         autorService.cambiarEstado(id, false);
-        return ResponseEntity.ok(ApiResponse.exito("Autor desactivado"));
+        return ResponseEntity.ok(ApiResponse.exito("Autor desactivado correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
     @Operation(
-        summary = "Activar autor",
-        description = "Restaura la visibilidad pública de un autor previamente desactivado."
+        summary = "Activar autor (Admin)",
+        description = "Restaura la visibilidad pública de un autor previamente desactivado (solo admin)."
     )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         autorService.cambiarEstado(id, true);
-        return ResponseEntity.ok(ApiResponse.exito("Autor activado"));
+        return ResponseEntity.ok(ApiResponse.exito("Autor activado correctamente"));
     }
 }
 ```
@@ -219,7 +204,8 @@ public class AutorController {
 ## 5. Lista de Autoverificación (Checklist del Desarrollador)
 
 1. **¿El mapeo de rutas es correcto?**
-   * ¿El prefijo empieza con `/api/v1/` y sigue con el nombre del recurso en plural en minúsculas?
+   * ¿Únicamente los 2 primeros endpoints son públicos (`GET /` y `GET /{id}`)?
+   * ¿Todos los demás endpoints administrativos tienen el prefijo `/admin` para alinearse con `SecurityConfig`?
 2. **¿Se inyectan las dependencias por constructor?**
    * ¿Están todos los servicios declarados como `private final` y la clase anotada con `@RequiredArgsConstructor`?
 3. **¿Se validan las peticiones de entrada?**

@@ -48,60 +48,52 @@ public class LibroServiceImpl implements LibroService {
     private final LibroMapper libroMapper;
 
     @Override
-    public Page<LibroResumen> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo libros activos proyectados paginados: {}", pageable);
-        return libroRepository.busquedaMaestraAdminProyectada(
-                false, null, null, null, null, null, null, null, null, null, null, null, pageable);
+    public Page<LibroResumen> busquedaGlobal(
+            String termino, Long idAutor, Long idGenero, Long idCategoria,
+            Long idEditorial, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda global proyectada de libros por '{}', autor: {}, género: {}, categoría: {}, editorial: {}",
+                termino, idAutor, idGenero, idCategoria, idEditorial);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return libroRepository.busqueda(
+                false, null, idAutor, idGenero, idCategoria, null, idEditorial, null, null, null, term, anioInicio, anioFin, pageable);
     }
 
     @Override
     @Cacheable(value = "libros", key = "#id")
-    public LibroDetalleResponse obtenerPorIdActivo(Long id) {
+    public LibroDetalleResponse busquedaGlobalPorId(Long id) {
         log.debug("Obteniendo libro activo por ID: {}", id);
-        return libroRepository.findByIdAndBorradoLogicoFalse(id)
+        return libroRepository.busquedaPorId(id, false)
                 .map(libroMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro activo con ID: " + id));
     }
 
     @Override
-    public Page<LibroResumen> busquedaGlobal(String palabra, Long idGenero, Long idCategoria, Pageable pageable) {
-        log.debug("Búsqueda global proyectada de libros por '{}', género: {}, categoría: {} paginados: {}", palabra, idGenero, idCategoria, pageable);
-        return libroRepository.busquedaMaestraAdminProyectada(
-                false, null, idGenero, idCategoria, null, null, null, null, null, palabra, null, null, pageable);
+    public Page<LibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda maestra de libros admin proyectada: borradoLogico={}, idObra={}, idAutor={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
+                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return libroRepository.busqueda(
+                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta,
+                idEditorial, idFormato, idGrado, idCiclo, term, anioInicio, anioFin, pageable);
     }
 
     @Override
-    public Page<LibroResumen> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los libros proyectados (Admin) paginados: {}", pageable);
-        return libroRepository.busquedaMaestraAdminProyectada(
-                null, null, null, null, null, null, null, null, null, null, null, null, pageable);
-    }
-
-    @Override
-    public LibroDetalleResponse obtenerPorId(Long id) {
+    public LibroDetalleResponse busquedaAdminPorId(Long id) {
         log.debug("Obteniendo libro por ID (Admin): {}", id);
-        return libroRepository.findById(id)
+        return libroRepository.busquedaPorId(id, null)
                 .map(libroMapper::toDetalleResponse)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
     }
 
     @Override
-    public Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idGenero, Long idCategoria, Long idEtiqueta,
-            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
-            String termino, Integer anioInicio, Integer anioFin,
-            Pageable pageable) {
-        log.debug("Búsqueda maestra de libros admin proyectada: esBorrado={}, idObra={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
-                esBorrado, idObra, idGenero, idCategoria, idEtiqueta, termino);
-        return libroRepository.busquedaMaestraAdminProyectada(
-                esBorrado, idObra, idGenero, idCategoria, idEtiqueta,
-                idEditorial, idFormato, idGrado, idCiclo, termino, anioInicio, anioFin, pageable);
-    }
-
-    @Override
     public Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable) {
         log.debug("Obteniendo libros proyectados por ID Obra: {}", idObra);
-        return libroRepository.buscarPorObraId(idObra, pageable);
+        return libroRepository.busqueda(false, idObra, null, null, null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
@@ -116,7 +108,7 @@ public class LibroServiceImpl implements LibroService {
         Libro libro = libroMapper.toEntity(request);
         asignarRelaciones(libro, request);
 
-        Libro guardado = libroRepository.save(libro);
+        Libro guardado = libroRepository.saveAndFlush(libro);
         log.info("Libro creado exitosamente con ID: {}", guardado.getId());
         return libroMapper.toDetalleResponse(guardado);
     }
@@ -126,7 +118,7 @@ public class LibroServiceImpl implements LibroService {
     @CacheEvict(value = "libros", key = "#id")
     public LibroDetalleResponse actualizar(Long id, LibroRequest request) {
         log.info("Actualizando libro con ID: {}", id);
-        Libro libroExistente = libroRepository.findById(id)
+        Libro libroExistente = libroRepository.busquedaPorId(id, null)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
 
         validarActualizacion(request, libroExistente);
@@ -137,7 +129,7 @@ public class LibroServiceImpl implements LibroService {
         libroMapper.updateEntity(request, libroExistente);
         asignarRelaciones(libroExistente, request);
 
-        Libro actualizado = libroRepository.save(libroExistente);
+        Libro actualizado = libroRepository.saveAndFlush(libroExistente);
         log.info("Libro con ID: {} actualizado exitosamente", id);
         return libroMapper.toDetalleResponse(actualizado);
     }

@@ -61,7 +61,7 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     void shouldSaveAndFind() {
         EjemplarLibro entity = createValidEjemplar("Test");
         EjemplarLibro saved = ejemplarLibroRepository.save(entity);
-        assertThat(ejemplarLibroRepository.findByIdAndBorradoLogicoFalse(saved.getId())).isPresent();
+        assertThat(ejemplarLibroRepository.busquedaPorId(saved.getId(), false)).isPresent();
     }
 
     @Test
@@ -76,7 +76,7 @@ class EjemplarLibroRepositoryTest extends BaseRepositoryTest {
     @DisplayName("Should perform global search")
     void shouldSearchGlobal() {
         ejemplarLibroRepository.save(createValidEjemplar("Especial"));
-        Page<EjemplarLibroResumen> page = ejemplarLibroRepository.busquedaMaestraAdminProyectada(
+        Page<EjemplarLibroResumen> page = ejemplarLibroRepository.busqueda(
                 false, null, null, null, null, null, null, null, "Especial", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }

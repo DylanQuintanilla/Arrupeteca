@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -33,49 +32,12 @@ class ObraControllerTest extends BaseControllerTest {
     private ObraService obraService;
 
     @Test
-    @DisplayName("GET /api/v1/obras - Should return active works")
-    void shouldReturnActive() throws Exception {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.obtenerTodosActivos(any(Pageable.class))).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/obras"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/obras/{id} - Should return work by ID")
-    void shouldReturnById() throws Exception {
-        ObraDetalleResponse detail = ObraDetalleResponse.builder()
-                .id(1L).titulo("Obra Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
-                .creadoPor("admin").modificadoPor("admin")
-                .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
-        when(obraService.obtenerPorIdActivo(1L)).thenReturn(detail);
-
-        mockMvc.perform(get("/api/v1/obras/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true))
-                .andExpect(jsonPath("$.data.titulo").value("Obra Test"));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/obras/global - Should perform global search")
-    void shouldPerformGlobalSearch() throws Exception {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.busquedaGlobal(any(), any())).thenReturn(page);
-
-        mockMvc.perform(get("/api/v1/obras/global").param("palabra", "test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
-    }
-
-    @Test
-    @DisplayName("GET /api/v1/obras/admin - Should return all works for admin")
+    @DisplayName("GET /api/v1/obras/admin/all - Should return works for admin")
     void shouldReturnAllForAdmin() throws Exception {
         Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.obtenerTodos(any())).thenReturn(page);
+        when(obraService.busquedaAdmin(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
-        mockMvc.perform(get("/api/v1/obras/admin"))
+        mockMvc.perform(get("/api/v1/obras/admin/all"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true));
     }
@@ -87,7 +49,7 @@ class ObraControllerTest extends BaseControllerTest {
                 .id(1L).titulo("Test").anioCreacion(2021).resumen("Resumen").version(0L).borradoLogico(false)
                 .creadoPor("admin").modificadoPor("admin")
                 .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
-        when(obraService.obtenerPorId(1L)).thenReturn(detail);
+        when(obraService.busquedaAdminPorId(1L)).thenReturn(detail);
 
         mockMvc.perform(get("/api/v1/obras/admin/1"))
                 .andExpect(status().isOk())
@@ -95,18 +57,19 @@ class ObraControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/obras/admin/busqueda-maestra - Should perform master search")
-    void shouldPerformMasterSearch() throws Exception {
-        Page<ObraResumen> page = new PageImpl<>(List.of());
-        when(obraService.busquedaMaestraAdmin(any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+    @DisplayName("GET /api/v1/obras/admin/verificar-duplicados - Should return duplicate works")
+    void shouldReturnDuplicateWorks() throws Exception {
+        ObraResumen resumen = new ObraResumen(1L, "Cien años de soledad", 1967, "Resumen", false);
+        when(obraService.buscarDuplicados("Cien", null)).thenReturn(List.of(resumen));
 
-        mockMvc.perform(get("/api/v1/obras/admin/busqueda-maestra"))
+        mockMvc.perform(get("/api/v1/obras/admin/verificar-duplicados").param("termino", "Cien"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data[0].titulo").value("Cien años de soledad"));
     }
 
     @Test
-    @DisplayName("POST /api/v1/obras - Should create work")
+    @DisplayName("POST /api/v1/obras/admin - Should create work")
     void shouldCreate() throws Exception {
         ObraRequest request = ObraRequest.builder()
                 .titulo(org.openapitools.jackson.nullable.JsonNullable.of("Nueva"))
@@ -122,7 +85,7 @@ class ObraControllerTest extends BaseControllerTest {
                 .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.crear(any())).thenReturn(detail);
 
-        mockMvc.perform(post("/api/v1/obras")
+        mockMvc.perform(post("/api/v1/obras/admin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -130,7 +93,7 @@ class ObraControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/obras/{id} - Should update work")
+    @DisplayName("PATCH /api/v1/obras/admin/{id} - Should update work")
     void shouldUpdate() throws Exception {
         ObraRequest request = ObraRequest.builder()
                 .titulo(org.openapitools.jackson.nullable.JsonNullable.of("Actualizada"))
@@ -147,7 +110,7 @@ class ObraControllerTest extends BaseControllerTest {
                 .generos(Collections.emptySet()).categorias(Collections.emptySet()).etiquetas(Collections.emptySet()).autores(Collections.emptySet()).build();
         when(obraService.actualizar(any(Long.class), any(ObraRequest.class))).thenReturn(detail);
 
-        mockMvc.perform(patch("/api/v1/obras/1")
+        mockMvc.perform(patch("/api/v1/obras/admin/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
@@ -155,18 +118,19 @@ class ObraControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("DELETE /api/v1/obras/{id} - Should deactivate work")
+    @DisplayName("DELETE /api/v1/obras/admin/{id} - Should deactivate work")
     void shouldDeactivate() throws Exception {
-        mockMvc.perform(delete("/api/v1/obras/1"))
+        mockMvc.perform(delete("/api/v1/obras/admin/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/obras/{id}/activar - Should activate work")
+    @DisplayName("PATCH /api/v1/obras/admin/{id}/activar - Should activate work")
     void shouldActivate() throws Exception {
-        mockMvc.perform(patch("/api/v1/obras/1/activar"))
+        mockMvc.perform(patch("/api/v1/obras/admin/1/activar"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true));
     }
 }
+

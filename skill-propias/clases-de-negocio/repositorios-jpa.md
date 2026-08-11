@@ -11,7 +11,7 @@ Todo repositorio debe definirse como una interfaz y extender de:
 
 ### Regla de Limpieza de Código (Clean Code):
 *   **Prohibido**: Utilizar la anotación `@Repository` sobre la interfaz del repositorio. Dado que extiende de `JpaRepository`, Spring Data JPA lo detecta y lo registra de forma automática en el contexto de aplicación. Colocar la anotación es redundante.
-*   **Prohibido**: Extender de `JpaSpecificationExecutor<Entity>`. Todas las búsquedas paginadas y filtrados complejos del sistema se gestionan a través del método proyectado `busquedaMaestraAdminProyectada(...)`, manteniendo los repositorios limpios y sin código muerto de especificaciones.
+*   **Prohibido**: Extender de `JpaSpecificationExecutor<Entity>`. Todas las búsquedas paginadas y filtrados complejos del sistema se gestionan a través de métodos JPQL unificados proyectados (`busqueda(...)`), manteniendo los repositorios limpios y sin código muerto de especificaciones.
 
 ---
 
@@ -19,7 +19,7 @@ Todo repositorio debe definirse como una interfaz y extender de:
 
 Hibernate utiliza carga perezosa (`FetchType.LAZY`) por defecto en las relaciones. Sin embargo, al consultar detalles por ID que serán mapeados a DTOs de salida, acceder a atributos de relaciones puede generar decenas de consultas individuales adicionales en bucle (el problema N+1).
 
-*   **Solución Obligatoria**: Usar `@EntityGraph(attributePaths = {"relacion1", "relacion2"})` en métodos de consulta de detalle por ID (`findById`, `findByIdAndBorradoLogicoFalse`).
+*   **Solución Obligatoria**: Usar `@EntityGraph(attributePaths = {"relacion1", "relacion2"})` en métodos de consulta de detalle por ID (`busquedaPorId`).
 *   **Propósito**: Fuerza a Hibernate a generar una única consulta SQL con sentencias `LEFT JOIN FETCH` para traer todos los objetos relacionados de un solo viaje, optimizando la base de datos y preparando los datos para ser cacheados sin lanzar excepciones `LazyInitializationException`.
 *   **Restricción Crítica (Colecciones ToMany)**:
     *   **Prohibido**: Incluir colecciones (`@ManyToMany` o `@OneToMany`, ej. `categorias` u `obras`) dentro del `@EntityGraph` junto con otras colecciones o en consultas de listados paginados.
@@ -31,25 +31,26 @@ Hibernate utiliza carga perezosa (`FetchType.LAZY`) por defecto en las relacione
 
 En Arrupeteca se establece la **Regla de Oro** para la capa de persistencia en clases de negocio:
 
-*   **1. Todos los métodos que retornen un Listado Paginado de Resumen (`Page<Resumen>`)** (tales como `obtenerTodosActivos`, `obtenerTodos`, `busquedaGlobal`, `busquedaMaestraAdmin`, `buscarPorObraId`):
+*   **1. Todos los métodos que retornen un Listado Paginado de Resumen (`Page<Resumen>`)**:
     *   **Obligatorio**: Deben ejecutarse mediante **`SELECT new`** en consultas `@Query` de JPQL (ej. `@Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(...) FROM ...")`).
     *   **Ventajas de Rendimiento**: Bypassean la caché L1 de Hibernate (Persistence Context), reducen la RAM en un 80%, consumen el mínimo ancho de banda SQL y eliminan la necesidad de transformación MapStruct en lectura.
     *   **Filtrado `@ManyToMany` sin Producto Cartesiano**: Usar `EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)` en lugar de `JOIN` explícito en el `WHERE`.
-*   **2. Todos los métodos que retornen un Detalle por ID (`DetalleResponse`)** (tales como `obtenerPorIdActivo`, `obtenerPorId`):
+*   **2. Todos los métodos que retornen un Detalle por ID (`DetalleResponse`)**:
     *   **Obligatorio**: Deben usar **`@EntityGraph`** para cargar la entidad completa con todas sus relaciones para visualización detallada o edición.
 
-### 📌 Patrón de Diseño: 1 Consulta Proyectada Maestra para 4 Endpoints
+### 📌 Patrón de Diseño: Consultas Unificadas Parametrizadas (`busqueda` y `busquedaPorId`)
 
-En lugar de duplicar la sintaxis del constructor `SELECT new [Entidad]Resumen(...)` 4 veces distintas en el repositorio, la arquitectura de Arrupeteca implementa **1 sola Consulta Proyectada Maestra Parametrizada (`busquedaMaestraAdminProyectada`)**.
+La arquitectura de Arrupeteca consolida las consultas en **2 métodos universales parametrizados** en el repositorio:
 
-Esta única consulta atiende los **4 endpoints de listado paginado** pasando parámetros opcionales nulos desde el Servicio:
+1. **`busqueda(...)`**: Maneja tanto la búsqueda pública (enviando `borradoLogico = false`) como la de administración (enviando `borradoLogico = null` para ver todos o `borradoLogico = true` para ver inactivos).
+2. **`busquedaPorId(...)`**: Retorna una entidad por ID aplicando `@EntityGraph` y el parámetro `@Param("borradoLogico") Boolean borradoLogico` (`false` para público, `null` para admin).
 
-| Endpoint en Controller | Método en Service | Parámetros enviados a `busquedaMaestraAdminProyectada` |
+| Método en Repository | Parámetro `borradoLogico` | Uso Principal |
 |---|---|---|
-| `GET /api/v1/[recurso]` | `obtenerTodosActivos` | `esBorrado = false`, demás filtros `null` |
-| `GET /api/v1/[recurso]/global` | `busquedaGlobal` | `esBorrado = false`, `termino = palabra`, demás `null` |
-| `GET /api/v1/[recurso]/admin` | `obtenerTodos` | `esBorrado = null` (trae activos y borrados), demás `null` |
-| `GET /api/v1/[recurso]/admin/busqueda-maestra` | `busquedaMaestraAdmin` | Filtros dinámicos seleccionados por el administrador |
+| `busqueda(...)` | `false` | Búsqueda Global Pública y Autocompletes de activos |
+| `busqueda(...)` | `null` / `true` | Búsqueda Completa de Administración (sin importar estado)|
+| `busquedaPorId(...)` | `false` | Detalle público de registro activo |
+| `busquedaPorId(...)` | `null` | Detalle administrativo por ID (sin importar estado) |
 
 ---
 
@@ -107,17 +108,17 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
            "LEFT JOIN a.nacionalidad n " +
            "LEFT JOIN a.generoPrincipal g " +
            "LEFT JOIN a.obraCumbre o " +
-           "WHERE (:esBorrado IS NULL OR a.borradoLogico = :esBorrado) " +
+           "WHERE (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico) " +
            "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
            "AND (:idPais IS NULL OR p.id = :idPais) " +
            "AND (:idGenero IS NULL OR g.id = :idGenero) " +
            "AND (:idObraCumbre IS NULL OR o.id = :idObraCumbre) " +
-           "AND (:termino IS NULL OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND (:termino IS NULL OR :termino = '' OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
            "AND (:anioFin IS NULL OR a.anioNacimiento <= :anioFin)")
-    Page<AutorResumenResponse> busquedaMaestraAdminProyectada(
-            @Param("esBorrado") Boolean esBorrado,
+    Page<AutorResumenResponse> busqueda(
+            @Param("borradoLogico") Boolean borradoLogico,
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
             @Param("idGenero") Long idGenero,
@@ -128,17 +129,15 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
             Pageable pageable);
 
     @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("SELECT a FROM Autor a WHERE a.id = :id AND (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico)")
+    Optional<Autor> busquedaPorId(@Param("id") Long id, @Param("borradoLogico") Boolean borradoLogico);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
     @Query("SELECT a FROM Autor a " +
            "WHERE (LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "   OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
            "AND (:idExcluir IS NULL OR a.id != :idExcluir)")
     List<Autor> buscarDuplicados(@Param("termino") String termino, @Param("idExcluir") Long idExcluir, Sort sort);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<Autor> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<Autor> findById(Long id);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
@@ -160,9 +159,9 @@ public interface AutorRepository extends JpaRepository<Autor, Long> {
    * ¿Extiende de `JpaRepository<Entidad, Long>` únicamente sin incluir `JpaSpecificationExecutor`?
 2. **¿Evita anotaciones redundantes?**
    * ¿Está la interfaz libre de la anotación `@Repository`?
-3. **¿Utiliza Proyección `SELECT new` para la Búsqueda Maestra de Admin?**
-   * ¿Tiene definido un método `busquedaMaestraAdminProyectada(...)` con la consulta `@Query("SELECT new ...")` que construye directamente el DTO Resumen?
+3. **¿Utiliza Proyección `SELECT new` unificada en el método `busqueda`?**
+   * ¿Tiene definido el método `busqueda(...)` con la consulta `@Query("SELECT new ...")` que construye directamente el DTO Resumen aceptando `@Param("borradoLogico") Boolean borradoLogico`?
 4. **¿Tiene optimización de consultas N+1 con `@EntityGraph` para vistas de detalle?**
-   * ¿Los métodos de detalle por ID (`findById`, `findByIdAndBorradoLogicoFalse`) tienen anotado `@EntityGraph` con las relaciones `@ManyToOne`?
+   * ¿El método `busquedaPorId(id, borradoLogico)` utiliza `@EntityGraph` con las relaciones `@ManyToOne`?
 5. **¿Los métodos `@Modifying` son seguros para el contexto de Hibernate?**
    * ¿Tienen todos los métodos `@Modifying` configurado `clearAutomatically = true` y `flushAutomatically = true`?

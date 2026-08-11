@@ -41,16 +41,19 @@ public class AutorServiceImpl implements AutorService {
     private final AutorMapper autorMapper;
 
     @Override
-    public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores activos proyectados con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, null, pageable);
+    public Page<AutorResumenResponse> busquedaGlobal(
+            Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda global de autores activos con término: '{}'", termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(false, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
     @Cacheable(value = "autores", key = "#id")
-    public AutorDetalleResponse obtenerPorIdActivo(Long id) {
+    public AutorDetalleResponse busquedaGlobalPorId(Long id) {
         log.debug("Buscando autor activo con ID: {}", id);
-        return autorRepository.findByIdAndBorradoLogicoFalse(id)
+        return autorRepository.busquedaPorId(id, false)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor activo con ID: {}", id);
@@ -59,34 +62,23 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores proyectados (incluyendo borrados) con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, null, pageable);
+    public Page<AutorResumenResponse> busquedaAdmin(
+            Boolean borradoLogico, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda admin de autores para término: '{}', borrado: {}", termino, borradoLogico);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(borradoLogico, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
-    public AutorDetalleResponse obtenerPorId(Long id) {
-        log.debug("Buscando autor con ID (incluyendo borrados): {}", id);
-        return autorRepository.findById(id)
+    public AutorDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Buscando autor con ID (admin): {}", id);
+        return autorRepository.busquedaPorId(id, null)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor con ID: {}", id);
                     return new ValidacionNegocioException("No se encontró Autor con ID: " + id);
                 });
-    }
-
-    @Override
-    public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
-        log.debug("Iniciando búsqueda global proyectada: '{}', años: {} - {}", palabra, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, anioInicio, anioFin, palabra, pageable);
-    }
-
-    @Override
-    public Page<AutorResumenResponse> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
-            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
-        log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}', años: {} - {}", termino, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, termino, pageable);
     }
 
     @Override
@@ -109,7 +101,7 @@ public class AutorServiceImpl implements AutorService {
     @CacheEvict(value = "autores", key = "#id")
     public AutorDetalleResponse actualizar(Long id, AutorRequest request) {
         log.info("Actualizando autor con ID: {}", id);
-        Autor autorExistente = autorRepository.findById(id)
+        Autor autorExistente = autorRepository.busquedaPorId(id, null)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
         validarDatosActualizacion(request, autorExistente);

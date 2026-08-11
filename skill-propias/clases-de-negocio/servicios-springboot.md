@@ -23,23 +23,27 @@ Los métodos que realicen modificaciones de datos (`crear`, `actualizar`, `cambi
 
 ---
 
-## 3. Delegación de Proyecciones Directas (`SELECT new`) vs Vistas de Detalle
+## 3. Delegación de Proyecciones Directas (`busqueda`) vs Vistas de Detalle (`busquedaPorId`)
 
 Para maximizar el rendimiento y la eficiencia de la memoria en la capa de servicio:
 
-*   **Métodos de Listado Paginado de Resumen (`obtenerTodosActivos`, `obtenerTodos`, `busquedaGlobal`, `busquedaMaestraAdmin`, `buscarPorObraId`)**:
-    *   **Delegación Directa**: Deben delegar directamente al método proyectado del repositorio (ej. `autorRepository.busquedaMaestraAdminProyectada(...)`).
+*   **Métodos de Listado Paginado (`busquedaGlobal`, `busquedaAdmin`)**:
+    *   **Delegación Directa**: Deben delegar directamente al método unificado proyectado del repositorio (`autorRepository.busqueda(...)`).
+    *   **`busquedaGlobal`**: Pasa `borradoLogico = false` a `busqueda(...)` para garantizar que los usuarios normales consulten únicamente registros activos.
+    *   **`busquedaAdmin`**: Pasa `borradoLogico` (el cual puede ser `null` para ver todos, `false` para activos o `true` para inactivos) según la selección del administrador.
     *   **Prohibido usar MapStruct en Lecturas Paginadas**: NO se debe invocar `.map(mapper::toResumen)`, ya que el resultado entregado por el repositorio ya es la página de DTOs finales (`Page<[Entidad]Resumen>`) instanciada por SQL.
-*   **Métodos de Detalle por ID (`obtenerPorIdActivo`, `obtenerPorId`)**:
-    *   **Carga Completa con `@EntityGraph`**: Consultan la entidad completa desde el repositorio (`findByIdAndBorradoLogicoFalse` / `findById`) y luego mapean el objeto con MapStruct (`.map(mapper::toDetalleResponse)`).
+*   **Métodos de Detalle por ID (`busquedaGlobalPorId`, `busquedaAdminPorId`)**:
+    *   **`busquedaGlobalPorId`**: Consulta la entidad desde el repositorio invocando `autorRepository.busquedaPorId(id, false)`.
+    *   **`busquedaAdminPorId`**: Consulta la entidad invocando `autorRepository.busquedaPorId(id, null)`.
+    *   Mapean el objeto obtenido con MapStruct (`.map(mapper::toDetalleResponse)`).
 
 ---
 
 ## 4. Estrategia de Caché Local
 
 Para optimizar las lecturas frecuentes de un mismo registro por su identificador único:
-*   **`@Cacheable(value = "nombre_cache", key = "#id")`**: Aplicar **únicamente en las consultas de detalle del catálogo público** (`obtenerPorIdActivo`).
-*   **Evitar colisiones con consultas de administración**: Los métodos de detalle para administradores (`obtenerPorId`) **no deben ser cacheados**, ya que los administradores modifican datos y requieren ver la versión real en base de datos de manera inmediata.
+*   **`@Cacheable(value = "nombre_cache", key = "#id")`**: Aplicar **únicamente en las consultas de detalle del catálogo público** (`busquedaGlobalPorId`).
+*   **Evitar colisiones con consultas de administración**: Los métodos de detalle para administradores (`busquedaAdminPorId`) **no deben ser cacheados**, ya que los administradores modifican datos y requieren ver la versión real en base de datos de manera inmediata.
 *   **`@CacheEvict(value = "nombre_cache", key = "#id")`**: Aplicar obligatoriamente en métodos de modificación (`actualizar`) y cambio de estado (`cambiarEstado`) para invalidar de forma quirúrgica las entradas obsoletas en memoria.
 
 ---
@@ -100,16 +104,19 @@ public class AutorServiceImpl implements AutorService {
     private final AutorMapper autorMapper;
 
     @Override
-    public Page<AutorResumenResponse> obtenerTodosActivos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores activos proyectados con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, null, null, null, pageable);
+    public Page<AutorResumenResponse> busquedaGlobal(
+            Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda global de autores activos con término: '{}'", termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(false, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
     @Cacheable(value = "autores", key = "#id")
-    public AutorDetalleResponse obtenerPorIdActivo(Long id) {
+    public AutorDetalleResponse busquedaGlobalPorId(Long id) {
         log.debug("Buscando autor activo con ID: {}", id);
-        return autorRepository.findByIdAndBorradoLogicoFalse(id)
+        return autorRepository.busquedaPorId(id, false)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor activo con ID: {}", id);
@@ -118,34 +125,23 @@ public class AutorServiceImpl implements AutorService {
     }
 
     @Override
-    public Page<AutorResumenResponse> obtenerTodos(Pageable pageable) {
-        log.debug("Obteniendo todos los autores proyectados (incluyendo borrados) con paginación: {}", pageable);
-        return autorRepository.busquedaMaestraAdminProyectada(null, null, null, null, null, null, null, pageable);
+    public Page<AutorResumenResponse> busquedaAdmin(
+            Boolean borradoLogico, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda admin de autores para término: '{}', borrado: {}", termino, borradoLogico);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(borradoLogico, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
-    public AutorDetalleResponse obtenerPorId(Long id) {
-        log.debug("Buscando autor con ID (incluyendo borrados): {}", id);
-        return autorRepository.findById(id)
+    public AutorDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Buscando autor con ID (admin): {}", id);
+        return autorRepository.busquedaPorId(id, null)
                 .map(autorMapper::toDetalleResponse)
                 .orElseThrow(() -> {
                     log.warn("No se encontró Autor con ID: {}", id);
                     return new ValidacionNegocioException("No se encontró Autor con ID: " + id);
                 });
-    }
-
-    @Override
-    public Page<AutorResumenResponse> busquedaGlobal(String palabra, Year anioInicio, Year anioFin, Pageable pageable) {
-        log.debug("Iniciando búsqueda global proyectada: '{}', años: {} - {}", palabra, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(false, null, null, null, anioInicio, anioFin, palabra, pageable);
-    }
-
-    @Override
-    public Page<AutorResumenResponse> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
-            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
-        log.debug("Iniciando búsqueda maestra admin proyectada para término: '{}', años: {} - {}", termino, anioInicio, anioFin);
-        return autorRepository.busquedaMaestraAdminProyectada(esBorrado, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, termino, pageable);
     }
 
     @Override
@@ -168,7 +164,7 @@ public class AutorServiceImpl implements AutorService {
     @CacheEvict(value = "autores", key = "#id")
     public AutorDetalleResponse actualizar(Long id, AutorRequest request) {
         log.info("Actualizando autor con ID: {}", id);
-        Autor autorExistente = autorRepository.findById(id)
+        Autor autorExistente = autorRepository.busquedaPorId(id, null)
                 .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
         validarDatosActualizacion(request, autorExistente);
@@ -349,8 +345,8 @@ public class AutorServiceImpl implements AutorService {
 2. **¿Inyección por constructor correcta?**
    * ¿Están todos los colaboradores marcados como `private final` y se usa `@RequiredArgsConstructor`?
 3. **¿Mapeo de caché seguro?**
-   * ¿Se incluyó `@Cacheable` solo en las consultas públicas de lectura por ID (`obtenerPorIdActivo`)?
-   * ¿Se excluyó del caché el método de lectura del administrador (`obtenerPorId`) para evitar colisiones y datos fantasmas?
+   * ¿Se incluyó `@Cacheable` solo en las consultas públicas de lectura por ID (`busquedaGlobalPorId`)?
+   * ¿Se excluyó del caché el método de lectura del administrador (`busquedaAdminPorId`) para evitar colisiones y datos fantasmas?
    * ¿Se incluyó `@CacheEvict` en los métodos de modificación correspondientes para limpiar la caché?
 4. **¿Validaciones cruzadas correctas?**
    * ¿La validación de unicidad de nombres desenvuelve el `JsonNullable` y permite mantener el valor original al actualizar?

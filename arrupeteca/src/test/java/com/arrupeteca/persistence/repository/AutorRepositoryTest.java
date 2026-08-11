@@ -2,9 +2,6 @@ package com.arrupeteca.persistence.repository;
 
 import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.persistence.entity.Autor;
-import com.arrupeteca.persistence.entity.Pais;
-import com.arrupeteca.persistence.entity.Nacionalidad;
-import com.arrupeteca.persistence.entity.Genero;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +11,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import org.instancio.Instancio;
@@ -36,8 +34,8 @@ class AutorRepositoryTest extends BaseRepositoryTest {
     }
 
     @Test
-    @DisplayName("Should search globally with projected query")
-    void shouldSearchGlobal() {
+    @DisplayName("Should search with unified busqueda query")
+    void shouldSearchWithBusqueda() {
         Autor autor = Instancio.of(Autor.class)
                 .ignore(field(Autor::getId))
                 .ignore(field(Autor::getVersion))
@@ -51,9 +49,22 @@ class AutorRepositoryTest extends BaseRepositoryTest {
                 .create();
         
         autorRepository.save(autor);
-        Page<AutorResumenResponse> page = autorRepository.busquedaMaestraAdminProyectada(
+        Page<AutorResumenResponse> page = autorRepository.busqueda(
                 false, null, null, null, null, null, null, "Gabriel", PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("Should find autor by ID with busquedaPorId")
+    void shouldFindByIdWithBusquedaPorId() {
+        Autor autor = Autor.builder().nombre("Unico").biografia("Bio").borradoLogico(false).build();
+        autorRepository.saveAndFlush(autor);
+
+        Optional<Autor> foundActive = autorRepository.busquedaPorId(autor.getId(), false);
+        assertThat(foundActive).isPresent();
+
+        Optional<Autor> foundAny = autorRepository.busquedaPorId(autor.getId(), null);
+        assertThat(foundAny).isPresent();
     }
 
     @Test
@@ -83,13 +94,13 @@ class AutorRepositoryTest extends BaseRepositoryTest {
         // Deactivate
         autorRepository.desactivar(autor.getId());
         entityManager.clear();
-        Autor deactivated = autorRepository.findById(autor.getId()).orElseThrow();
+        Autor deactivated = autorRepository.busquedaPorId(autor.getId(), null).orElseThrow();
         assertThat(deactivated.isBorradoLogico()).isTrue();
 
         // Activate
         autorRepository.activar(autor.getId());
         entityManager.clear();
-        Autor activated = autorRepository.findById(autor.getId()).orElseThrow();
+        Autor activated = autorRepository.busquedaPorId(autor.getId(), null).orElseThrow();
         assertThat(activated.isBorradoLogico()).isFalse();
     }
 }

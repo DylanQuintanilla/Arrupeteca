@@ -22,7 +22,7 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
            "LEFT JOIN e.estadoFisico ef " +
            "LEFT JOIN e.disponibilidad d " +
            "LEFT JOIN e.mueble m " +
-           "WHERE (:esBorrado IS NULL OR e.borradoLogico = :esBorrado) " +
+           "WHERE (:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico) " +
            "AND (:idLibro IS NULL OR l.id = :idLibro) " +
            "AND (:idEstadoFisico IS NULL OR ef.id = :idEstadoFisico) " +
            "AND (:idDisponibilidad IS NULL OR d.id = :idDisponibilidad) " +
@@ -30,11 +30,11 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
            "AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)) " +
            "AND (:idCategoria IS NULL OR EXISTS (SELECT 1 FROM o.categorias c WHERE c.id = :idCategoria)) " +
            "AND (:idEtiqueta IS NULL OR EXISTS (SELECT 1 FROM o.etiquetas et WHERE et.id = :idEtiqueta)) " +
-           "AND (:termino IS NULL OR LOWER(e.comentario) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "AND (:termino IS NULL OR :termino = '' OR LOWER(e.comentario) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "     OR LOWER(l.isbn) LIKE LOWER(CONCAT('%', :termino, '%')) " +
            "     OR LOWER(o.titulo) LIKE LOWER(CONCAT('%', :termino, '%')))")
-    Page<EjemplarLibroResumen> busquedaMaestraAdminProyectada(
-            @Param("esBorrado") Boolean esBorrado,
+    Page<EjemplarLibroResumen> busqueda(
+            @Param("borradoLogico") Boolean borradoLogico,
             @Param("idLibro") Long idLibro,
             @Param("idGenero") Long idGenero,
             @Param("idCategoria") Long idCategoria,
@@ -45,11 +45,9 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
             @Param("termino") String termino,
             Pageable pageable);
 
-    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibro> findByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio"})
-    Optional<EjemplarLibro> findById(Long id);
+    @EntityGraph(attributePaths = {"libro.obra", "libro.editorial", "mueble.salon.planta.edificio", "estadoFisico", "disponibilidad"})
+    @Query("SELECT e FROM EjemplarLibro e WHERE e.id = :id AND (:borradoLogico IS NULL OR e.borradoLogico = :borradoLogico)")
+    Optional<EjemplarLibro> busquedaPorId(@Param("id") Long id, @Param("borradoLogico") Boolean borradoLogico);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EjemplarLibro e SET e.borradoLogico = true WHERE e.id = :id")
@@ -58,6 +56,5 @@ public interface EjemplarLibroRepository extends JpaRepository<EjemplarLibro, Lo
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE EjemplarLibro e SET e.borradoLogico = false WHERE e.id = :id")
     void activar(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
 }
+
