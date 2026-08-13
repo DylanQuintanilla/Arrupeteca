@@ -30,6 +30,7 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
            "AND (:idFormato IS NULL OR f.id = :idFormato) " +
            "AND (:idGrado IS NULL OR gr.id = :idGrado) " +
            "AND (:idCiclo IS NULL OR ci.id = :idCiclo) " +
+           "AND (:idIdioma IS NULL OR EXISTS (SELECT 1 FROM l.idiomas i WHERE i.id = :idIdioma)) " +
            "AND (:idGenero IS NULL OR EXISTS (SELECT 1 FROM o.generos g WHERE g.id = :idGenero)) " +
            "AND (:idCategoria IS NULL OR EXISTS (SELECT 1 FROM o.categorias c WHERE c.id = :idCategoria)) " +
            "AND (:idEtiqueta IS NULL OR EXISTS (SELECT 1 FROM o.etiquetas e WHERE e.id = :idEtiqueta)) " +
@@ -48,6 +49,7 @@ public interface LibroRepository extends JpaRepository<Libro, Long> {
             @Param("idFormato") Long idFormato,
             @Param("idGrado") Long idGrado,
             @Param("idCiclo") Long idCiclo,
+            @Param("idIdioma") Long idIdioma,
             @Param("termino") String termino,
             @Param("anioInicio") Integer anioInicio,
             @Param("anioFin") Integer anioFin,

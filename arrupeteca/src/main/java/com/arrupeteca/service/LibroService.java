@@ -10,14 +10,14 @@ public interface LibroService {
 
     Page<LibroResumen> busquedaGlobal(
             String termino, Long idAutor, Long idGenero, Long idCategoria,
-            Long idEditorial, Integer anioInicio, Integer anioFin,
-            Pageable pageable);
+            Long idEditorial, Long idIdioma, Long idCiclo, Long idEtiqueta,
+            Integer anioInicio, Integer anioFin, Pageable pageable);
 
     LibroDetalleResponse busquedaGlobalPorId(Long id);
 
     Page<LibroResumen> busquedaAdmin(
             Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
-            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo, Long idIdioma,
             String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable);
 

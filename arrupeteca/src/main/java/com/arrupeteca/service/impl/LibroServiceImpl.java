@@ -50,13 +50,14 @@ public class LibroServiceImpl implements LibroService {
     @Override
     public Page<LibroResumen> busquedaGlobal(
             String termino, Long idAutor, Long idGenero, Long idCategoria,
-            Long idEditorial, Integer anioInicio, Integer anioFin,
+            Long idEditorial, Long idIdioma, Long idCiclo, Long idEtiqueta,
+            Integer anioInicio, Integer anioFin,
             Pageable pageable) {
-        log.debug("Búsqueda global proyectada de libros por '{}', autor: {}, género: {}, categoría: {}, editorial: {}",
-                termino, idAutor, idGenero, idCategoria, idEditorial);
+        log.debug("Búsqueda global proyectada de libros por '{}', autor: {}, género: {}, categoría: {}, editorial: {}, idioma: {}, ciclo: {}, etiqueta: {}",
+                termino, idAutor, idGenero, idCategoria, idEditorial, idIdioma, idCiclo, idEtiqueta);
         String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
         return libroRepository.busqueda(
-                false, null, idAutor, idGenero, idCategoria, null, idEditorial, null, null, null, term, anioInicio, anioFin, pageable);
+                false, null, idAutor, idGenero, idCategoria, idEtiqueta, idEditorial, null, null, idCiclo, idIdioma, term, anioInicio, anioFin, pageable);
     }
 
     @Override
@@ -71,15 +72,15 @@ public class LibroServiceImpl implements LibroService {
     @Override
     public Page<LibroResumen> busquedaAdmin(
             Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
-            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo, Long idIdioma,
             String termino, Integer anioInicio, Integer anioFin,
             Pageable pageable) {
-        log.debug("Búsqueda maestra de libros admin proyectada: borradoLogico={}, idObra={}, idAutor={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
-                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, termino);
+        log.debug("Búsqueda maestra de libros admin proyectada: borradoLogico={}, idObra={}, idAutor={}, idGenero={}, idCategoria={}, idEtiqueta={}, idIdioma={}, termino={}",
+                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, idIdioma, termino);
         String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
         return libroRepository.busqueda(
                 borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta,
-                idEditorial, idFormato, idGrado, idCiclo, term, anioInicio, anioFin, pageable);
+                idEditorial, idFormato, idGrado, idCiclo, idIdioma, term, anioInicio, anioFin, pageable);
     }
 
     @Override
@@ -93,7 +94,7 @@ public class LibroServiceImpl implements LibroService {
     @Override
     public Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable) {
         log.debug("Obteniendo libros proyectados por ID Obra: {}", idObra);
-        return libroRepository.busqueda(false, idObra, null, null, null, null, null, null, null, null, null, null, null, pageable);
+        return libroRepository.busqueda(false, idObra, null, null, null, null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override

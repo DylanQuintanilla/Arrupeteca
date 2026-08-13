@@ -25,6 +25,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import org.springframework.context.annotation.Profile;
 
+import org.springframework.http.HttpMethod;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
@@ -46,7 +48,15 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
-                        .requestMatchers("/api/v1/*/admin", "/api/v1/*/admin/**", "/api/v1/*/all").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/*/admin", "/api/v1/*/admin/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/libros/**",
+                                "/api/v1/autores",
+                                "/api/v1/generos",
+                                "/api/v1/categorias",
+                                "/api/v1/editoriales",
+                                "/api/v1/idiomas"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

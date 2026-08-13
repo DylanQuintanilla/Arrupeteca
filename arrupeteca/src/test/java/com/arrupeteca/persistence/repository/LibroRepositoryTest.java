@@ -48,7 +48,7 @@ class LibroRepositoryTest extends BaseRepositoryTest {
     void shouldFindActive() {
         libroRepository.save(createValidLibro("9781107004634"));
         Page<LibroResumen> page = libroRepository.busqueda(
-                false, null, null, null, null, null, null, null, null, null, null, null, null, PageRequest.of(0, 10));
+                false, null, null, null, null, null, null, null, null, null, null, null, null, null, PageRequest.of(0, 10));
         assertThat(page.getTotalElements()).isGreaterThan(0);
     }
 

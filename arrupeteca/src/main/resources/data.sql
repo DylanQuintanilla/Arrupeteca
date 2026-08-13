@@ -22,12 +22,30 @@ INSERT INTO ciclo (id_ciclo, nombre, borrado_logico) VALUES
 
 -- DDL/DML de semilla para grado
 INSERT INTO grado (id_grado, nombre, borrado_logico) VALUES
-  (1, 'Inicial 3 - Parvularia', 0),
-  (2, 'Primer Grado - Noveno Grado', 0),
-  (3, 'Bachillerato General', 0),
-  (4, 'Bachillerato tecnico contador', 0),
-  (5, 'Bachillerato tecnico electronica', 0),
-  (6, 'Bachillerato tecnico en software', 0);
+  (1, 'Tercer Año de Vida', 0),
+  (2, 'Cuarto Año de Vida', 0),
+  (3, 'Quinto Año de Vida', 0),
+  (4, 'Sexto Año de Vida', 0),
+  (5, 'Primer Grado', 0),
+  (6, 'Segundo Grado', 0),
+  (7, 'Tercer Grado', 0),
+  (8, 'Cuarto Grado', 0),
+  (9, 'Quinto Grado', 0),
+  (10, 'Sexto Grado', 0),
+  (11, 'Séptimo Grado', 0),
+  (12, 'Octavo Grado', 0),
+  (13, 'Noveno Grado', 0),
+  (14, 'Primer Año Bachillerato Contador', 0),
+  (15, 'Primer Año Bachillerato en Desarrollo Software', 0),
+  (16, 'Primer Año Bachillerato Electrónica', 0),
+  (17, 'Primer Año Bachillerato General', 0),
+  (18, 'Segundo Año Bachillerato Contador', 0),
+  (19, 'Segundo Año Bachillerato en Desarrollo Software', 0),
+  (20, 'Segundo Año Bachillerato Electrónica', 0),
+  (21, 'Segundo Año Bachillerato General', 0),
+  (22, 'Tercer Año Bachillerato Contador', 0),
+  (23, 'Tercer Año Bachillerato Electrónica', 0),
+  (24, 'Tercer Año Bachillerato en Desarrollo Software', 0);
 
 -- DDL/DML de semilla para estado_fisico
 INSERT INTO estado_fisico (id_estado_fisico, nombre, borrado_logico) VALUES

@@ -36,7 +36,7 @@ public class LibroController {
     @GetMapping
     @Operation(
         summary = "Búsqueda global de libros activos",
-        description = "Permite buscar libros activos por término (ISBN o título de obra), autor, género, categoría, editorial y rango de años de publicación."
+        description = "Permite buscar libros activos por término (ISBN o título de obra), autor, género, categoría, editorial, idioma, ciclo, etiqueta y rango de años de publicación."
     )
     public ResponseEntity<ApiResponse<Page<LibroResumen>>> busquedaGlobal(
             @RequestParam(required = false) String termino,
@@ -44,11 +44,14 @@ public class LibroController {
             @RequestParam(required = false) Long idGenero,
             @RequestParam(required = false) Long idCategoria,
             @RequestParam(required = false) Long idEditorial,
+            @RequestParam(required = false) Long idIdioma,
+            @RequestParam(required = false) Long idCiclo,
+            @RequestParam(required = false) Long idEtiqueta,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda pública de libros activos",
-                libroService.busquedaGlobal(termino, idAutor, idGenero, idCategoria, idEditorial, anioInicio, anioFin, pageable)));
+                libroService.busquedaGlobal(termino, idAutor, idGenero, idCategoria, idEditorial, idIdioma, idCiclo, idEtiqueta, anioInicio, anioFin, pageable)));
     }
 
     @GetMapping("/{id}")
@@ -87,13 +90,14 @@ public class LibroController {
             @RequestParam(required = false) Long idFormato,
             @RequestParam(required = false) Long idGrado,
             @RequestParam(required = false) Long idCiclo,
+            @RequestParam(required = false) Long idIdioma,
             @RequestParam(required = false) String termino,
             @RequestParam(required = false) Integer anioInicio,
             @RequestParam(required = false) Integer anioFin,
             @ParameterObject @PageableDefault(size = 20, sort = "obra.titulo") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda de administración de libros",
                 libroService.busquedaAdmin(borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, idEditorial, idFormato,
-                        idGrado, idCiclo, termino, anioInicio, anioFin, pageable)));
+                        idGrado, idCiclo, idIdioma, termino, anioInicio, anioFin, pageable)));
     }
 
     @GetMapping("/admin/{id}")

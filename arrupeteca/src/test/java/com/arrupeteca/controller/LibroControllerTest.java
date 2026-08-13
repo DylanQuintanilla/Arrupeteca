@@ -38,7 +38,7 @@ class LibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/libros - Should return active books")
     void shouldReturnActive() throws Exception {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
+        when(libroService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros"))
                 .andExpect(status().isOk())
@@ -78,7 +78,7 @@ class LibroControllerTest extends BaseControllerTest {
     @DisplayName("GET /api/v1/libros/admin/all - Should return all books for admin")
     void shouldReturnAllForAdmin() throws Exception {
         Page<LibroResumen> page = new PageImpl<>(List.of());
-        when(libroService.busquedaAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(libroService.busquedaAdmin(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
         mockMvc.perform(get("/api/v1/libros/admin/all"))
                 .andExpect(status().isOk())

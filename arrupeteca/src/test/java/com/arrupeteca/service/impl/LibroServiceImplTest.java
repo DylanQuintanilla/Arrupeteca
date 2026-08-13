@@ -66,9 +66,9 @@ class LibroServiceImplTest extends BaseServiceTest {
     void busquedaGlobal() {
         LibroResumen resumen = mock(LibroResumen.class);
         Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
-        when(libroRepository.busqueda(eq(false), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(libroRepository.busqueda(eq(false), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
-        Page<LibroResumen> result = libroService.busquedaGlobal("palabra", null, null, null, null, null, null, Pageable.unpaged());
+        Page<LibroResumen> result = libroService.busquedaGlobal("palabra", null, null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(resumen);
     }
@@ -101,9 +101,9 @@ class LibroServiceImplTest extends BaseServiceTest {
     void busquedaAdmin() {
         LibroResumen resumen = mock(LibroResumen.class);
         Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
-        when(libroRepository.busqueda(eq(true), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
+        when(libroRepository.busqueda(eq(true), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any())).thenReturn(page);
 
-        Page<LibroResumen> result = libroService.busquedaAdmin(true, null, null, null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
+        Page<LibroResumen> result = libroService.busquedaAdmin(true, null, null, null, null, null, null, null, null, null, null, null, null, null, Pageable.unpaged());
 
         assertThat(result.getContent()).containsExactly(resumen);
     }
@@ -135,7 +135,7 @@ class LibroServiceImplTest extends BaseServiceTest {
     void buscarPorObraId() {
         LibroResumen resumen = mock(LibroResumen.class);
         Page<LibroResumen> page = new PageImpl<>(List.of(resumen));
-        when(libroRepository.busqueda(eq(false), eq(1L), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
+        when(libroRepository.busqueda(eq(false), eq(1L), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any(Pageable.class))).thenReturn(page);
 
         Page<LibroResumen> result = libroService.buscarPorObraId(1L, Pageable.unpaged());
 

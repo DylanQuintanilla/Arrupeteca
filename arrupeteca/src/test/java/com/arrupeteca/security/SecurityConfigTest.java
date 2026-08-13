@@ -41,13 +41,69 @@ class SecurityConfigTest {
     @MockitoBean
     private CategoriaService categoriaService;
 
+    @MockitoBean
+    private com.arrupeteca.service.AutorService autorService;
+
+    @MockitoBean
+    private com.arrupeteca.service.GeneroService generoService;
+
+    @MockitoBean
+    private com.arrupeteca.service.EditorialService editorialService;
+
+    @MockitoBean
+    private com.arrupeteca.service.LibroService libroService;
+
     @Test
-    @DisplayName("Endpoint no autenticado debe retornar 401 Unauthorized con formato JSON")
+    @DisplayName("Endpoint de usuarios sin token debe retornar 401 Unauthorized")
     void debeRetornar401SinToken() throws Exception {
-        mockMvc.perform(get("/api/v1/autores"))
+        mockMvc.perform(get("/api/v1/usuarios"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.exito").value(false))
                 .andExpect(jsonPath("$.mensaje").value("No autorizado. Token JWT inválido o ausente."));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros sin token debe ser permitido públicamente (200 OK)")
+    void debePermitirBusquedaLibrosSinToken() throws Exception {
+        given(libroService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+
+        mockMvc.perform(get("/api/v1/libros"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/autores, /generos, /categorias, /editoriales sin token deben ser públicos (200 OK)")
+    void debePermitirCatalogosDropdownSinToken() throws Exception {
+        given(autorService.busquedaGlobal(any(), any(), any(), any(), any(), any(), any(), any()))
+                .willReturn(new PageImpl<>(List.of()));
+        given(generoService.obtenerTodosActivos(any())).willReturn(List.of());
+        given(categoriaService.obtenerTodosActivos(any())).willReturn(List.of());
+        given(editorialService.obtenerTodosActivos(any())).willReturn(List.of());
+
+        mockMvc.perform(get("/api/v1/autores")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/generos")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/categorias")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/editoriales")).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/libros/{id} sin token debe ser público (200 OK)")
+    void debePermitirDetalleLibroPorIdSinToken() throws Exception {
+        given(libroService.busquedaGlobalPorId(1L)).willReturn(com.arrupeteca.dto.response.detail.LibroDetalleResponse.builder().id(1L).build());
+
+        mockMvc.perform(get("/api/v1/libros/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/autores/{id} sin token debe exigir autenticación (401 Unauthorized)")
+    void debeExigirTokenParaDetalleAutor() throws Exception {
+        mockMvc.perform(get("/api/v1/autores/1"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.exito").value(false));
     }
 
     @Test
