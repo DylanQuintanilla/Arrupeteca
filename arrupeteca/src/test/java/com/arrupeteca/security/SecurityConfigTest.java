@@ -99,11 +99,14 @@ class SecurityConfigTest {
     }
 
     @Test
-    @DisplayName("GET /api/v1/autores/{id} sin token debe exigir autenticación (401 Unauthorized)")
-    void debeExigirTokenParaDetalleAutor() throws Exception {
+    @DisplayName("GET /api/v1/autores/{id} sin token debe ser permitido públicamente (200 OK)")
+    void debePermitirDetalleAutorPorIdSinToken() throws Exception {
+        given(autorService.busquedaGlobalPorId(1L))
+                .willReturn(com.arrupeteca.dto.response.detail.AutorDetalleResponse.builder().id(1L).nombre("Gabriel").build());
+
         mockMvc.perform(get("/api/v1/autores/1"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.exito").value(false));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true));
     }
 
     @Test
