@@ -1,0 +1,363 @@
+/* DESACTIVAR RESTRICCIONES DE LLAVE FORÁNEA */
+SET FOREIGN_KEY_CHECKS = 0;
+
+/* LIMPIAR TABLAS CON DELETE (Evita el error #1701 de MySQL) */
+DELETE FROM responsable;
+DELETE FROM parentesco;
+DELETE FROM usuario;
+DELETE FROM tipo_usuario;
+DELETE FROM ejemplar_libro;
+DELETE FROM libro_idioma;
+DELETE FROM libro;
+DELETE FROM mueble;
+DELETE FROM salon;
+DELETE FROM planta;
+DELETE FROM editorial;
+DELETE FROM obra_etiqueta;
+DELETE FROM obra_categoria;
+DELETE FROM obra_genero;
+DELETE FROM obra_autor;
+DELETE FROM autor;
+DELETE FROM obra;
+DELETE FROM tipo_autoria;
+DELETE FROM pais;
+DELETE FROM nacionalidad;
+DELETE FROM idioma;
+DELETE FROM genero;
+DELETE FROM formato;
+DELETE FROM edificio;
+DELETE FROM etiqueta;
+DELETE FROM categoria;
+DELETE FROM ciclo;
+DELETE FROM grado;
+DELETE FROM estado_fisico;
+DELETE FROM disponibilidad;
+
+/* RESTABLECER LOS CONTADORES AUTO_INCREMENT A 1 */
+ALTER TABLE responsable AUTO_INCREMENT = 1;
+ALTER TABLE parentesco AUTO_INCREMENT = 1;
+ALTER TABLE usuario AUTO_INCREMENT = 1;
+ALTER TABLE tipo_usuario AUTO_INCREMENT = 1;
+ALTER TABLE ejemplar_libro AUTO_INCREMENT = 1;
+ALTER TABLE libro AUTO_INCREMENT = 1;
+ALTER TABLE editorial AUTO_INCREMENT = 1;
+ALTER TABLE planta AUTO_INCREMENT = 1;
+ALTER TABLE salon AUTO_INCREMENT = 1;
+ALTER TABLE mueble AUTO_INCREMENT = 1;
+ALTER TABLE autor AUTO_INCREMENT = 1;
+ALTER TABLE obra AUTO_INCREMENT = 1;
+ALTER TABLE obra_autor AUTO_INCREMENT = 1;
+ALTER TABLE tipo_autoria AUTO_INCREMENT = 1;
+ALTER TABLE pais AUTO_INCREMENT = 1;
+ALTER TABLE nacionalidad AUTO_INCREMENT = 1;
+ALTER TABLE idioma AUTO_INCREMENT = 1;
+ALTER TABLE genero AUTO_INCREMENT = 1;
+ALTER TABLE formato AUTO_INCREMENT = 1;
+ALTER TABLE edificio AUTO_INCREMENT = 1;
+ALTER TABLE etiqueta AUTO_INCREMENT = 1;
+ALTER TABLE categoria AUTO_INCREMENT = 1;
+ALTER TABLE ciclo AUTO_INCREMENT = 1;
+ALTER TABLE grado AUTO_INCREMENT = 1;
+ALTER TABLE estado_fisico AUTO_INCREMENT = 1;
+ALTER TABLE disponibilidad AUTO_INCREMENT = 1;
+
+/* ACTIVAR RESTRICCIONES DE NUEVO */
+SET FOREIGN_KEY_CHECKS = 1;
+
+/* 1. TABLAS MAESTRAS SIMPLES Y CATÁLOGOS */
+INSERT INTO tipo_usuario (nombre, borrado_logico) VALUES
+('admin', 0), ('alumno', 0), ('maestro', 0), ('personal administrativo', 0);
+
+INSERT INTO parentesco (nombre, borrado_logico) VALUES
+('Padre', 0), ('Madre', 0), ('Tutor Legal', 0), ('Hermano/a', 0), ('Otro', 0);
+
+INSERT INTO categoria (nombre, borrado_logico) VALUES
+('Literatura General', 0), ('Referencia', 0), ('Hemeroteca', 0), ('Ciencias Exactas', 0), ('Infantil y Juvenil', 0);
+
+INSERT INTO etiqueta (nombre, borrado_logico) VALUES
+('Tecnología', 0), ('Día del Niño', 0), ('Día de la Madre', 0), ('Recomendados', 0), ('Novedades', 0);
+
+INSERT INTO edificio (nombre, borrado_logico) VALUES
+('Biblioteca Central', 0), ('Edificio de Aulas D', 0), ('Centro Loyola', 0), ('Edificio de Postgrados', 0), ('Laboratorios de Ingeniería', 0);
+
+INSERT INTO formato (nombre, borrado_logico) VALUES
+('Libro Físico (Tapa Dura)', 0), ('Libro Físico (Rústica)', 0), ('Libro de Bolsillo', 0), ('Documento PDF', 0), ('Audiolibro', 0);
+
+INSERT INTO genero (nombre, borrado_logico) VALUES
+('Novela Histórica', 0), ('Ciencia Ficción', 0), ('Terror y Suspenso', 0), ('Poesía', 0), ('Ensayo Académico', 0);
+
+INSERT INTO idioma (nombre, borrado_logico) VALUES
+('Español', 0), ('Inglés', 0), ('Francés', 0), ('Portugués', 0), ('Alemán', 0);
+
+INSERT INTO nacionalidad (nombre, borrado_logico) VALUES
+('Salvadoreña', 0), ('Estadounidense', 0), ('Española', 0), ('Colombiana', 0), ('Mexicana', 0),
+('Británica', 0), ('Argentina', 0), ('Francesa', 0), ('Alemana', 0), ('Chilena', 0);
+
+INSERT INTO pais (nombre, borrado_logico) VALUES
+('El Salvador', 0), ('Estados Unidos', 0), ('España', 0), ('Colombia', 0), ('México', 0),
+('Reino Unido', 0), ('Argentina', 0), ('Francia', 0), ('Alemania', 0), ('Chile', 0);
+
+INSERT INTO tipo_autoria (nombre, borrado_logico) VALUES
+('Escritor', 0), ('Ilustrador', 0), ('Traductor', 0), ('Compilador', 0), ('Editor', 0);
+
+INSERT INTO ciclo (nombre, borrado_logico) VALUES
+('Primer ciclo', 0), ('Segundo ciclo', 0), ('Tercer ciclo', 0), ('Cuarto ciclo', 0);
+
+INSERT INTO grado (nombre, borrado_logico) VALUES
+('Tercer Año de Vida', 0), ('Cuarto Año de Vida', 0), ('Quinto Año de Vida', 0), ('Sexto Año de Vida', 0),
+('Primer Grado', 0), ('Segundo Grado', 0), ('Tercer Grado', 0), ('Cuarto Grado', 0),
+('Quinto Grado', 0), ('Sexto Grado', 0), ('Séptimo Grado', 0), ('Octavo Grado', 0), ('Noveno Grado', 0),
+('Primer Año Bachillerato Contador', 0), ('Primer Año Bachillerato en Desarrollo Software', 0),
+('Primer Año Bachillerato Electrónica', 0), ('Primer Año Bachillerato General', 0),
+('Segundo Año Bachillerato Contador', 0), ('Segundo Año Bachillerato en Desarrollo Software', 0),
+('Segundo Año Bachillerato Electrónica', 0), ('Segundo Año Bachillerato General', 0),
+('Tercer Año Bachillerato Contador', 0), ('Tercer Año Bachillerato Electrónica', 0),
+('Tercer Año Bachillerato en Desarrollo Software', 0);
+
+INSERT INTO estado_fisico (nombre, borrado_logico) VALUES
+('Nuevo', 0), ('Como nuevo', 0), ('Buen estado', 0), ('Aceptable', 0), ('Deteriorado', 0), ('Muy deteriorado', 0), ('Incompleto', 0);
+
+INSERT INTO disponibilidad (nombre, borrado_logico) VALUES
+('Disponible', 0), ('Prestado', 0), ('Reservado', 0), ('Mantenimiento', 0), ('Perdido', 0), ('Botado', 0), ('Donado', 0);
+
+/* 2. USUARIOS DE PRUEBA Y SEGURIDAD (Contraseña para ambos: Password123!) */
+INSERT INTO usuario (nombres, apellidos, correo, contrasena, carnet, bloqueado_por_mora, fecha_registro, ultima_fecha_actividad, id_tipo, borrado_logico) VALUES
+('Administrador', 'Sistema', 'admin@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ADM-0001', 0, NOW(), NOW(), 1, 0),
+('Carlos', 'Pérez', 'alumno@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-001', 0, NOW(), NOW(), 2, 0);
+
+/* 3. RESPONSABLE DE ALUMNO */
+INSERT INTO responsable (nombres, apellidos, correo, telefono, dui, id_usuario, id_parentesco, borrado_logico) VALUES
+('Juan', 'Pérez', 'juan.perez@gmail.com', '7890-1234', '01234567-8', 2, 1, 0);
+
+/* 4. OBRAS (35 Obras) */
+INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+('Pobrecito Poeta que era yo', 1976, 'Novela collage autobiográfica de la generación comprometida salvadoreña.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('It (Eso)', 1986, 'Obra maestra del terror contemporáneo sobre una entidad ancestral en Derry.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Don Quijote de la Mancha', 1605, 'La historia universal del hidalgo Don Quijote y su fiel escudero Sancho Panza.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Cien años de soledad', 1967, 'Saga familiar de los Buendía en el pueblo mítico de Macondo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Inundación Castálida', 1689, 'Magna colección lírica de la Décima Musa del barroco hispanoamericano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('1984', 1949, 'Distopía clásica sobre la vigilancia extrema del Gran Hermano y la manipulación de la verdad.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Rebelión en la granja', 1945, 'Fábula satírica sobre la corrupción del poder y los regímenes totalitarios.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El Aleph', 1949, 'Cuentos fantásticos y metafísicos que exploran la infinitud y el laberinto.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Tierra de Infancia', 1958, 'Memorias poéticas de la niñez en El Salvador.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Un día en la vida', 1980, 'Relato conmovedor de la vida cotidiana campesina en El Salvador pre-conflicto.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Cuentos de barro', 1933, 'Relatos folklóricos y estampas costumbristas del campo salvadoreño.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Rayuela', 1963, 'Contranovela revolucionaria que se puede leer de múltiples maneras.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Frankenstein o el moderno Prometeo', 1818, 'Novela gótica y pionera de la ciencia ficción sobre la creación de la vida.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La metamorfosis', 1915, 'Relato angustioso sobre Gregorio Samsa y su transformación repentina.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El principito', 1943, 'Fábula poética y filosófica sobre la amistad, el amor y la naturaleza humana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La casa de los espíritus', 1982, 'Crónica de cuatro generaciones de la familia Trueba con toques de realismo mágico.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Fundación', 1951, 'Inicio de la saga galáctica y el concepto de la psicohistoria para salvar el conocimiento.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Las aventuras de Sherlock Holmes', 1892, 'Colección de relatos detectivescos protagonizados por el célebre investigador de Baker Street.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Clean Code: A Handbook of Agile Software Craftsmanship', 2008, 'Guía esencial de mejores prácticas, refactorización y principios de diseño para escribir código limpio.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Design Patterns: Elements of Reusable Object-Oriented Software', 1994, 'Catálogo clásico de patrones de diseño de software orientados a objetos.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La ciudad y los perros', 1963, 'Novela que retrata la severa disciplina y los conflictos internos en un colegio militar.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Veinte poemas de amor y una canción desesperada', 1924, 'Obra cumbre de la poesía amorosa hispanoamericana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Rimas y Leyendas', 1871, 'Antología fundamental del romanticismo poético y de relatos místico-fantásticos.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Drácula', 1897, 'El mito clásico del vampirismo y la lucha del bien contra el mal en la Europa victoriana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La llamada de Cthulhu', 1928, 'Relato seminal del terror cósmico y la mitología Lovecraftiana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Orgullo y prejuicio', 1813, 'Clásico de la literatura romántica y crítica social sobre Elizabeth Bennet y el Sr. Darcy.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El resplandor', 1977, 'Novela de terror psicológico ambientada en el aislado Hotel Overlook.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Crónica de una muerte anunciada', 1981, 'Relato periodístico y literario sobre la muerte trágica e inevitable de Santiago Nasar.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El amor en los tiempos del cólera', 1985, 'Historia apasionada del amor perseverante entre Florentino Ariza y Fermina Daza.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Fahrenheit 451', 1953, 'Novela distópica sobre un futuro donde los libros están prohibidos y son quemados por bomberos.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Un mundo feliz', 1932, 'Visionaria distopía sobre una sociedad tecnológicamente acondicionada y deshumanizada.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Clean Architecture', 2017, 'Principios universales de arquitectura de software para mantener sistemas mantenibles y desacoplados.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El túnel', 1948, 'Novela existencialista sobre la obsesión fatal del pintor Juan Pablo Castel.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Pedro Páramo', 1955, 'Viaje de Juan Preciado a Comala, un pueblo donde habitan los murmullos de los muertos.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El señor presidente', 1946, 'Obra maestra de la narrativa sobre las dictaduras iberoamericanas.', 0, 0, NOW(), NOW(), 'SYSTEM');
+
+/* 5. AUTORES (25 Autores) */
+INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biografia, borrado_logico, id_pais_nacimiento, id_nacionalidad, id_genero_principal, id_obra, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+('Roque Dalton García', NULL, 1935, 1975, 'Poeta y ensayista salvadoreño.', 0, 1, 1, 4, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('Stephen Edwin King', 'Richard Bachman', 1947, NULL, 'El rey del terror contemporáneo.', 0, 2, 2, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Miguel de Cervantes Saavedra', 'El Manco de Lepanto', 1547, 1616, 'Máxima figura de la literatura española.', 0, 3, 3, 1, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Gabriel García Márquez', 'Gabo', 1927, 2014, 'Padre del realismo mágico y Premio Nobel.', 0, 4, 4, 1, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Juana Inés de Asbaje', 'Sor Juana', 1648, 1695, 'La décima musa mexicana del barroco.', 0, 5, 5, 4, 5, 0, NOW(), NOW(), 'SYSTEM'),
+('George Orwell', 'Eric Arthur Blair', 1903, 1950, 'Escritor británico célebre por sus novelas distópicas.', 0, 6, 6, 1, 6, 0, NOW(), NOW(), 'SYSTEM'),
+('Jorge Luis Borges', NULL, 1899, 1986, 'Maestro del cuento, la poesía y el ensayo fantástico.', 0, 7, 7, 5, 8, 0, NOW(), NOW(), 'SYSTEM'),
+('Carmen Brannon Vega', 'Claudia Lars', 1899, 1974, 'Destacada poetisa salvadoreña de finura lírica.', 0, 1, 1, 4, 9, 0, NOW(), NOW(), 'SYSTEM'),
+('Manlio Argueta', NULL, 1935, NULL, 'Novelista salvadoreño y miembro del grupo La Masacuata.', 0, 1, 1, 1, 10, 0, NOW(), NOW(), 'SYSTEM'),
+('Salvador Salazar Arrué', 'Salarrué', 1899, 1975, 'Escritor y pintor salvadoreño fundamental del costumbrismo.', 0, 1, 1, 1, 11, 0, NOW(), NOW(), 'SYSTEM'),
+('Julio Cortázar', NULL, 1914, 1984, 'Renombrado escritor argentino del boom latinoamericano.', 0, 7, 7, 1, 12, 0, NOW(), NOW(), 'SYSTEM'),
+('Mary Wollstonecraft Shelley', NULL, 1797, 1851, 'Dramaturga y ensayista británica, creadora de Frankenstein.', 0, 6, 6, 3, 13, 0, NOW(), NOW(), 'SYSTEM'),
+('Franz Kafka', NULL, 1883, 1924, 'Autor bohemio fundamental de la literatura del siglo XX.', 0, 9, 9, 1, 14, 0, NOW(), NOW(), 'SYSTEM'),
+('Antoine de Saint-Exupéry', NULL, 1900, 1944, 'Aviador y escritor francés, autor de El principito.', 0, 8, 8, 1, 15, 0, NOW(), NOW(), 'SYSTEM'),
+('Isabel Allende Llona', NULL, 1942, NULL, 'Aclamada escritora chilena de éxito internacional.', 0, 10, 10, 1, 16, 0, NOW(), NOW(), 'SYSTEM'),
+('Isaac Asimov', NULL, 1920, 1992, 'Bioquímico y prolijo autor de ciencia ficción y divulgación.', 0, 2, 2, 2, 17, 0, NOW(), NOW(), 'SYSTEM'),
+('Arthur Conan Doyle', NULL, 1859, 1930, 'Médico y escritor británico, creador de Sherlock Holmes.', 0, 6, 6, 3, 18, 0, NOW(), NOW(), 'SYSTEM'),
+('Robert C. Martin', 'Uncle Bob', 1952, NULL, 'Ingeniero de software estadounidense y divulgador ágil.', 0, 2, 2, 5, 19, 0, NOW(), NOW(), 'SYSTEM'),
+('Erich Gamma', NULL, 1961, NULL, 'Informático suizo coautor de la banda Gang of Four.', 0, 9, 9, 5, 20, 0, NOW(), NOW(), 'SYSTEM'),
+('Mario Vargas Llosa', NULL, 1936, NULL, 'Premio Nobel de Literatura hispano-peruano.', 0, 3, 3, 1, 21, 0, NOW(), NOW(), 'SYSTEM'),
+('Pablo Neruda', 'Ricardo Eliécer Neftalí Reyes', 1904, 1973, 'Poeta chileno, Premio Nobel de Literatura.', 0, 10, 10, 4, 22, 0, NOW(), NOW(), 'SYSTEM'),
+('Gustavo Adolfo Bécquer', NULL, 1836, 1870, 'Poeta y narrador español del romanticismo.', 0, 3, 3, 4, 23, 0, NOW(), NOW(), 'SYSTEM'),
+('Bram Stoker', NULL, 1847, 1912, 'Escritor irlandés célebre por su obra maestra Drácula.', 0, 6, 6, 3, 24, 0, NOW(), NOW(), 'SYSTEM'),
+('Howard Phillips Lovecraft', 'H.P. Lovecraft', 1890, 1937, 'Maestro del terror cósmico y de la ciencia ficción gótica.', 0, 2, 2, 3, 25, 0, NOW(), NOW(), 'SYSTEM'),
+('Jane Austen', NULL, 1775, 1817, 'Novelista británica cumbre de la literatura universal.', 0, 6, 6, 1, 26, 0, NOW(), NOW(), 'SYSTEM');
+
+/* 6. RELACIONES DE OBRA Y AUTOR */
+INSERT INTO obra_autor (id_obra, id_autor, id_tipo_autoria, borrado_logico) VALUES
+(1, 1, 1, 0), (2, 2, 1, 0), (3, 3, 1, 0), (4, 4, 1, 0), (5, 5, 1, 0),
+(6, 6, 1, 0), (7, 6, 1, 0), (8, 7, 1, 0), (9, 8, 1, 0), (10, 9, 1, 0),
+(11, 10, 1, 0), (12, 11, 1, 0), (13, 12, 1, 0), (14, 13, 1, 0), (15, 14, 1, 0),
+(16, 15, 1, 0), (17, 16, 1, 0), (18, 17, 1, 0), (19, 18, 1, 0), (20, 19, 1, 0),
+(21, 20, 1, 0), (22, 21, 1, 0), (23, 22, 1, 0), (24, 23, 1, 0), (25, 24, 1, 0),
+(26, 25, 1, 0), (27, 2, 1, 0), (28, 4, 1, 0), (29, 4, 1, 0), (30, 6, 1, 0),
+(31, 6, 1, 0), (32, 18, 1, 0), (33, 7, 1, 0), (34, 4, 1, 0), (35, 4, 1, 0);
+
+INSERT INTO obra_genero (id_obra, id_genero) VALUES
+(1, 1), (1, 4), (2, 3), (3, 1), (4, 1), (5, 4), (6, 2), (7, 1), (8, 5), (9, 4),
+(10, 1), (11, 1), (12, 1), (13, 3), (13, 2), (14, 1), (15, 1), (16, 1), (17, 2),
+(18, 3), (19, 5), (20, 5), (21, 1), (22, 4), (23, 4), (24, 3), (25, 3), (26, 1),
+(27, 3), (28, 1), (29, 1), (30, 2), (31, 2), (32, 5), (33, 1), (34, 1), (35, 1);
+
+INSERT INTO obra_categoria (id_obra, id_categoria) VALUES
+(1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
+(11, 1), (12, 1), (13, 1), (14, 1), (15, 5), (16, 1), (17, 1), (18, 1), (19, 4), (20, 4),
+(21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1),
+(31, 1), (32, 4), (33, 1), (34, 1), (35, 1);
+
+INSERT INTO obra_etiqueta (id_obra, id_etiqueta) VALUES
+(1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4),
+(11, 4), (12, 4), (13, 4), (14, 4), (15, 2), (16, 4), (17, 4), (18, 4), (19, 1), (20, 1),
+(21, 4), (22, 4), (23, 4), (24, 4), (25, 4), (26, 4), (27, 4), (28, 4), (29, 4), (30, 4),
+(31, 4), (32, 1), (33, 4), (34, 4), (35, 4);
+
+/* 7. EDITORIALES (10 Editoriales) Y UBICACIÓN */
+INSERT INTO editorial (nombre, direccion, correo, telefono, persona_contacto, borrado_logico) VALUES
+('UCA Editores', 'Bulevar de los Próceres, Campus UCA, San Salvador', 'ventas@uca.edu.sv', '2210-6600', 'Carlos Martínez', 0),
+('Penguin Random House', 'Travessera de Gràcia, 47, Barcelona, España', 'info@penguinrandomhouse.com', '9336-6030', 'Ana María Matute', 0),
+('Editorial Santillana', 'Calle La Mascota #123, San Salvador', 'servicio@santillana.com.sv', '2278-5555', 'Roberto Gómez', 0),
+('Editorial Anagrama', 'Carrer de Pau Claris 172, Barcelona', 'prensa@anagrama.es', '9320-1555', 'Jorge Herralde', 0),
+('Fondo de Cultura Económica', 'Carretera Picacho-Ajusco 227, Ciudad de México', 'contacto@fce.com.mx', '5552-2700', 'Paco Ignacio Taibo', 0),
+('Editorial Planeta', 'Av. Diagonal 662, Barcelona, España', 'contacto@planeta.es', '9349-6700', 'Laura Fernández', 0),
+('Alianza Editorial', 'Calle Juan Ignacio Luca de Tena 15, Madrid', 'atencion@alianza.es', '9139-3888', 'Fernando Gómez', 0),
+('O\'Reilly Media', '1005 Gravenstein Highway North, Sebastopol, CA', 'support@oreilly.com', '7078-2905', 'Tim O\'Reilly', 0),
+('Clásicos Salvadoreños', 'Centro Histórico, Calle Arce, San Salvador', 'info@clasicossv.org', '2222-1100', 'Beatriz Rivas', 0),
+('Oxford University Press', 'Great Clarendon Street, Oxford, Reino Unido', 'query@oup.com', '1865-5567', 'John Smith', 0);
+
+INSERT INTO planta (nombre, id_edificio, borrado_logico) VALUES
+('Nivel 1 (Recepción)', 1, 0), ('Nivel 2 (Estantería General)', 1, 0), ('Nivel 3 (Silencio)', 1, 0), ('Planta Baja', 2, 0), ('Salón de Usos Múltiples', 3, 0);
+
+INSERT INTO salon (nombre, id_planta, borrado_logico) VALUES
+('Área de Préstamos', 1, 0), ('Colección General', 2, 0), ('Hemeroteca', 2, 0), ('Cubículos de Estudio', 3, 0), ('Sala de Cómputo', 4, 0);
+
+INSERT INTO mueble (nombre, id_salon, borrado_logico) VALUES
+('Mostrador Principal', 1, 0), ('Estante de Reservas', 1, 0), ('Estantería A-F (Literatura)', 2, 0), ('Estantería G-Z (Ciencias)', 2, 0), ('Estantería A-F (Revistas)', 3, 0);
+
+/* 8. LIBROS (50 Libros de Prueba) */
+INSERT INTO libro (isbn, anio_publicacion, precio, mora, url_imagen, borrado_logico, id_grado, id_ciclo, id_obra, id_editorial, id_formato, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+('978-99923-45-01-2', 2010, 12.50, 0.25, 'https://m.media-amazon.com/images/I/51+Z+A+b+L.jpg', 0, 17, 4, 1, 1, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-15011-42-97-0', 2016, 24.99, 0.50, 'https://images.images-pop.com/cover/9781501142970.jpg', 0, NULL, NULL, 2, 2, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84204-12-14-6', 2005, 15.00, 0.10, 'https://images.casadellibro.com/9788420412146.jpg', 0, 11, 3, 3, 3, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-03074-74-72-8', 2019, 9.99, 0.00, 'https://covers.openlibrary.org/b/id/8259449-L.jpg', 0, 21, 4, 4, 4, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('978-60716-55-22-1', 1995, 18.75, 0.30, 'https://fondo.com.mx/covers/sorjuana.jpg', 0, 17, 4, 5, 5, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-04515-24-93-5', 2003, 14.20, 0.25, 'https://images.openlibrary.org/b/id/1984george.jpg', 0, 17, 4, 6, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-04515-26-34-2', 1996, 11.50, 0.20, 'https://images.openlibrary.org/b/id/rebeliongranja.jpg', 0, 13, 3, 7, 7, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84339-20-45-1', 2012, 16.00, 0.30, 'https://images.openlibrary.org/b/id/elalephborges.jpg', 0, 21, 4, 8, 4, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-99923-00-12-3', 2008, 10.00, 0.15, 'https://images.openlibrary.org/b/id/tierrainfancia.jpg', 0, 9, 2, 9, 9, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84375-01-88-2', 1990, 13.50, 0.25, 'https://images.openlibrary.org/b/id/undiaenlavida.jpg', 0, 17, 4, 10, 1, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-99923-11-22-3', 2015, 8.50, 0.10, 'https://images.openlibrary.org/b/id/cuentosdebarro.jpg', 0, 7, 2, 11, 9, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-04-94-7', 2004, 19.99, 0.40, 'https://images.openlibrary.org/b/id/rayuelacortazar.jpg', 0, 21, 4, 12, 7, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-47-1', 2007, 12.00, 0.20, 'https://images.openlibrary.org/b/id/frankensteinshelley.jpg', 0, 13, 3, 13, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-51-36-1', 2011, 9.50, 0.15, 'https://images.openlibrary.org/b/id/metamorfosiskafka.jpg', 0, 17, 4, 14, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01560-12-19-5', 2000, 15.00, 0.10, 'https://images.openlibrary.org/b/id/elprincipito.jpg', 0, 5, 2, 15, 3, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84080-52-74-6', 2006, 21.00, 0.45, 'https://images.openlibrary.org/b/id/casadelespiritus.jpg', 0, 21, 4, 16, 6, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-05532-93-35-7', 1991, 17.80, 0.30, 'https://images.openlibrary.org/b/id/fundacionasimov.jpg', 0, 17, 4, 17, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01404-39-07-6', 2001, 11.00, 0.20, 'https://images.openlibrary.org/b/id/sherlockholmes.jpg', 0, 12, 3, 18, 10, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01323-50-88-4', 2008, 42.50, 0.75, 'https://m.media-amazon.com/images/I/41xShlnTZTL._SX376_BO1,204,203,200_.jpg', 0, 15, 4, 19, 8, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-02016-33-61-0', 1994, 55.00, 1.00, 'https://m.media-amazon.com/images/I/51szD9HC9pL._SX395_BO1,204,203,200_.jpg', 0, 15, 4, 20, 8, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84204-71-83-9', 2006, 16.50, 0.35, 'https://images.openlibrary.org/b/id/laciudadyperros.jpg', 0, 17, 4, 21, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84910-50-83-4', 2015, 10.99, 0.15, 'https://images.openlibrary.org/b/id/nerudapoemas.jpg', 0, 13, 3, 22, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-01-23-6', 1998, 8.99, 0.10, 'https://images.openlibrary.org/b/id/rimasbecquer.jpg', 0, 11, 3, 23, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-84-6', 2003, 13.99, 0.25, 'https://images.openlibrary.org/b/id/draculastoker.jpg', 0, 17, 4, 24, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01431-05-64-0', 2011, 14.50, 0.30, 'https://images.openlibrary.org/b/id/cthulhulovecraft.jpg', 0, 17, 4, 25, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-51-8', 2008, 12.99, 0.20, 'https://images.openlibrary.org/b/id/orgulloyprejuicio.jpg', 0, 13, 3, 26, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-03077-43-65-7', 2012, 18.00, 0.40, 'https://images.openlibrary.org/b/id/elresplandorking.jpg', 0, 17, 4, 27, 2, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84975-92-43-7', 2003, 11.25, 0.20, 'https://images.openlibrary.org/b/id/muerteanunciadagabo.jpg', 0, 17, 4, 28, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-03073-87-26-4', 2007, 16.80, 0.30, 'https://images.openlibrary.org/b/id/amorcoleragabo.jpg', 0, 21, 4, 29, 2, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-04515-24-93-6', 2013, 13.50, 0.25, 'https://images.openlibrary.org/b/id/fahrenheitbradbury.jpg', 0, 17, 4, 30, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-00608-50-52-4', 2006, 14.99, 0.25, 'https://images.openlibrary.org/b/id/unmundofelizhuxley.jpg', 0, 17, 4, 31, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01344-94-16-6', 2017, 45.00, 0.80, 'https://m.media-amazon.com/images/I/41-sN-mzwKL.jpg', 0, 15, 4, 32, 8, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84322-15-46-9', 2002, 12.00, 0.20, 'https://images.openlibrary.org/b/id/eltunelsabato.jpg', 0, 17, 4, 33, 4, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84375-01-99-9', 1997, 11.50, 0.20, 'https://images.openlibrary.org/b/id/pedroparamorulfo.jpg', 0, 17, 4, 34, 5, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-34-12-8', 1988, 15.00, 0.25, 'https://images.openlibrary.org/b/id/elsenorpresidente.jpg', 0, 17, 4, 35, 7, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-99923-45-02-9', 2015, 14.00, 0.25, 'https://m.media-amazon.com/images/I/51+Z+A+b+L.jpg', 0, 17, 4, 1, 9, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-15011-42-98-7', 2020, 22.00, 0.45, 'https://images.images-pop.com/cover/9781501142970.jpg', 0, NULL, NULL, 2, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84204-12-15-3', 2018, 13.50, 0.15, 'https://images.casadellibro.com/9788420412146.jpg', 0, 12, 3, 3, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-03074-74-73-5', 2021, 10.50, 0.00, 'https://covers.openlibrary.org/b/id/8259449-L.jpg', 0, 21, 4, 4, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-04515-24-94-2', 2017, 12.50, 0.20, 'https://images.openlibrary.org/b/id/1984george.jpg', 0, 17, 4, 6, 10, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-04515-26-35-9', 2018, 10.00, 0.15, 'https://images.openlibrary.org/b/id/rebeliongranja.jpg', 0, 13, 3, 7, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84339-20-46-8', 2019, 15.50, 0.25, 'https://images.openlibrary.org/b/id/elalephborges.jpg', 0, 21, 4, 8, 4, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-04-95-4', 2016, 18.00, 0.35, 'https://images.openlibrary.org/b/id/rayuelacortazar.jpg', 0, 21, 4, 12, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-48-8', 2014, 11.50, 0.20, 'https://images.openlibrary.org/b/id/frankensteinshelley.jpg', 0, 13, 3, 13, 10, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01560-12-20-1', 2012, 14.00, 0.10, 'https://images.openlibrary.org/b/id/elprincipito.jpg', 0, 6, 2, 15, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84080-52-75-3', 2015, 19.50, 0.40, 'https://images.openlibrary.org/b/id/casadelespiritus.jpg', 0, 21, 4, 16, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01404-39-08-3', 2010, 10.50, 0.15, 'https://images.openlibrary.org/b/id/sherlockholmes.jpg', 0, 12, 3, 18, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84204-71-84-6', 2014, 15.00, 0.30, 'https://images.openlibrary.org/b/id/laciudadyperros.jpg', 0, 17, 4, 21, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-85-3', 2012, 12.50, 0.20, 'https://images.openlibrary.org/b/id/draculastoker.jpg', 0, 17, 4, 24, 10, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01414-39-52-5', 2015, 11.99, 0.20, 'https://images.openlibrary.org/b/id/orgulloyprejuicio.jpg', 0, 13, 3, 26, 10, 3, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO libro_idioma (id_libro, id_idioma) VALUES
+(1, 1), (2, 2), (3, 1), (4, 1), (5, 1), (6, 2), (7, 1), (8, 1), (9, 1), (10, 1),
+(11, 1), (12, 1), (13, 2), (14, 1), (15, 1), (15, 3), (16, 1), (17, 2), (18, 2),
+(19, 2), (20, 2), (21, 1), (22, 1), (23, 1), (24, 2), (25, 2), (26, 2), (27, 2),
+(28, 1), (29, 1), (30, 2), (31, 2), (32, 2), (33, 1), (34, 1), (35, 1), (36, 1),
+(37, 2), (38, 1), (39, 1), (40, 2), (41, 1), (42, 1), (43, 1), (44, 2), (45, 1),
+(46, 1), (47, 2), (48, 1), (49, 2), (50, 2);
+
+/* 9. EJEMPLARES DE LIBROS (50+ Ejemplares de Prueba) */
+INSERT INTO ejemplar_libro (comentario, id_estado_fisico, id_disponibilidad, borrado_logico, id_libro, id_mueble, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+('Copia de exhibición principal', 1, 1, 0, 1, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('Disponible en estantería', 3, 1, 0, 1, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Prestado a estudiante', 2, 2, 0, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Edición tapa dura de lujo', 1, 1, 0, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Copia de lectura rápida', 3, 1, 0, 4, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Hojas amarillentas', 4, 1, 0, 5, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Disponible para consulta', 1, 1, 0, 6, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Prestado', 3, 2, 0, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Reservado por docente', 2, 3, 0, 8, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('Edición escolar de colección', 1, 1, 0, 9, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Excelente estado', 1, 1, 0, 10, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Donado por alumni', 2, 1, 0, 11, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('En mantenimiento / empastado', 5, 4, 0, 12, 5, 0, NOW(), NOW(), 'SYSTEM'),
+('Lectura recomendada', 1, 1, 0, 13, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Disponible en estante', 2, 1, 0, 14, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Área infantil y juvenil', 1, 1, 0, 15, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Segunda copia infantil', 2, 1, 0, 15, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Prestado', 3, 2, 0, 16, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Colección sci-fi', 1, 1, 0, 17, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Clásico de misterio', 2, 1, 0, 18, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Manual técnico para cómputo', 1, 1, 0, 19, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Copia 2 manual técnico', 1, 1, 0, 19, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Libro de consulta de ingeniería', 1, 1, 0, 20, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Copia de biblioteca', 3, 1, 0, 21, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Antología poética', 1, 1, 0, 22, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Romancero clásico', 2, 1, 0, 23, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Novela gótica', 3, 1, 0, 24, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Copia de terror cósmico', 1, 1, 0, 25, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Edición especial con notas', 1, 1, 0, 26, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('En préstamo', 2, 2, 0, 27, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Novela Gabriel García Márquez', 1, 1, 0, 28, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Copia en estante', 2, 1, 0, 29, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Distopía clásica', 1, 1, 0, 30, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Ciencia ficción distópica', 2, 1, 0, 31, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Texto avanzado de ingeniería', 1, 1, 0, 32, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Novela existencialista', 3, 1, 0, 33, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Realismo mágico', 2, 1, 0, 34, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Literatura hispanoamericana', 1, 1, 0, 35, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Segunda edición Pobrecito Poeta', 1, 1, 0, 36, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('It edición reciente', 2, 1, 0, 37, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Don Quijote adaptado', 1, 1, 0, 38, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('Cien años de soledad de bolsillo', 3, 1, 0, 39, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('1984 edición conmemorativa', 1, 1, 0, 40, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Rebelión en la granja rústica', 2, 1, 0, 41, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('El Aleph nueva edición', 1, 1, 0, 42, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Rayuela edición aniversario', 1, 1, 0, 43, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Frankenstein ilustrado', 1, 1, 0, 44, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('El Principito bilingüe', 1, 1, 0, 45, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('La casa de los espíritus de bolsillo', 3, 1, 0, 46, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Sherlock Holmes casos selectos', 2, 1, 0, 47, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('La ciudad y los perros rústica', 3, 1, 0, 48, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Drácula edición comentada', 1, 1, 0, 49, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Orgullo y prejuicio rústica', 2, 1, 0, 50, 3, 0, NOW(), NOW(), 'SYSTEM');
