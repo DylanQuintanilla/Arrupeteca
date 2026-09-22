@@ -3,20 +3,16 @@ package com.arrupeteca.dto.request;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CategoriaRequest {
-
+public record CategoriaRequest(
     @NotBlank(message = "El nombre de la categoria no puede estar vacio")
     @Size(max = 50, message = "El nombre de la categoria no puede exceder 50 caracteres")
-    private String nombre;
-
+    String nombre
+) {
+    public CategoriaRequest {}
 }

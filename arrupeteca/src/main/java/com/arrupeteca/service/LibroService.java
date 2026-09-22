@@ -1,31 +1,34 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.LibroRequest;
-import com.arrupeteca.persistence.projection.LibroResumen;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface LibroService {
 
-    Page<LibroResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<LibroResumen> busquedaGlobal(
+            String termino, Long idAutor, Long idGenero, Long idCategoria,
+            Long idEditorial, Long idIdioma, Long idCiclo, Long idEtiqueta,
+            Integer anioInicio, Integer anioFin, Pageable pageable);
 
-    LibroResumen obtenerPorIdActivo(Long id);
+    LibroDetalleResponse busquedaGlobalPorId(Long id);
 
-    Page<LibroResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion);
+    Page<LibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo, Long idIdioma,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable);
 
-    Page<LibroResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    LibroDetalleResponse busquedaAdminPorId(Long id);
 
-    LibroResumen obtenerPorId(Long id);
+    Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable);
 
-    Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idEditorial, Long idFormato,
-            String grado, String ciclo, String termino, Integer anioInicio, Integer anioFin,
-            int page, int size, String ordenarPor, String direccion);
+    LibroDetalleResponse crear(LibroRequest request);
 
-    Page<LibroResumen> obtenerPorObra(Long idObra, int page, int size, String ordenarPor, String direccion);
-
-    LibroResumen crear(LibroRequest request);
-
-    LibroResumen actualizar(Long id, LibroRequest request);
+    LibroDetalleResponse actualizar(Long id, LibroRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }
+

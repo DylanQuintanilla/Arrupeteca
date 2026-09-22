@@ -1,2 +1,0 @@
-# Arrupeteca
-Proyecto de Arrupe

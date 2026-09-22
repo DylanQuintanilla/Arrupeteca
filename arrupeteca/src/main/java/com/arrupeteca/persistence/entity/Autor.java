@@ -1,89 +1,93 @@
 package com.arrupeteca.persistence.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import java.time.Year;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
 
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
+@ToString(onlyExplicitlyIncluded = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Entity
 @Builder
-@Table(name = "autor")
+@Table(name = "autor", indexes = {
+    @Index(name = "idx_autor_busqueda", columnList = "borrado_logico, id_nacionalidad, id_pais_nacimiento, id_genero_principal, id_obra"),
+    @Index(name = "idx_autor_nombre", columnList = "nombre, seudonimo")
+})
+@SQLDelete(sql = "UPDATE autor SET borrado_logico = 1 WHERE id_autor = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Autor extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id_autor")
+    @Column(name = "id_autor", updatable = false)
     @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    @Column(length = 100, nullable = true)
+    @Version
+    @Column(name = "version")
+    private Long version;
+
+    @Column(name = "nombre", length = 100)
+    @ToString.Include
     private String nombre;
 
-    @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    @Column(length = 50, nullable = true)
+    @Column(name = "seudonimo", length = 50)
+    @ToString.Include
     private String seudonimo;
 
-    @Column(name = "anio_nacimiento", nullable = true)
-    @Max(value = 9999, message = "El año de nacimiento no puede tener más de 4 digitos")
-    private Integer anioNacimiento;
+    @Column(name = "anio_nacimiento")
+    @ToString.Include
+    private Year anioNacimiento;
 
-    @Column(name = "anio_fallecimiento", nullable = true)
-    @Max(value = 9999, message = "El año de fallecimiento no puede tener más de 4 digitos")
-    private Integer anioFallecimiento;
+    @Column(name = "anio_fallecimiento")
+    @ToString.Include
+    private Year anioFallecimiento;
 
-    @NotBlank(message = "La biografia no puede estar vacía")
-    @Size(max = 5000, message = "La biografia es demasiado larga")
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Lob
+    @Column(name = "biografia", nullable = false, columnDefinition = "TEXT")
     private String biografia;
 
-    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
     private boolean borradoLogico = false;
 
-
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_pais_nacimiento", nullable = true)
+    @JoinColumn(name = "id_pais_nacimiento")
     private Pais paisNacimiento;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_nacionalidad", nullable = true)
+    @JoinColumn(name = "id_nacionalidad")
     private Nacionalidad nacionalidad;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_genero_principal", nullable = true)
+    @JoinColumn(name = "id_genero_principal")
     private Genero generoPrincipal;
 
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_obra", nullable = true)
+    @JoinColumn(name = "id_obra")
     private Obra obraCumbre;
 
-    // --- VALIDACIONES ---
-
-    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
-    public boolean isIdentidadValida() {
-        boolean tieneNombreCompleto = (nombre != null && !nombre.isBlank());
-        boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
-        return tieneNombreCompleto || tieneSeudonimo;
-    }
-
-    @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
-    public boolean isFechasValidas() {
-        if (anioNacimiento == null || anioFallecimiento == null) {
-            return true;
-        }
-        return anioNacimiento <= anioFallecimiento;
-    }
 }

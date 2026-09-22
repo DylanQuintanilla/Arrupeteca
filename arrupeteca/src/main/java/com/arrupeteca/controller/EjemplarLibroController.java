@@ -2,101 +2,106 @@ package com.arrupeteca.controller;
 
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
 import com.arrupeteca.dto.response.ApiResponse;
-import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
+import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import com.arrupeteca.service.EjemplarLibroService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/ejemplares")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
+@Tag(name = "Ejemplares de Libros", description = "Endpoints para la gestión de ejemplares físicos de libros")
 public class EjemplarLibroController {
 
     private final EjemplarLibroService ejemplarLibroService;
 
-    @GetMapping
-    public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodosActivos(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
-    ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.obtenerTodosActivos(page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Lista de ejemplares activos", lista));
+    @GetMapping("/admin/all")
+    @Operation(
+        summary = "Búsqueda de administración de ejemplares",
+        description = "Búsqueda avanzada de ejemplares usando filtros por estado, libro, género, categoría, etiqueta, mueble, estado físico y disponibilidad (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaAdmin(
+            @RequestParam(required = false) Boolean borradoLogico,
+            @RequestParam(required = false) Long idLibro,
+            @RequestParam(required = false) Long idGenero,
+            @RequestParam(required = false) Long idCategoria,
+            @RequestParam(required = false) Long idEtiqueta,
+            @RequestParam(required = false) Long idMueble,
+            @RequestParam(required = false) Long idEstadoFisico,
+            @RequestParam(required = false) Long idDisponibilidad,
+            @RequestParam(required = false) String termino,
+            @ParameterObject @PageableDefault(size = 20, sort = {"libro.obra.titulo", "id"}) Pageable pageable) {
+        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda de administración de ejemplares",
+                ejemplarLibroService.busquedaAdmin(borradoLogico, idLibro, idGenero, idCategoria, idEtiqueta, idMueble,
+                        idEstadoFisico, idDisponibilidad, termino, pageable)));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<EjemplarLibroResumen>> obtenerPorId(@PathVariable Long id) {
-        return ResponseEntity.ok(ApiResponse.exito("Ejemplar encontrado", ejemplarLibroService.obtenerPorIdActivo(id)));
+    @GetMapping("/admin/{id}")
+    @Operation(
+        summary = "Obtener detalle de ejemplar por ID (Admin)",
+        description = "Retorna el detalle completo de cualquier ejemplar registrado en la base de datos (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<EjemplarLibroDetalleResponse>> busquedaAdminPorId(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.exito("Ejemplar encontrado (admin)", ejemplarLibroService.busquedaAdminPorId(id)));
     }
 
-    @GetMapping("/busqueda")
-    public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaGlobal(
-            @RequestParam(required = false) String palabra,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
-    ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.busquedaGlobal(palabra, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados de búsqueda", lista));
+    @PostMapping("/admin")
+    @Operation(
+        summary = "Registrar nuevo ejemplar de libro (Admin)",
+        description = "Vincula y registra un nuevo ejemplar físico a un libro y un mueble de ubicación (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<EjemplarLibroDetalleResponse>> crear(@Valid @RequestBody EjemplarLibroRequest request) {
+        return new ResponseEntity<>(ApiResponse.exito("Ejemplar creado exitosamente",
+                ejemplarLibroService.crear(request)), HttpStatus.CREATED);
     }
 
-    @PostMapping
-    public ResponseEntity<ApiResponse<EjemplarLibroResumen>> crear(@Valid @RequestBody EjemplarLibroRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.exito("Ejemplar creado exitosamente", ejemplarLibroService.crear(request)));
+    @PatchMapping("/admin/{id}")
+    @Operation(
+        summary = "Actualizar ejemplar de libro (Admin)",
+        description = "Actualiza los atributos de un ejemplar físico controlando bloqueo optimista (solo admin)."
+    )
+    public ResponseEntity<ApiResponse<EjemplarLibroDetalleResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody EjemplarLibroRequest request) {
+        return ResponseEntity.ok(ApiResponse.exito("Ejemplar actualizado correctamente",
+                ejemplarLibroService.actualizar(id, request)));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<EjemplarLibroResumen>> actualizar(@PathVariable Long id,
-                                                                        @Valid @RequestBody EjemplarLibroRequest request) {
-        return ResponseEntity.ok(ApiResponse.exito("Ejemplar actualizado correctamente", ejemplarLibroService.actualizar(id, request)));
-    }
-
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/admin/{id}")
+    @Operation(
+        summary = "Desactivar ejemplar (Admin)",
+        description = "Desactiva lógicamente un ejemplar físico en el catálogo público (solo admin)."
+    )
     public ResponseEntity<ApiResponse<Void>> desactivar(@PathVariable Long id) {
         ejemplarLibroService.cambiarEstado(id, false);
         return ResponseEntity.ok(ApiResponse.exito("Ejemplar desactivado correctamente"));
     }
 
-    @PatchMapping("/{id}/activar")
+    @PatchMapping("/admin/{id}/activar")
+    @Operation(
+        summary = "Activar ejemplar (Admin)",
+        description = "Reactiva un ejemplar que había sido desactivado lógicamente (solo admin)."
+    )
     public ResponseEntity<ApiResponse<Void>> activar(@PathVariable Long id) {
         ejemplarLibroService.cambiarEstado(id, true);
         return ResponseEntity.ok(ApiResponse.exito("Ejemplar activado correctamente"));
     }
-
-    @GetMapping("/admin")
-    public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> obtenerTodosAdmin(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
-    ) {
-        return ResponseEntity.ok(ApiResponse.exito("Historial completo de ejemplares",
-                ejemplarLibroService.obtenerTodos(page, size, ordenarPor, direccion)));
-    }
-
-    @GetMapping("/admin/busqueda-maestra")
-    public ResponseEntity<ApiResponse<Page<EjemplarLibroResumen>>> busquedaMaestra(
-            @RequestParam(required = false) Boolean esBorrado,
-            @RequestParam(required = false) Long idLibro,
-            @RequestParam(required = false) Long idMueble,
-            @RequestParam(required = false) String estadoFisico,
-            @RequestParam(required = false) String disponibilidad,
-            @RequestParam(required = false) String termino,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String ordenarPor,
-            @RequestParam(defaultValue = "ASC") String direccion
-    ) {
-        Page<EjemplarLibroResumen> lista = ejemplarLibroService.busquedaMaestraAdmin(
-                esBorrado, idLibro, idMueble, estadoFisico, disponibilidad, termino, page, size, ordenarPor, direccion);
-        return ResponseEntity.ok(ApiResponse.exito("Resultados búsqueda maestra", lista));
-    }
 }
+

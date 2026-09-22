@@ -1,28 +1,23 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.MuebleRequest;
-import com.arrupeteca.persistence.projection.MuebleResumen;
+import com.arrupeteca.dto.response.MuebleResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface MuebleService {
 
-    Page<MuebleResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    List<MuebleResponse> obtenerTodosActivos(String nombre);
 
-    MuebleResumen obtenerPorIdActivo(Long id);
+    Page<MuebleResponse> obtenerTodos(Long idSalon, String nombre, Boolean borradoLogico, Pageable pageable);
 
-    Page<MuebleResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion);
+    MuebleResponse obtenerPorId(Long id);
 
-    Page<MuebleResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    MuebleResponse crear(MuebleRequest request);
 
-    MuebleResumen obtenerPorId(Long id);
-
-    Page<MuebleResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idSalon, Long idPlanta, Long idEdificio, String termino,
-            int page, int size, String ordenarPor, String direccion);
-
-    MuebleResumen crear(MuebleRequest request);
-
-    MuebleResumen actualizar(Long id, MuebleRequest request);
+    MuebleResponse actualizar(Long id, MuebleRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }

@@ -1,26 +1,22 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.PaisRequest;
-import com.arrupeteca.persistence.projection.PaisResumen;
+import com.arrupeteca.dto.response.PaisResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface PaisService {
 
-    List<PaisResumen> obtenerTodosActivos();
+    List<PaisResponse> obtenerTodosActivos(String nombre);
 
-    PaisResumen obtenerPorIdActivo(Long id);
+    Page<PaisResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
-    List<PaisResumen> obtenerTodos();
+    PaisResponse obtenerPorId(Long id);
 
-    PaisResumen obtenerPorId(Long id);
+    PaisResponse crear(PaisRequest request);
 
-    PaisResumen crear(PaisRequest paisRequest);
+    PaisResponse actualizar(Long id, PaisRequest request);
 
-    PaisResumen actualizar(Long id, PaisRequest request);
-
-    void cambiarEstadoLogico(Long id, boolean estado);
-
-
-
-}
+    void cambiarEstado(Long id, boolean estado);}

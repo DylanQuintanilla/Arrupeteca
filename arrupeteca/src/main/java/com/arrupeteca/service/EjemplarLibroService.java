@@ -1,28 +1,24 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.EjemplarLibroRequest;
-import com.arrupeteca.persistence.projection.EjemplarLibroResumen;
+import com.arrupeteca.dto.response.detail.EjemplarLibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.EjemplarLibroResumen;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface EjemplarLibroService {
 
-    Page<EjemplarLibroResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<EjemplarLibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idLibro, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idMueble, Long idEstadoFisico, Long idDisponibilidad,
+            String termino, Pageable pageable);
 
-    EjemplarLibroResumen obtenerPorIdActivo(Long id);
+    EjemplarLibroDetalleResponse busquedaAdminPorId(Long id);
 
-    Page<EjemplarLibroResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion);
+    EjemplarLibroDetalleResponse crear(EjemplarLibroRequest request);
 
-    Page<EjemplarLibroResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
-
-    EjemplarLibroResumen obtenerPorId(Long id);
-
-    Page<EjemplarLibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idLibro, Long idMueble, String estadoFisico, String disponibilidad,
-            String termino, int page, int size, String ordenarPor, String direccion);
-
-    EjemplarLibroResumen crear(EjemplarLibroRequest request);
-
-    EjemplarLibroResumen actualizar(Long id, EjemplarLibroRequest request);
+    EjemplarLibroDetalleResponse actualizar(Long id, EjemplarLibroRequest request);
 
     void cambiarEstado(Long id, boolean estado);
 }
+

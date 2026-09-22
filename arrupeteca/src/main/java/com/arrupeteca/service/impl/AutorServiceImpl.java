@@ -1,219 +1,275 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.AutorRequest;
+import org.openapitools.jackson.nullable.JsonNullable;
+import com.arrupeteca.dto.response.detail.AutorDetalleResponse;
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.AutorMapper;
-import com.arrupeteca.persistence.entity.*;
-import com.arrupeteca.persistence.projection.AutorResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.entity.Autor;
+import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.NacionalidadRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.PaisRepository;
 import com.arrupeteca.service.AutorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class AutorServiceImpl implements AutorService {
 
     private final AutorRepository autorRepository;
-    private final AutorMapper autorMapper;
-
     private final PaisRepository paisRepository;
     private final NacionalidadRepository nacionalidadRepository;
     private final GeneroRepository generoRepository;
     private final ObraRepository obraRepository;
+    private final AutorMapper autorMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return autorRepository.findByBorradoLogicoFalse(pageable);
+    public Page<AutorResumenResponse> busquedaGlobal(
+            Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda global de autores activos con término: '{}'", termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(false, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AutorResumen obtenerPorIdActivo(Long id) {
-        return autorRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor activo con ID: " + id));
+    @Cacheable(value = "autores", key = "#id")
+    public AutorDetalleResponse busquedaGlobalPorId(Long id) {
+        log.debug("Buscando autor activo con ID: {}", id);
+        return autorRepository.busquedaPorId(id, false)
+                .map(autorMapper::toDetalleResponse)
+                .orElseThrow(() -> {
+                    log.warn("No se encontró Autor activo con ID: {}", id);
+                    return new ValidacionNegocioException("No se encontró Autor activo con ID: " + id);
+                });
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return autorRepository.findAllProjectedBy(pageable);
+    public Page<AutorResumenResponse> busquedaAdmin(
+            Boolean borradoLogico, Long idNacionalidad, Long idPais, Long idGenero, Long idObraCumbre,
+            Year anioInicio, Year anioFin, String termino, Pageable pageable) {
+        log.debug("Iniciando búsqueda admin de autores para término: '{}', borrado: {}", termino, borradoLogico);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return autorRepository.busqueda(borradoLogico, idNacionalidad, idPais, idGenero, idObraCumbre, anioInicio, anioFin, term, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AutorResumen obtenerPorId(Long id) {
-        return autorRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> busquedaGlobalAvanzada(String palabra, Integer inicio, Integer fin,
-                                                     int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return autorRepository.busquedaGlobalAvanzada(palabra, inicio, fin, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> busquedaMaestraAdmin(Boolean esBorrado, Long idNacionalidad, Long idPais,
-                                                   Long idGenero, Long idObra, String terminoBusqueda,
-                                                   Integer anioInicio, Integer anioFin,
-                                                   int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return autorRepository.busquedaMaestraAdmin(esBorrado, idNacionalidad, idPais, idGenero, idObra,
-                terminoBusqueda, anioInicio, anioFin, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<AutorResumen> buscarAutoresVivosEnRango(Integer anioInicio, Integer anioFin,
-                                                        int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return autorRepository.buscarAutoresVivosEnRango(anioInicio, anioFin, pageable);
+    public AutorDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Buscando autor con ID (admin): {}", id);
+        return autorRepository.busquedaPorId(id, null)
+                .map(autorMapper::toDetalleResponse)
+                .orElseThrow(() -> {
+                    log.warn("No se encontró Autor con ID: {}", id);
+                    return new ValidacionNegocioException("No se encontró Autor con ID: " + id);
+                });
     }
 
     @Override
     @Transactional
-    public AutorResumen crear(AutorRequest request) {
+    public AutorDetalleResponse crear(AutorRequest request) {
+        log.info("Creando nuevo autor con nombre: {}", request.nombre());
+        validarDatosCreacion(request);
+        validarUnicidadNombre(request.nombre(), null);
 
-        List<String> errores = new ArrayList<>();
-
-        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
-            request.setSeudonimo("Seudonimo Desconocido");
-        }
-
-        if(request.getNombre() == null || request.getNombre().isBlank()){
-            request.setSeudonimo("Nombre Desconocido");
-        }
-
-        Autor autorNuevo = autorMapper.toEntity(request);
-
-        validarYAsignarRelaciones(autorNuevo, request, errores);
-
-        if (!errores.isEmpty()) {
-            throw new ValidacionNegocioException(errores);
-        }
-
-        Autor autorGuardado = autorRepository.save(autorNuevo);
-        return obtenerPorId(autorGuardado.getId());
+        Autor autor = autorMapper.toEntity(request);
+        asignarRelaciones(autor, request);
+        
+        Autor guardado = autorRepository.saveAndFlush(autor);
+        log.info("Autor creado exitosamente con ID: {}", guardado.getId());
+        return autorMapper.toDetalleResponse(guardado);
     }
 
     @Override
     @Transactional
-    public AutorResumen actualizar(Long id, AutorRequest request) {
+    @CacheEvict(value = "autores", key = "#id")
+    public AutorDetalleResponse actualizar(Long id, AutorRequest request) {
+        log.info("Actualizando autor con ID: {}", id);
+        Autor autorExistente = autorRepository.busquedaPorId(id, null)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Autor con ID: " + id));
 
-        Autor autorExistente = autorRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Autor con ID: " + id));
-
-        List<String> errores = new ArrayList<>();
-
-        if(request.getSeudonimo() == null || request.getSeudonimo().isBlank()){
-            request.setSeudonimo("Seudonimo Desconocido");
-        }
-
-        if(request.getNombre() == null || request.getNombre().isBlank()){
-            request.setSeudonimo("Nombre Desconocido");
-        }
+        validarDatosActualizacion(request, autorExistente);
+        validarUnicidadNombre(request.nombre(), autorExistente);
 
         autorMapper.updateEntity(request, autorExistente);
+        asignarRelaciones(autorExistente, request);
 
-        validarYAsignarRelaciones(autorExistente, request, errores);
+        // Validar fechas cruzadas post-merge
+        if (autorExistente.getAnioNacimiento() != null && autorExistente.getAnioFallecimiento() != null) {
+            if (autorExistente.getAnioNacimiento().isAfter(autorExistente.getAnioFallecimiento())) {
+                throw new ValidacionNegocioException("El año de nacimiento no puede ser mayor al año de fallecimiento (" + autorExistente.getAnioFallecimiento() + ")");
+            }
+        }
+        
+        Autor actualizado = autorRepository.saveAndFlush(autorExistente);
+        log.info("Autor con ID: {} actualizado exitosamente", id);
+        return autorMapper.toDetalleResponse(actualizado);
+    }
 
-        if (!errores.isEmpty()) {
-            throw new ValidacionNegocioException(errores);
+    private void validarDatosCreacion(AutorRequest request) {
+        boolean tieneNombre = (request.nombre() != null && request.nombre().isPresent() && request.nombre().get() != null && !request.nombre().get().isBlank());
+        boolean tieneSeudonimo = (request.seudonimo() != null && request.seudonimo().isPresent() && request.seudonimo().get() != null && !request.seudonimo().get().isBlank());
+        if (!tieneNombre && !tieneSeudonimo) {
+            throw new ValidacionNegocioException("El autor debe tener al menos un Nombre o un Seudonimo");
+        }
+        
+        boolean tieneBiografia = (request.biografia() != null && request.biografia().isPresent() && request.biografia().get() != null && !request.biografia().get().isBlank());
+        if (!tieneBiografia) {
+            throw new ValidacionNegocioException("La biografia no puede estar vacía");
+        }
+    }
+
+    private void validarDatosActualizacion(AutorRequest request, Autor autorExistente) {
+        // Validación manual de Bloqueo Optimista
+        Long vExistente = autorExistente.getVersion() != null ? autorExistente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
+            throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
         }
 
-        Autor autorActualizado = autorRepository.save(autorExistente);
-        return obtenerPorId(autorActualizado.getId());
+        // Si se envían en el JSON, no deben estar vacíos
+        if (request.nombre() != null && request.nombre().isPresent()) {
+            if (request.nombre().get() == null || request.nombre().get().isBlank()) {
+                throw new ValidacionNegocioException("El nombre no puede estar vacío");
+            }
+        }
+        if (request.seudonimo() != null && request.seudonimo().isPresent()) {
+            if (request.seudonimo().get() == null || request.seudonimo().get().isBlank()) {
+                throw new ValidacionNegocioException("El seudonimo no puede estar vacío");
+            }
+        }
+        if (request.biografia() != null && request.biografia().isPresent()) {
+            if (request.biografia().get() == null || request.biografia().get().isBlank()) {
+                throw new ValidacionNegocioException("La biografia no puede estar vacía");
+            }
+        }
+
+        // Post-merge, verificar que aún quede al menos un nombre o seudónimo válido
+        String nombreFinal = (request.nombre() != null && request.nombre().isPresent())
+                ? (request.nombre().get() != null ? request.nombre().get().trim() : null)
+                : autorExistente.getNombre();
+        String seudonimoFinal = (request.seudonimo() != null && request.seudonimo().isPresent())
+                ? (request.seudonimo().get() != null ? request.seudonimo().get().trim() : null)
+                : autorExistente.getSeudonimo();
+
+        boolean tieneNombre = (nombreFinal != null && !nombreFinal.isBlank());
+        boolean tieneSeudonimo = (seudonimoFinal != null && !seudonimoFinal.isBlank());
+        if (!tieneNombre && !tieneSeudonimo) {
+            throw new ValidacionNegocioException("El autor debe tener al menos un Nombre o un Seudonimo");
+        }
+    }
+
+    private void validarUnicidadNombre(JsonNullable<String> nombreNuevo, Autor autorExistente) {
+        if (nombreNuevo == null || !nombreNuevo.isPresent() || nombreNuevo.get() == null || nombreNuevo.get().isBlank()) {
+            return;
+        }
+
+        String nombreVal = nombreNuevo.get().trim();
+        boolean esNuevo = (autorExistente == null);
+        boolean nombreCambio = !esNuevo && !autorExistente.getNombre().equalsIgnoreCase(nombreVal);
+
+        if ((esNuevo || nombreCambio) && autorRepository.existsByNombreIgnoreCase(nombreVal)) {
+            log.warn("Intento de duplicar nombre de autor: {}", nombreVal);
+            throw new ValidacionNegocioException("Ya existe un autor con el nombre: " + nombreVal);
+        }
+    }
+
+    private void asignarRelaciones(Autor autor, AutorRequest request) {
+        List<String> errores = new ArrayList<>();
+
+        // Validación de País
+        if (request.idPaisNacimiento() != null && request.idPaisNacimiento().isPresent()) {
+            Long idPais = request.idPaisNacimiento().orElse(null);
+            if (idPais != null) {
+                paisRepository.findById(idPais)
+                        .ifPresentOrElse(autor::setPaisNacimiento,
+                                () -> errores.add("El país con ID " + idPais + " no existe."));
+            } else {
+                autor.setPaisNacimiento(null);
+            }
+        }
+
+        // Validación de Nacionalidad
+        if (request.idNacionalidad() != null && request.idNacionalidad().isPresent()) {
+            Long idNac = request.idNacionalidad().orElse(null);
+            if (idNac != null) {
+                nacionalidadRepository.findById(idNac)
+                        .ifPresentOrElse(autor::setNacionalidad,
+                                () -> errores.add("La nacionalidad con ID " + idNac + " no existe."));
+            } else {
+                autor.setNacionalidad(null);
+            }
+        }
+
+        // Validación de Género
+        if (request.idGeneroPrincipal() != null && request.idGeneroPrincipal().isPresent()) {
+            Long idGen = request.idGeneroPrincipal().orElse(null);
+            if (idGen != null) {
+                generoRepository.findById(idGen)
+                        .ifPresentOrElse(autor::setGeneroPrincipal,
+                                () -> errores.add("El género con ID " + idGen + " no existe."));
+            } else {
+                autor.setGeneroPrincipal(null);
+            }
+        }
+
+        // Validación de Obra Cumbre
+        if (request.idObraCumbre() != null && request.idObraCumbre().isPresent()) {
+            Long idObra = request.idObraCumbre().orElse(null);
+            if (idObra != null) {
+                obraRepository.findById(idObra)
+                        .ifPresentOrElse(autor::setObraCumbre,
+                                () -> errores.add("La obra con ID " + idObra + " no existe."));
+            } else {
+                autor.setObraCumbre(null);
+            }
+        }
+
+        if (!errores.isEmpty()) {
+            log.warn("Errores al asignar relaciones para autor: {}", errores);
+            throw new ValidacionNegocioException(errores);
+        }
     }
 
     @Override
     @Transactional
-    public void cambiarEstadoLogico(Long id, boolean estado) {
+    @CacheEvict(value = "autores", key = "#id")
+    public void cambiarEstado(Long id, boolean estado) {
+        log.info("Cambiando estado de borrado del autor ID: {} a {}", id, !estado);
         if (!autorRepository.existsById(id)) {
-            throw new RuntimeException("No se encontró Autor con ID: " + id);
+            throw new ValidacionNegocioException("No se encontró Autor con ID: " + id);
         }
-        if (estado) autorRepository.activarAutor(id);
-        else autorRepository.desactivarAutor(id);
+        if (estado) {
+            autorRepository.activar(id);
+        } else {
+            autorRepository.desactivar(id);
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<AutorResumen> verificarDuplicados(String termino, Long idExcluir) {
-        if (termino == null || termino.isBlank()
-                || termino.trim().equalsIgnoreCase("Seudonimo Desconocido")
-                || termino.trim().equalsIgnoreCase("Nombre Desconocido")) {
+    public List<AutorResumenResponse> buscarDuplicados(String termino, Long idExcluir) {
+        if (termino == null || termino.isBlank()) {
             return List.of();
         }
-
-        return autorRepository.buscarPosiblesDuplicados(termino.trim(), idExcluir);
-    }
-
-    private void validarYAsignarRelaciones(Autor autor, AutorRequest request, List<String> errores) {
-
-        if (request.getIdPaisNacimiento() != null) {
-            paisRepository.findById(request.getIdPaisNacimiento())
-                    .ifPresentOrElse(
-                            autor::setPaisNacimiento,
-                            () -> errores.add("El País de nacimiento indicado (ID: " + request.getIdPaisNacimiento() + ") no existe.")
-                    );
-        } else {
-            autor.setPaisNacimiento(null);
-        }
-
-        if (request.getIdNacionalidad() != null) {
-            nacionalidadRepository.findById(request.getIdNacionalidad())
-                    .ifPresentOrElse(
-                            autor::setNacionalidad,
-                            () -> errores.add("La Nacionalidad indicada (ID: " + request.getIdNacionalidad() + ") no existe.")
-                    );
-        } else {
-            autor.setNacionalidad(null);
-        }
-
-        if (request.getIdGeneroPrincipal() != null) {
-            generoRepository.findById(request.getIdGeneroPrincipal())
-                    .ifPresentOrElse(
-                            autor::setGeneroPrincipal,
-                            () -> errores.add("El Género principal indicado (ID: " + request.getIdGeneroPrincipal() + ") no existe.")
-                    );
-        } else {
-            autor.setGeneroPrincipal(null);
-        }
-
-        if (request.getIdObraCumbre() != null) {
-            obraRepository.findById(request.getIdObraCumbre())
-                    .ifPresentOrElse(
-                            autor::setObraCumbre,
-                            () -> errores.add("La Obra Cumbre indicada (ID: " + request.getIdObraCumbre() + ") no existe.")
-                    );
-        } else {
-            autor.setObraCumbre(null);
-        }
-    }
-
-    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
-        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
-
-        if ("pais".equalsIgnoreCase(campoOrden)) campoOrden = "paisNacimiento.nombre";
-        if ("nacionalidad".equalsIgnoreCase(campoOrden)) campoOrden = "nacionalidad.nombre";
-
-        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-        return PageRequest.of(page, size, Sort.by(direction, campoOrden));
+        log.debug("Buscando duplicados para el término: '{}'", termino);
+        return autorRepository.buscarDuplicados(termino.trim(), idExcluir, Sort.by("nombre"))
+                .stream()
+                .map(autorMapper::toResumen)
+                .toList();
     }
 }

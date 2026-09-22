@@ -1,25 +1,45 @@
 package com.arrupeteca.persistence.entity;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
-import lombok.*;
-
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
 
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
+@ToString(onlyExplicitlyIncluded = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
 @Entity
-@Table(name = "obra")
+@Table(name = "obra", indexes = {
+    @Index(name = "idx_obra_busqueda", columnList = "borrado_logico, anio_creacion"),
+    @Index(name = "idx_obra_titulo", columnList = "titulo")
+})
+@SQLDelete(sql = "UPDATE obra SET borrado_logico = 1 WHERE id_obra = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Obra extends Auditable {
 
@@ -27,27 +47,29 @@ public class Obra extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_obra")
     @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
-    @NotBlank(message = "El titulo no puede estas vacio")
-    @Size(max = 100, message = "El titulo debe tener un maximo de 100 caracteres")
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(nullable = false, length = 100)
+    @ToString.Include
     private String titulo;
 
-    @Column(name = "anio_creacion", nullable = true)
-    @Max(value = 9999, message = "El año no puede tener más de 4 digitos")
+    @Column(name = "anio_creacion")
+    @ToString.Include
     private Integer anioCreacion;
 
-    @NotBlank(message = "Se debe de agregar un resumen")
     @Column(nullable = false, columnDefinition = "TEXT")
     private String resumen;
 
-    @Column(name = "borrado_logico", nullable = false, columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(name = "borrado_logico", nullable = false)
     @Builder.Default
+    @ToString.Include
     private boolean borradoLogico = false;
 
-    @NotEmpty(message = "la obra debe tener genero")
-    @ToString.Exclude
     @ManyToMany(fetch = FetchType.LAZY)
     @Builder.Default
     @JoinTable(
@@ -57,8 +79,6 @@ public class Obra extends Auditable {
     )
     private Set<Genero> generos = new HashSet<>();
 
-    @NotEmpty(message = "Favor de elegir categoria para la obra")
-    @ToString.Exclude
     @ManyToMany(fetch = FetchType.LAZY)
     @Builder.Default
     @JoinTable(
@@ -68,7 +88,15 @@ public class Obra extends Auditable {
     )
     private Set<Categoria> categorias = new HashSet<>();
 
-    @ToString.Exclude
+    @ManyToMany(fetch = FetchType.LAZY)
+    @Builder.Default
+    @JoinTable(
+            name = "obra_etiqueta",
+            joinColumns = @JoinColumn(name = "id_obra"),
+            inverseJoinColumns = @JoinColumn(name = "id_etiqueta")
+    )
+    private Set<Etiqueta> etiquetas = new HashSet<>();
+
     @Builder.Default
     @OneToMany(mappedBy = "obra", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ObraAutor> obraAutores = new HashSet<>();

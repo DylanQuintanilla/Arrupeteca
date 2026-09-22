@@ -1,26 +1,45 @@
 package com.arrupeteca.persistence.entity;
 
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-import org.hibernate.validator.constraints.ISBN;
-
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.SQLDelete;
 
 @Getter
 @Setter
-@ToString
-@NoArgsConstructor
-@AllArgsConstructor
-@Entity
+@ToString(onlyExplicitlyIncluded = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-@Table(name = "libro")
+@Entity
+@Table(name = "libro", indexes = {
+    @Index(name = "idx_libro_busqueda", columnList = "borrado_logico, id_obra, id_editorial, id_grado, id_ciclo, id_formato"),
+    @Index(name = "idx_libro_isbn", columnList = "isbn")
+})
+@SQLDelete(sql = "UPDATE libro SET borrado_logico = 1 WHERE id_libro = ?")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 public class Libro extends Auditable {
 
@@ -28,16 +47,19 @@ public class Libro extends Auditable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_libro")
     @EqualsAndHashCode.Include
+    @ToString.Include
     private Long id;
 
-    @ISBN(message = "El ISBN no es valdio")
-    @Size(max = 20, message = "El ISBN no puede contener mas de 20 digitos")
+    @Version
+    @Column(name = "version")
+    private Long version;
+
     @Column(length = 20, unique = true)
+    @ToString.Include
     private String isbn;
 
-    @NotNull(message = "El valor de publicacion no puede estar vacio")
     @Column(name = "anio_publicacion", nullable = false)
-    @Max(value = 9999, message = "El año de publicación no puede tener más de 4 dígitos")
+    @ToString.Include
     private Integer anioPublicacion;
 
     @Column(precision = 6, scale = 2)
@@ -51,38 +73,31 @@ public class Libro extends Auditable {
     @Builder.Default
     private BigDecimal mora = BigDecimal.ZERO;
 
-    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT(1) DEFAULT 0")
+    @Column(nullable = false, name = "borrado_logico", columnDefinition = "TINYINT DEFAULT 0")
     @Builder.Default
+    @ToString.Include
     private boolean borradoLogico = false;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "grado", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_grado")
     private Grado grado;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "ciclo", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_ciclo")
     private Ciclo ciclo;
 
-    @NotNull(message = "Debe elegir una obra")
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_obra", nullable = false)
     private Obra obra;
 
-    @NotNull(message = "El libro debe pertenecer a una editorial")
-    @ToString.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_editorial", nullable = false)
     private Editorial editorial;
 
-    @ToString.Exclude
-    @NotNull(message = "El libro debe tener un formato")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_formato", nullable = false)
     private Formato formato;
 
-    @NotEmpty
-    @ToString.Exclude
     @Builder.Default
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
@@ -91,6 +106,5 @@ public class Libro extends Auditable {
             inverseJoinColumns = @JoinColumn(name = "id_idioma")
     )
     private Set<Idioma> idiomas = new HashSet<>();
-
 
 }

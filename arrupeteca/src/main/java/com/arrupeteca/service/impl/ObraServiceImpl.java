@@ -2,185 +2,276 @@ package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.dto.request.ObraAutorRequest;
+import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
+import com.arrupeteca.dto.response.summary.ObraResumen;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.ObraMapper;
-import com.arrupeteca.persistence.entity.*;
-import com.arrupeteca.persistence.projection.ObraResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.entity.Obra;
+import com.arrupeteca.persistence.entity.ObraAutor;
+import com.arrupeteca.persistence.entity.Genero;
+import com.arrupeteca.persistence.entity.Categoria;
+import com.arrupeteca.persistence.entity.Autor;
+import com.arrupeteca.persistence.entity.TipoAutoria;
+import com.arrupeteca.persistence.entity.Etiqueta;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.GeneroRepository;
+import com.arrupeteca.persistence.repository.CategoriaRepository;
+import com.arrupeteca.persistence.repository.EtiquetaRepository;
+import com.arrupeteca.persistence.repository.AutorRepository;
+import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
 import com.arrupeteca.service.ObraService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class ObraServiceImpl implements ObraService {
 
     private final ObraRepository obraRepository;
     private final GeneroRepository generoRepository;
     private final CategoriaRepository categoriaRepository;
+    private final EtiquetaRepository etiquetaRepository;
     private final AutorRepository autorRepository;
     private final TipoAutoriaRepository tipoAutoriaRepository;
-
     private final ObraMapper obraMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<ObraResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return obraRepository.findByBorradoLogicoFalse(pageable);
+    public Page<ObraResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idGenero, Long idCategoria, Long idEtiqueta,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda maestra de obras admin: borradoLogico={}, idGenero={}, idCategoria={}, idEtiqueta={}, termino={}",
+                borradoLogico, idGenero, idCategoria, idEtiqueta, termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return obraRepository.busqueda(borradoLogico, idGenero, idCategoria, idEtiqueta, term, anioInicio, anioFin, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public ObraResumen obtenerPorIdActivo(Long id) {
-        return obraRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Obra activa con ID: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ObraResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return obraRepository.busquedaGlobal(palabra, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ObraResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return obraRepository.findAllProjectedBy(pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public ObraResumen obtenerPorId(Long id) {
-        return obraRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Obra con ID: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<ObraResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin, int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return obraRepository.busquedaMaestraAdmin(esBorrado, termino, anioInicio, anioFin, pageable);
+    public ObraDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Obteniendo obra por ID (Admin): {}", id);
+        return obraRepository.busquedaPorId(id, null)
+                .map(obraMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra con ID: " + id));
     }
 
     @Override
     @Transactional
-    public ObraResumen crear(ObraRequest request) {
-        if (obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
-            throw new RuntimeException("Ya existe una obra con el título: " + request.getTitulo());
+    public ObraDetalleResponse crear(ObraRequest request) {
+        log.info("Creando obra: {}", request.titulo());
+        validarCreacion(request);
+        validarUnicidadTitulo(request.titulo().orElse(null), null);
+
+        Obra obra = obraMapper.toEntity(request);
+        asignarRelaciones(obra, request);
+
+        Obra guardada = obraRepository.saveAndFlush(obra);
+        log.info("Obra creada exitosamente con ID: {}", guardada.getId());
+        return obraMapper.toDetalleResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "obras", key = "#id")
+    public ObraDetalleResponse actualizar(Long id, ObraRequest request) {
+        log.info("Actualizando obra con ID: {}", id);
+        Obra obraExistente = obraRepository.busquedaPorId(id, null)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Obra con ID: " + id));
+
+        validarActualizacion(request, obraExistente);
+        if (request.titulo() != null && request.titulo().isPresent()) {
+            validarUnicidadTitulo(request.titulo().get(), obraExistente);
         }
 
-        Obra nuevaObra = obraMapper.toEntity(request);
+        obraMapper.updateEntity(request, obraExistente);
+        asignarRelaciones(obraExistente, request);
 
-        asignarGeneros(nuevaObra, request.getIdGeneros());
-        asignarCategorias(nuevaObra, request.getIdCategorias());
-        asignarAutores(nuevaObra, request.getAutores());
-
-        Obra guardada = obraRepository.save(nuevaObra);
-        return obtenerPorId(guardada.getId());
+        Obra actualizada = obraRepository.saveAndFlush(obraExistente);
+        log.info("Obra con ID: {} actualizada exitosamente", id);
+        return obraMapper.toDetalleResponse(actualizada);
     }
 
     @Override
     @Transactional
-    public ObraResumen actualizar(Long id, ObraRequest request) {
-        Obra existente = obraRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Obra con ID: " + id));
-
-        if (!existente.getTitulo().equalsIgnoreCase(request.getTitulo()) &&
-                obraRepository.existsByTituloIgnoreCase(request.getTitulo())) {
-            throw new RuntimeException("Ya existe una obra con el título: " + request.getTitulo());
-        }
-
-        obraMapper.updateEntity(request, existente);
-
-        asignarGeneros(existente, request.getIdGeneros());
-        asignarCategorias(existente, request.getIdCategorias());
-
-        existente.getObraAutores().clear();
-        obraRepository.saveAndFlush(existente);
-
-        asignarAutores(existente, request.getAutores());
-
-        Obra actualizada = obraRepository.save(existente);
-        return obtenerPorId(actualizada.getId());
-    }
-
-    @Override
-    @Transactional
+    @CacheEvict(value = "obras", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
+        log.info("Cambiando estado de borrado de obra ID: {} a {}", id, !estado);
         if (!obraRepository.existsById(id)) {
-            throw new RuntimeException("No se encontró Obra con ID: " + id);
+            throw new ValidacionNegocioException("No se encontró Obra con ID: " + id);
         }
-        if (estado) obraRepository.activar(id);
-        else obraRepository.desactivar(id);
+        if (estado) {
+            obraRepository.activar(id);
+        } else {
+            obraRepository.desactivar(id);
+        }
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
-        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "titulo" : ordenarPor;
-        if ("anio".equalsIgnoreCase(campoOrden)) campoOrden = "anioCreacion";
-
-        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-        return PageRequest.of(page, size, Sort.by(direction, campoOrden));
+    private void validarCreacion(ObraRequest request) {
+        List<String> errores = new ArrayList<>();
+        if (request.titulo() == null || !request.titulo().isPresent() || request.titulo().get() == null || request.titulo().get().isBlank()) {
+            errores.add("El título no puede estar vacío");
+        }
+        if (request.resumen() == null || !request.resumen().isPresent() || request.resumen().get() == null || request.resumen().get().isBlank()) {
+            errores.add("Se debe de agregar un resumen");
+        }
+        if (request.idGeneros() == null || !request.idGeneros().isPresent() || request.idGeneros().get() == null || request.idGeneros().get().isEmpty()) {
+            errores.add("La obra debe tener al menos un género");
+        }
+        if (request.idCategorias() == null || !request.idCategorias().isPresent() || request.idCategorias().get() == null || request.idCategorias().get().isEmpty()) {
+            errores.add("Favor de elegir al menos una categoría para la obra");
+        }
+        if (request.autores() == null || !request.autores().isPresent() || request.autores().get() == null || request.autores().get().isEmpty()) {
+            errores.add("La obra debe tener al menos un autor asociado");
+        }
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
     }
 
-    private void asignarGeneros(Obra obra, Set<Long> idGeneros) {
-        if (obra.getGeneros() == null) obra.setGeneros(new HashSet<>());
-        obra.getGeneros().clear();
+    private void validarActualizacion(ObraRequest request, Obra existente) {
+        // Bloqueo optimista
+        Long vExistente = existente.getVersion() != null ? existente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
+            throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
+        }
 
-        if (idGeneros != null && !idGeneros.isEmpty()) {
-            List<Genero> generosEncontrados = generoRepository.findAllById(idGeneros);
-            if (generosEncontrados.size() != idGeneros.size()) {
-                throw new RuntimeException("Uno o más Géneros indicados no existen en la base de datos");
+        List<String> errores = new ArrayList<>();
+        if (request.titulo() != null && request.titulo().isPresent() && (request.titulo().get() == null || request.titulo().get().isBlank())) {
+            errores.add("El título no puede estar vacío");
+        }
+        if (request.resumen() != null && request.resumen().isPresent() && (request.resumen().get() == null || request.resumen().get().isBlank())) {
+            errores.add("Se debe de agregar un resumen");
+        }
+        if (request.idGeneros() != null && request.idGeneros().isPresent() && (request.idGeneros().get() == null || request.idGeneros().get().isEmpty())) {
+            errores.add("La obra debe tener al menos un género");
+        }
+        if (request.idCategorias() != null && request.idCategorias().isPresent() && (request.idCategorias().get() == null || request.idCategorias().get().isEmpty())) {
+            errores.add("Favor de elegir al menos una categoría para la obra");
+        }
+        if (request.autores() != null && request.autores().isPresent() && (request.autores().get() == null || request.autores().get().isEmpty())) {
+            errores.add("La obra debe tener al menos un autor asociado");
+        }
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
+    }
+
+    private void validarUnicidadTitulo(String tituloNuevo, Obra existente) {
+        if (tituloNuevo == null || tituloNuevo.isBlank()) {
+            return;
+        }
+        String tituloVal = tituloNuevo.trim();
+        boolean esNuevo = (existente == null);
+        boolean tituloCambio = !esNuevo && !existente.getTitulo().equalsIgnoreCase(tituloVal);
+
+        if ((esNuevo || tituloCambio) && obraRepository.existsByTituloIgnoreCase(tituloVal)) {
+            throw new ValidacionNegocioException("Ya existe una obra con el título: " + tituloVal);
+        }
+    }
+
+    private void asignarRelaciones(Obra obra, ObraRequest request) {
+        List<String> errores = new ArrayList<>();
+
+        // 1. Géneros
+        if (request.idGeneros() != null && request.idGeneros().isPresent()) {
+            Set<Long> ids = request.idGeneros().get();
+            if (ids != null) {
+                Set<Genero> generos = new HashSet<>();
+                for (Long id : ids) {
+                    generoRepository.findById(id)
+                            .ifPresentOrElse(generos::add,
+                                    () -> errores.add("El género con ID " + id + " no existe."));
+                }
+                obra.setGeneros(generos);
             }
-            obra.getGeneros().addAll(generosEncontrados);
+        }
+
+        // 2. Categorías
+        if (request.idCategorias() != null && request.idCategorias().isPresent()) {
+            Set<Long> ids = request.idCategorias().get();
+            if (ids != null) {
+                Set<Categoria> categorias = new HashSet<>();
+                for (Long id : ids) {
+                    categoriaRepository.findById(id)
+                            .ifPresentOrElse(categorias::add,
+                                    () -> errores.add("La categoría con ID " + id + " no existe."));
+                }
+                obra.setCategorias(categorias);
+            }
+        }
+
+        // 3. Etiquetas
+        if (request.idEtiquetas() != null && request.idEtiquetas().isPresent()) {
+            Set<Long> ids = request.idEtiquetas().get();
+            if (ids != null) {
+                Set<Etiqueta> etiquetas = new HashSet<>();
+                for (Long id : ids) {
+                    etiquetaRepository.findById(id)
+                            .ifPresentOrElse(etiquetas::add,
+                                    () -> errores.add("La etiqueta con ID " + id + " no existe."));
+                }
+                obra.setEtiquetas(etiquetas);
+            }
+        }
+
+        // 3. Autores (ObraAutor)
+        if (request.autores() != null && request.autores().isPresent()) {
+            Set<ObraAutorRequest> autoresReq = request.autores().get();
+            if (autoresReq != null) {
+                obra.getObraAutores().clear();
+                for (ObraAutorRequest autReq : autoresReq) {
+                    if (autReq.idAutor() == null || autReq.idTipoAutoria() == null) {
+                        errores.add("El ID del autor y el tipo de autoría son obligatorios.");
+                        continue;
+                    }
+                    Autor autor = autorRepository.findById(autReq.idAutor()).orElse(null);
+                    TipoAutoria tipo = tipoAutoriaRepository.findById(autReq.idTipoAutoria()).orElse(null);
+
+                    if (autor == null) {
+                        errores.add("El autor con ID " + autReq.idAutor() + " no existe.");
+                    }
+                    if (tipo == null) {
+                        errores.add("El tipo de autoría con ID " + autReq.idTipoAutoria() + " no existe.");
+                    }
+
+                    if (autor != null && tipo != null) {
+                        ObraAutor obraAutor = ObraAutor.builder()
+                                .obra(obra)
+                                .autor(autor)
+                                .tipoAutoria(tipo)
+                                .build();
+                        obra.getObraAutores().add(obraAutor);
+                    }
+                }
+            }
+        }
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
         }
     }
 
-    private void asignarCategorias(Obra obra, Set<Long> idCategorias) {
-        if (obra.getCategorias() == null) obra.setCategorias(new HashSet<>());
-        obra.getCategorias().clear();
-
-        if (idCategorias != null && !idCategorias.isEmpty()) {
-            List<Categoria> categoriasEncontradas = categoriaRepository.findAllById(idCategorias);
-            if (categoriasEncontradas.size() != idCategorias.size()) {
-                throw new RuntimeException("Una o más Categorías indicadas no existen");
-            }
-            obra.getCategorias().addAll(categoriasEncontradas);
+    @Override
+    public List<ObraResumen> buscarDuplicados(String termino, Long idExcluir) {
+        if (termino == null || termino.isBlank()) {
+            return List.of();
         }
-    }
-
-    private void asignarAutores(Obra obra, Set<ObraAutorRequest> autoresRequest) {
-        if (autoresRequest != null && !autoresRequest.isEmpty()) {
-            for (ObraAutorRequest req : autoresRequest) {
-                Autor autor = autorRepository.findById(req.getIdAutor())
-                        .orElseThrow(() -> new RuntimeException("Autor con ID " + req.getIdAutor() + " no encontrado"));
-
-                TipoAutoria tipo = tipoAutoriaRepository.findById(req.getIdTipoAutoria())
-                        .orElseThrow(() -> new RuntimeException("Tipo de Autoría con ID " + req.getIdTipoAutoria() + " no encontrado"));
-
-                ObraAutor nuevoEnlace = ObraAutor.builder()
-                        .autor(autor)
-                        .tipoAutoria(tipo)
-                        .obra(obra)
-                        .borradoLogico(false)
-                        .build();
-
-                obra.getObraAutores().add(nuevoEnlace);
-            }
-        }
+        log.debug("Buscando duplicados de obra para el término: '{}'", termino);
+        return obraRepository.buscarDuplicados(termino.trim(), idExcluir, org.springframework.data.domain.Sort.by("titulo"))
+                .stream()
+                .map(obraMapper::toResumen)
+                .toList();
     }
 }

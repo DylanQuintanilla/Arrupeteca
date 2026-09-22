@@ -1,18 +1,18 @@
 package com.arrupeteca.mapper;
 
+import com.arrupeteca.config.CentralMapperConfig;
 import com.arrupeteca.dto.request.MuebleRequest;
-import com.arrupeteca.dto.request.SalonRequest;
+import com.arrupeteca.dto.response.MuebleResponse;
 import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.entity.Salon;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
-import org.mapstruct.ReportingPolicy;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(config = CentralMapperConfig.class, uses = {SalonMapper.class})
 public interface MuebleMapper {
 
     Mueble toEntity(MuebleRequest request);
 
     void updateEntity(MuebleRequest request, @MappingTarget Mueble mueble);
 
+    MuebleResponse toResponse(Mueble mueble);
 }

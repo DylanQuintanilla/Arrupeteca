@@ -1,175 +1,291 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.LibroRequest;
+import com.arrupeteca.dto.response.detail.LibroDetalleResponse;
+import com.arrupeteca.dto.response.summary.LibroResumen;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.LibroMapper;
-import com.arrupeteca.persistence.entity.Idioma;
 import com.arrupeteca.persistence.entity.Libro;
-import com.arrupeteca.persistence.enums.Ciclo;
-import com.arrupeteca.persistence.enums.Grado;
-import com.arrupeteca.persistence.projection.LibroResumen;
-import com.arrupeteca.persistence.repository.*;
+import com.arrupeteca.persistence.entity.Obra;
+import com.arrupeteca.persistence.entity.Editorial;
+import com.arrupeteca.persistence.entity.Formato;
+import com.arrupeteca.persistence.entity.Idioma;
+import com.arrupeteca.persistence.repository.LibroRepository;
+import com.arrupeteca.persistence.repository.ObraRepository;
+import com.arrupeteca.persistence.repository.EditorialRepository;
+import com.arrupeteca.persistence.repository.FormatoRepository;
+import com.arrupeteca.persistence.repository.IdiomaRepository;
+import com.arrupeteca.persistence.repository.GradoRepository;
+import com.arrupeteca.persistence.repository.CicloRepository;
 import com.arrupeteca.service.LibroService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class LibroServiceImpl implements LibroService {
 
     private final LibroRepository libroRepository;
-    private final LibroMapper libroMapper;
     private final ObraRepository obraRepository;
     private final EditorialRepository editorialRepository;
     private final FormatoRepository formatoRepository;
     private final IdiomaRepository idiomaRepository;
+    private final GradoRepository gradoRepository;
+    private final CicloRepository cicloRepository;
+    private final LibroMapper libroMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<LibroResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return libroRepository.findByBorradoLogicoFalse(pageable);
+    public Page<LibroResumen> busquedaGlobal(
+            String termino, Long idAutor, Long idGenero, Long idCategoria,
+            Long idEditorial, Long idIdioma, Long idCiclo, Long idEtiqueta,
+            Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda global proyectada de libros por '{}', autor: {}, género: {}, categoría: {}, editorial: {}, idioma: {}, ciclo: {}, etiqueta: {}",
+                termino, idAutor, idGenero, idCategoria, idEditorial, idIdioma, idCiclo, idEtiqueta);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return libroRepository.busqueda(
+                false, null, idAutor, idGenero, idCategoria, idEtiqueta, idEditorial, null, null, idCiclo, idIdioma, term, anioInicio, anioFin, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public LibroResumen obtenerPorIdActivo(Long id) {
-        return libroRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Libro activo con ID: " + id));
+    @Cacheable(value = "libros", key = "#id")
+    public LibroDetalleResponse busquedaGlobalPorId(Long id) {
+        log.debug("Obteniendo libro activo por ID: {}", id);
+        return libroRepository.busquedaPorId(id, false)
+                .map(libroMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro activo con ID: " + id));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<LibroResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return libroRepository.busquedaGlobal(palabra, pageable);
+    public Page<LibroResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idObra, Long idAutor, Long idGenero, Long idCategoria, Long idEtiqueta,
+            Long idEditorial, Long idFormato, Long idGrado, Long idCiclo, Long idIdioma,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable) {
+        log.debug("Búsqueda maestra de libros admin proyectada: borradoLogico={}, idObra={}, idAutor={}, idGenero={}, idCategoria={}, idEtiqueta={}, idIdioma={}, termino={}",
+                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta, idIdioma, termino);
+        String term = (termino != null && !termino.isBlank()) ? termino.trim() : null;
+        return libroRepository.busqueda(
+                borradoLogico, idObra, idAutor, idGenero, idCategoria, idEtiqueta,
+                idEditorial, idFormato, idGrado, idCiclo, idIdioma, term, anioInicio, anioFin, pageable);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<LibroResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return libroRepository.findAllProjectedBy(pageable);
+    public LibroDetalleResponse busquedaAdminPorId(Long id) {
+        log.debug("Obteniendo libro por ID (Admin): {}", id);
+        return libroRepository.busquedaPorId(id, null)
+                .map(libroMapper::toDetalleResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public LibroResumen obtenerPorId(Long id) {
-        return libroRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Libro con ID: " + id));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<LibroResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, Long idObra, Long idEditorial, Long idFormato,
-            String gradoStr, String cicloStr, String termino, Integer anioInicio, Integer anioFin,
-            int page, int size, String ordenarPor, String direccion) {
-
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-
-        Grado grado = (gradoStr != null && !gradoStr.isEmpty()) ? Grado.valueOf(gradoStr) : null;
-        Ciclo ciclo = (cicloStr != null && !cicloStr.isEmpty()) ? Ciclo.valueOf(cicloStr) : null;
-
-        return libroRepository.busquedaMaestraAdmin(esBorrado, idObra, idEditorial, idFormato,
-                grado, ciclo, termino, anioInicio, anioFin, pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<LibroResumen> obtenerPorObra(Long idObra, int page, int size, String ordenarPor, String direccion) {
-        if (!obraRepository.existsById(idObra)) {
-            throw new RuntimeException("No se encontró Obra con ID: " + idObra);
-        }
-
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-
-        return libroRepository.findByObraId(pageable, idObra);
+    public Page<LibroResumen> buscarPorObraId(Long idObra, Pageable pageable) {
+        log.debug("Obteniendo libros proyectados por ID Obra: {}", idObra);
+        return libroRepository.busqueda(false, idObra, null, null, null, null, null, null, null, null, null, null, null, null, pageable);
     }
 
     @Override
     @Transactional
-    public LibroResumen crear(LibroRequest request) {
-        if (libroRepository.existsByIsbn(request.getIsbn())) {
-            throw new RuntimeException("El ISBN " + request.getIsbn() + " ya está registrado.");
+    public LibroDetalleResponse crear(LibroRequest request) {
+        log.info("Creando nuevo libro");
+        validarCreacion(request);
+        if (request.isbn() != null && request.isbn().isPresent()) {
+            validarUnicidadIsbn(request.isbn().get(), null);
         }
 
-        Libro nuevoLibro = libroMapper.toEntity(request);
-        asignarRelaciones(nuevoLibro, request);
+        Libro libro = libroMapper.toEntity(request);
+        asignarRelaciones(libro, request);
 
-        Libro libroGuardado = libroRepository.save(nuevoLibro);
-        return obtenerPorId(libroGuardado.getId());
+        Libro guardado = libroRepository.saveAndFlush(libro);
+        log.info("Libro creado exitosamente con ID: {}", guardado.getId());
+        return libroMapper.toDetalleResponse(guardado);
     }
 
     @Override
     @Transactional
-    public LibroResumen actualizar(Long id, LibroRequest request) {
-        Libro libroExistente = libroRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró Libro con ID: " + id));
+    @CacheEvict(value = "libros", key = "#id")
+    public LibroDetalleResponse actualizar(Long id, LibroRequest request) {
+        log.info("Actualizando libro con ID: {}", id);
+        Libro libroExistente = libroRepository.busquedaPorId(id, null)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró Libro con ID: " + id));
 
-        if (!libroExistente.getIsbn().equalsIgnoreCase(request.getIsbn()) &&
-                libroRepository.existsByIsbn(request.getIsbn())) {
-            throw new RuntimeException("El ISBN " + request.getIsbn() + " ya está en uso por otro libro.");
+        validarActualizacion(request, libroExistente);
+        if (request.isbn() != null && request.isbn().isPresent()) {
+            validarUnicidadIsbn(request.isbn().get(), libroExistente);
         }
 
         libroMapper.updateEntity(request, libroExistente);
         asignarRelaciones(libroExistente, request);
 
-        Libro libroActualizado = libroRepository.save(libroExistente);
-        return obtenerPorId(libroActualizado.getId());
+        Libro actualizado = libroRepository.saveAndFlush(libroExistente);
+        log.info("Libro con ID: {} actualizado exitosamente", id);
+        return libroMapper.toDetalleResponse(actualizado);
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "libros", key = "#id")
     public void cambiarEstado(Long id, boolean estado) {
+        log.info("Cambiando estado de borrado del libro ID: {} a {}", id, !estado);
         if (!libroRepository.existsById(id)) {
-            throw new RuntimeException("No se encontró Libro con ID: " + id);
+            throw new ValidacionNegocioException("No se encontró Libro con ID: " + id);
         }
-        if (estado) libroRepository.activar(id);
-        else libroRepository.desactivar(id);
+        if (estado) {
+            libroRepository.activar(id);
+        } else {
+            libroRepository.desactivar(id);
+        }
+    }
+
+    private void validarCreacion(LibroRequest request) {
+        List<String> errores = new ArrayList<>();
+        if (request.anioPublicacion() == null || !request.anioPublicacion().isPresent() || request.anioPublicacion().get() == null) {
+            errores.add("El año de publicación no puede estar vacío");
+        }
+        if (request.idObra() == null || !request.idObra().isPresent() || request.idObra().get() == null) {
+            errores.add("Debe elegir una obra para el libro");
+        }
+        if (request.idFormato() == null || !request.idFormato().isPresent() || request.idFormato().get() == null) {
+            errores.add("El libro debe pertenecer a un formato");
+        }
+        if (request.idEditorial() == null || !request.idEditorial().isPresent() || request.idEditorial().get() == null) {
+            errores.add("El libro debe pertenecer a una editorial");
+        }
+        if (request.idIdiomas() == null || !request.idIdiomas().isPresent() || request.idIdiomas().get() == null || request.idIdiomas().get().isEmpty()) {
+            errores.add("Debe elegir al menos un idioma para el libro");
+        }
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
+    }
+
+    private void validarActualizacion(LibroRequest request, Libro existente) {
+        // Bloqueo optimista
+        Long vExistente = existente.getVersion() != null ? existente.getVersion() : 0L;
+        if (request.version() == null || !request.version().equals(vExistente)) {
+            throw new ValidacionNegocioException("El registro fue modificado por otro usuario. Por favor recargue la página.");
+        }
+
+        List<String> errores = new ArrayList<>();
+        if (request.anioPublicacion() != null && request.anioPublicacion().isPresent() && request.anioPublicacion().get() == null) {
+            errores.add("El año de publicación no puede estar vacío");
+        }
+        if (request.idObra() != null && request.idObra().isPresent() && request.idObra().get() == null) {
+            errores.add("Debe elegir una obra para el libro");
+        }
+        if (request.idFormato() != null && request.idFormato().isPresent() && request.idFormato().get() == null) {
+            errores.add("El libro debe pertenecer a un formato");
+        }
+        if (request.idEditorial() != null && request.idEditorial().isPresent() && request.idEditorial().get() == null) {
+            errores.add("El libro debe pertenecer a una editorial");
+        }
+        if (request.idIdiomas() != null && request.idIdiomas().isPresent() && (request.idIdiomas().get() == null || request.idIdiomas().get().isEmpty())) {
+            errores.add("Debe elegir al menos un idioma para el libro");
+        }
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
+    }
+
+    private void validarUnicidadIsbn(String isbnNuevo, Libro existente) {
+        if (isbnNuevo == null || isbnNuevo.isBlank()) {
+            return;
+        }
+        String isbnVal = isbnNuevo.trim();
+        boolean esNuevo = (existente == null);
+        boolean isbnCambio = !esNuevo && !existente.getIsbn().equals(isbnVal);
+
+        if ((esNuevo || isbnCambio) && libroRepository.existsByIsbn(isbnVal)) {
+            throw new ValidacionNegocioException("Ya existe un libro con el ISBN: " + isbnVal);
+        }
     }
 
     private void asignarRelaciones(Libro libro, LibroRequest request) {
-        if (request.getIdObra() != null) {
-            libro.setObra(obraRepository.findById(request.getIdObra())
-                    .orElseThrow(() -> new RuntimeException("La Obra indicada no existe")));
-        }
-        if (request.getIdEditorial() != null) {
-            libro.setEditorial(editorialRepository.findById(request.getIdEditorial())
-                    .orElseThrow(() -> new RuntimeException("La Editorial indicada no existe")));
-        }
-        if (request.getIdFormato() != null) {
-            libro.setFormato(formatoRepository.findById(request.getIdFormato())
-                    .orElseThrow(() -> new RuntimeException("El Formato indicado no existe")));
-        }
-        if (request.getIdIdiomas() != null && !request.getIdIdiomas().isEmpty()) {
-            List<Idioma> idiomas = idiomaRepository.findAllById(request.getIdIdiomas());
-            if (idiomas.size() != request.getIdIdiomas().size()) {
-                throw new RuntimeException("Uno o más idiomas indicados no existen");
+        List<String> errores = new ArrayList<>();
+
+        // 1. Obra
+        if (request.idObra() != null && request.idObra().isPresent()) {
+            Long idObra = request.idObra().get();
+            if (idObra != null) {
+                obraRepository.findById(idObra)
+                        .ifPresentOrElse(libro::setObra,
+                                () -> errores.add("La obra con ID " + idObra + " no existe."));
             }
-            libro.setIdiomas(new HashSet<>(idiomas));
         }
-    }
 
-    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion) {
-        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "isbn" : ordenarPor;
+        // 2. Editorial
+        if (request.idEditorial() != null && request.idEditorial().isPresent()) {
+            Long idEditorial = request.idEditorial().get();
+            if (idEditorial != null) {
+                editorialRepository.findById(idEditorial)
+                        .ifPresentOrElse(libro::setEditorial,
+                                () -> errores.add("La editorial con ID " + idEditorial + " no existe."));
+            }
+        }
 
-        if ("obra".equalsIgnoreCase(campoOrden)) campoOrden = "obra.titulo";
-        if ("editorial".equalsIgnoreCase(campoOrden)) campoOrden = "editorial.nombre";
-        if ("formato".equalsIgnoreCase(campoOrden)) campoOrden = "formato.nombre";
+        // 3. Formato
+        if (request.idFormato() != null && request.idFormato().isPresent()) {
+            Long idFormato = request.idFormato().get();
+            if (idFormato != null) {
+                formatoRepository.findById(idFormato)
+                        .ifPresentOrElse(libro::setFormato,
+                                () -> errores.add("El formato con ID " + idFormato + " no existe."));
+            }
+        }
 
-        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
+        // 4. Idiomas
+        if (request.idIdiomas() != null && request.idIdiomas().isPresent()) {
+            Set<Long> ids = request.idIdiomas().get();
+            if (ids != null) {
+                Set<Idioma> idiomas = new HashSet<>();
+                for (Long id : ids) {
+                    idiomaRepository.findById(id)
+                            .ifPresentOrElse(idiomas::add,
+                                    () -> errores.add("El idioma con ID " + id + " no existe."));
+                }
+                libro.setIdiomas(idiomas);
+            }
+        }
 
-        Sort sort = Sort.by(direction, campoOrden);
-        return PageRequest.of(page, size, sort);
+        // 5. Grado
+        if (request.idGrado() != null && request.idGrado().isPresent()) {
+            Long idGrado = request.idGrado().get();
+            if (idGrado != null) {
+                gradoRepository.findById(idGrado)
+                        .ifPresentOrElse(libro::setGrado,
+                                () -> errores.add("El grado con ID " + idGrado + " no existe."));
+            } else {
+                libro.setGrado(null);
+            }
+        }
+
+        // 6. Ciclo
+        if (request.idCiclo() != null && request.idCiclo().isPresent()) {
+            Long idCiclo = request.idCiclo().get();
+            if (idCiclo != null) {
+                cicloRepository.findById(idCiclo)
+                        .ifPresentOrElse(libro::setCiclo,
+                                () -> errores.add("El ciclo con ID " + idCiclo + " no existe."));
+            } else {
+                libro.setCiclo(null);
+            }
+        }
+
+        if (!errores.isEmpty()) {
+            throw new ValidacionNegocioException(errores);
+        }
     }
 }

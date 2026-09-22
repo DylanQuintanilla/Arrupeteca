@@ -1,24 +1,20 @@
 package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class PlantaRequest {
-
+public record PlantaRequest(
     @NotBlank(message = "El nombre de la planta no puede estar vacío")
     @Size(max = 30, message = "El nombre no puede exceder 30 caracteres")
-    private String nombre;
+    String nombre,
 
     @NotNull(message = "Se debe especificar el edificio")
-    private Long idEdificio;
-
-}
+    Long idEdificio
+) {}

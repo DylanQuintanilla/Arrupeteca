@@ -1,7 +1,7 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.EditorialRequest;
-import com.arrupeteca.persistence.projection.EditorialResumen;
+import com.arrupeteca.dto.response.EditorialResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -9,20 +9,15 @@ import java.util.List;
 
 public interface EditorialService {
 
-    Page<EditorialResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    List<EditorialResponse> obtenerTodosActivos(String nombre);
 
-    EditorialResumen obtenerPorIdActivo(Long id);
+    Page<EditorialResponse> obtenerTodos(String nombre, String correo, String personaContacto, Boolean borradoLogico, Pageable pageable);
 
-    Page<EditorialResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
+    EditorialResponse obtenerPorId(Long id);
 
-    Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, int page, int size, String ordenarPor, String direccion);
+    EditorialResponse crear(EditorialRequest request);
 
-    EditorialResumen obtenerPorId(Long id);
-
-    EditorialResumen crear(EditorialRequest request);
-
-    EditorialResumen actualizar(Long id, EditorialRequest request);
+    EditorialResponse actualizar(Long id, EditorialRequest request);
 
     void cambiarEstado(Long id, boolean estado);
-    
 }

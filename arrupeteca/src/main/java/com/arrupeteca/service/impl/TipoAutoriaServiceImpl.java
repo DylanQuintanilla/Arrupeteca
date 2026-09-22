@@ -1,93 +1,114 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
+import com.arrupeteca.dto.response.TipoAutoriaResponse;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.TipoAutoriaMapper;
-import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.TipoAutoria;
-import com.arrupeteca.persistence.projection.TipoAutoriaResumen;
 import com.arrupeteca.persistence.repository.TipoAutoriaRepository;
-import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.service.TipoAutoriaService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class TipoAutoriaServiceImpl implements TipoAutoriaService {
 
     private final TipoAutoriaRepository tipoAutoriaRepository;
-
     private final TipoAutoriaMapper tipoAutoriaMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public List<TipoAutoriaResumen> obtenerTodosActivos() {
-
-        return tipoAutoriaRepository.findByBorradoLogicoFalse();
+    @Cacheable(value = "tipos-autoria-activos", key = "#nombre != null ? #nombre : 'todos'")
+    public List<TipoAutoriaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo tipos de autoría activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return tipoAutoriaRepository.buscarActivosPorNombre(filtro).stream()
+                .map(tipoAutoriaMapper::toResponse)
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public TipoAutoriaResumen obtenerPorIdActivo(Long id) {
-        return tipoAutoriaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro un tipo de autoria con ID: "+id+", o no esta activo"));
+    public Page<TipoAutoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de tipos de autoría con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return tipoAutoriaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
+                .map(tipoAutoriaMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<TipoAutoriaResumen> obtenerTodos() {
-        return tipoAutoriaRepository.findAllProjectedBy();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public TipoAutoriaResumen obtenerPorId(Long id) {
-        return tipoAutoriaRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro un tipo de autoria con ID: "+id));
-
+    public TipoAutoriaResponse obtenerPorId(Long id) {
+        log.debug("Buscando tipos de autoría por ID: {}", id);
+        return tipoAutoriaRepository.findById(id)
+                .map(tipoAutoriaMapper::toResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) tipoautoria con ID: " + id));
     }
 
     @Override
     @Transactional
-    public TipoAutoriaResumen crear(TipoAutoriaRequest request) {
-        if(tipoAutoriaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("El nombre: "+request.getNombre()+" ya ha sido utilizado");
+    @CacheEvict(value = "tipos-autoria-activos", allEntries = true)
+    public TipoAutoriaResponse crear(TipoAutoriaRequest request) {
+        log.info("Creando nuevo(a) tipoautoria con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, null);
+
+        TipoAutoria tipoAutoria = tipoAutoriaMapper.toEntity(request);
+        tipoAutoria.setNombre(nombreTrimmed);
+
+        TipoAutoria guardado = tipoAutoriaRepository.save(tipoAutoria);
+        log.info("TipoAutoria creado(a) exitosamente con ID: {}", guardado.getId());
+        return tipoAutoriaMapper.toResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "tipos-autoria-activos", allEntries = true)
+    public TipoAutoriaResponse actualizar(Long id, TipoAutoriaRequest request) {
+        log.info("Actualizando tipoautoria con ID: {}", id);
+        TipoAutoria tipoAutoriaExistente = tipoAutoriaRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) tipoautoria con ID: " + id));
+
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, tipoAutoriaExistente);
+
+        tipoAutoriaMapper.updateEntity(request, tipoAutoriaExistente);
+        tipoAutoriaExistente.setNombre(nombreTrimmed);
+
+        TipoAutoria actualizado = tipoAutoriaRepository.save(tipoAutoriaExistente);
+        log.info("TipoAutoria con ID: {} actualizado(a) exitosamente", id);
+        return tipoAutoriaMapper.toResponse(actualizado);
+    }
+
+    private void validarUnicidad(String nombreNuevo, TipoAutoria tipoAutoriaExistente) {
+        boolean esNuevo = (tipoAutoriaExistente == null);
+        boolean nombreCambio = !esNuevo && !tipoAutoriaExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+
+        if ((esNuevo || nombreCambio) && tipoAutoriaRepository.existsByNombreIgnoreCase(nombreNuevo)) {
+            log.warn("Intento de duplicar tipos de autoría: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) tipoautoria con el nombre: " + nombreNuevo);
         }
-        TipoAutoria TipoAutoriaMapeada = tipoAutoriaMapper.toEntity(request);
-        TipoAutoria TipoAutoriaGuarda = tipoAutoriaRepository.save(TipoAutoriaMapeada);
-        return obtenerPorId(TipoAutoriaGuarda.getId());
     }
 
     @Override
     @Transactional
-    public TipoAutoriaResumen actualizar(Long id, TipoAutoriaRequest request) {
-
-        TipoAutoria TipoAutoriaEncontrada = tipoAutoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro un tipo de autoria con ID: "+id));
-
-        if (!TipoAutoriaEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
-                && tipoAutoriaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe una autoria con el nombre: "+request.getNombre());
-        }
-
-        tipoAutoriaMapper.updateEntity(request, TipoAutoriaEncontrada);
-        TipoAutoria TipoAutoriaActualizada = tipoAutoriaRepository.save(TipoAutoriaEncontrada);
-
-        return obtenerPorId(TipoAutoriaEncontrada.getId());
-    }
-
-    @Override
-    @Transactional
+    @CacheEvict(value = "tipos-autoria-activos", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (!tipoAutoriaRepository.existsById(id)){
-            throw new RuntimeException("No se encontro un tipo de autoria con ID: "+id);
+        log.info("Cambiando estado de borrado de tipos de autoría ID: {} a {}", id, !estado);
+        if (!tipoAutoriaRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) tipoautoria con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             tipoAutoriaRepository.activar(id);
-        else
+        } else {
             tipoAutoriaRepository.desactivar(id);
-    }
-}
+        }
+    }}

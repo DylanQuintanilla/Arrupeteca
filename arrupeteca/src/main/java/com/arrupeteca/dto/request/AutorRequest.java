@@ -2,55 +2,102 @@ package com.arrupeteca.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
+import java.time.Year;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
+import org.openapitools.jackson.nullable.JsonNullable;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AutorRequest {
+public record AutorRequest(
+    JsonNullable<String> nombre,
 
-    @Size(max = 100, message = "El nombre no puede exceder 100 caracteres")
-    private String nombre;
+    JsonNullable<String> seudonimo,
 
-    @Size(max = 50, message = "El seudonimo no puede exceder 50 caracteres")
-    private String seudonimo;
+    JsonNullable<Year> anioNacimiento,
 
-    @Max(value = 9999, message = "El año de nacimiento no puede tener más de 4 digitos")
-    private Integer anioNacimiento;
+    JsonNullable<Year> anioFallecimiento,
 
-    @Max(value = 9999, message = "El año de fallecimiento no puede tener más de 4 digitos")
-    private Integer anioFallecimiento;
+    JsonNullable<String> biografia,
 
-    @NotBlank(message = "La biografia no puede estar vacía")
-    @Size(max = 5000, message = "La biografia es demasiado larga")
-    private String biografia;
+    Long version,
 
-    private Long idPaisNacimiento;
-    private Long idNacionalidad;
-    private Long idGeneroPrincipal;
-    private Long idObraCumbre;
+    JsonNullable<Long> idPaisNacimiento,
 
-    @AssertTrue(message = "El autor debe tener al menos un Nombre o un Seudonimo")
-    public boolean isIdentidadValida() {
-        boolean tieneNombreCompleto = (nombre != null && !nombre.isBlank());
-        boolean tieneSeudonimo = (seudonimo != null && !seudonimo.isBlank());
-        return tieneNombreCompleto || tieneSeudonimo;
+    JsonNullable<Long> idNacionalidad,
+
+    JsonNullable<Long> idGeneroPrincipal,
+
+    JsonNullable<Long> idObraCumbre
+) {
+
+    public AutorRequest {
+
+    }
+
+    @AssertTrue(message = "El nombre no puede exceder 100 caracteres")
+    public boolean isNombreLongitudValida() {
+        if (nombre == null || !nombre.isPresent() || nombre.get() == null) {
+            return true;
+        }
+        return nombre.get().length() <= 100;
+    }
+
+    @AssertTrue(message = "El seudonimo no puede exceder 50 caracteres")
+    public boolean isSeudonimoValido() {
+        if (seudonimo == null || !seudonimo.isPresent() || seudonimo.get() == null) {
+            return true;
+        }
+        return seudonimo.get().length() <= 50;
+    }
+
+    @AssertTrue(message = "La biografia es demasiado larga")
+    public boolean isBiografiaLongitudValida() {
+        if (biografia == null || !biografia.isPresent() || biografia.get() == null) {
+            return true;
+        }
+        return biografia.get().length() <= 5000;
+    }
+
+    @AssertTrue(message = "El año de nacimiento no puede ser una fecha futura")
+    public boolean isAnioNacimientoValido() {
+        if (anioNacimiento == null || !anioNacimiento.isPresent() || anioNacimiento.get() == null) {
+            return true;
+        }
+        return !anioNacimiento.get().isAfter(Year.now());
+    }
+
+    @AssertTrue(message = "El año de fallecimiento no puede ser una fecha futura")
+    public boolean isAnioFallecimientoValido() {
+        if (anioFallecimiento == null || !anioFallecimiento.isPresent() || anioFallecimiento.get() == null) {
+            return true;
+        }
+        return !anioFallecimiento.get().isAfter(Year.now());
     }
 
     @AssertTrue(message = "El año de nacimiento no puede ser mayor al año de fallecimiento")
     public boolean isFechasValidas() {
-        if (anioNacimiento == null || anioFallecimiento == null) {
+        Year nacimiento = (anioNacimiento != null && anioNacimiento.isPresent()) ? anioNacimiento.get() : null;
+        Year fallecimiento = (anioFallecimiento != null && anioFallecimiento.isPresent()) ? anioFallecimiento.get() : null;
+        if (nacimiento == null || fallecimiento == null) {
             return true;
         }
-        return anioNacimiento <= anioFallecimiento;
+        return !nacimiento.isAfter(fallecimiento);
     }
 
+    @AssertTrue(message = "Los IDs de las relaciones deben ser positivos")
+    public boolean isIdsValidos() {
+        return esPositivo(idPaisNacimiento)
+            && esPositivo(idNacionalidad)
+            && esPositivo(idGeneroPrincipal)
+            && esPositivo(idObraCumbre);
+    }
+
+    private boolean esPositivo(JsonNullable<Long> id) {
+        if (id == null || !id.isPresent() || id.get() == null) {
+            return true;
+        }
+        return id.get() > 0;
+    }
 }

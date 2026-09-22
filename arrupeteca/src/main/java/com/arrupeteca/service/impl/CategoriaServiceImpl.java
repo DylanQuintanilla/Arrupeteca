@@ -1,93 +1,115 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.CategoriaRequest;
+import com.arrupeteca.dto.response.CategoriaResponse;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.CategoriaMapper;
-import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.Categoria;
-import com.arrupeteca.persistence.projection.CategoriaResumen;
 import com.arrupeteca.persistence.repository.CategoriaRepository;
-import com.arrupeteca.persistence.repository.GeneroRepository;
 import com.arrupeteca.service.CategoriaService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class CategoriaServiceImpl implements CategoriaService {
 
     private final CategoriaRepository categoriaRepository;
-
     private final CategoriaMapper categoriaMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public List<CategoriaResumen> obtenerTodosActivos() {
-
-        return categoriaRepository.findByBorradoLogicoFalse();
+    @Cacheable(value = "categorias-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<CategoriaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo categorías activas (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return categoriaRepository.buscarActivosPorNombre(filtro).stream()
+                .map(categoriaMapper::toResponse)
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public CategoriaResumen obtenerPorIdActivo(Long id) {
-        return categoriaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una categoria con ID: "+id+", o no esta activo"));
+    public Page<CategoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de categorías con filtros - nombre: {}, borradoLogico: {}, pageable: {}", nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return categoriaRepository.busquedaAdmin(nombreFiltro, borradoLogico, pageable)
+                .map(categoriaMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<CategoriaResumen> obtenerTodos() {
-        return categoriaRepository.findAllProjectedBy();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public CategoriaResumen obtenerPorId(Long id) {
-        return categoriaRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una categoria con ID: "+id));
-
+    public CategoriaResponse obtenerPorId(Long id) {
+        log.debug("Buscando categoría por ID: {}", id);
+        return categoriaRepository.findById(id)
+                .map(categoriaMapper::toResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría con ID: " + id));
     }
 
     @Override
     @Transactional
-    public CategoriaResumen crear(CategoriaRequest request) {
-        if(categoriaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("El nombre: "+request.getNombre()+" ya ha sido utilizado");
+    @CacheEvict(value = "categorias-activas", allEntries = true)
+    public CategoriaResponse crear(CategoriaRequest request) {
+        log.info("Creando nueva categoría con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, null);
+
+        Categoria categoria = categoriaMapper.toEntity(request);
+        categoria.setNombre(nombreTrimmed);
+
+        Categoria guardada = categoriaRepository.save(categoria);
+        log.info("Categoría creada exitosamente con ID: {}", guardada.getId());
+        return categoriaMapper.toResponse(guardada);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "categorias-activas", allEntries = true)
+    public CategoriaResponse actualizar(Long id, CategoriaRequest request) {
+        log.info("Actualizando categoría con ID: {}", id);
+        Categoria categoriaExistente = categoriaRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una categoría con ID: " + id));
+
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, categoriaExistente);
+
+        categoriaMapper.updateEntity(request, categoriaExistente);
+        categoriaExistente.setNombre(nombreTrimmed);
+
+        Categoria actualizada = categoriaRepository.save(categoriaExistente);
+        log.info("Categoría con ID: {} actualizada exitosamente", id);
+        return categoriaMapper.toResponse(actualizada);
+    }
+
+    private void validarUnicidad(String nombreNuevo, Categoria categoriaExistente) {
+        boolean esNuevo = (categoriaExistente == null);
+        boolean nombreCambio = !esNuevo && !categoriaExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+
+        if ((esNuevo || nombreCambio) && categoriaRepository.existsByNombreIgnoreCase(nombreNuevo)) {
+            log.warn("Intento de duplicar categoría: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe una categoría con el nombre: " + nombreNuevo);
         }
-        Categoria categoriaMapeada = categoriaMapper.toEntity(request);
-        Categoria categoriaGuarda = categoriaRepository.save(categoriaMapeada);
-        return obtenerPorId(categoriaGuarda.getId());
     }
 
     @Override
     @Transactional
-    public CategoriaResumen actualizar(Long id, CategoriaRequest request) {
-
-        Categoria categoriaEncontrada = categoriaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro categoria con ID: "+id));
-
-        if (!categoriaEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
-                && categoriaRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe un genero con el nombre: "+request.getNombre());
-        }
-
-        categoriaMapper.updateEntity(request, categoriaEncontrada);
-        Categoria categoriaActualizada = categoriaRepository.save(categoriaEncontrada);
-
-        return obtenerPorId(categoriaEncontrada.getId());
-    }
-
-    @Override
-    @Transactional
+    @CacheEvict(value = "categorias-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (!categoriaRepository.existsById(id)){
-            throw new RuntimeException("No se encontro categoria con ID: "+id);
+        log.info("Cambiando estado de borrado de categoría ID: {} a {}", id, !estado);
+        if (!categoriaRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró una categoría con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             categoriaRepository.activar(id);
-        else
+        } else {
             categoriaRepository.desactivar(id);
+        }
     }
 }

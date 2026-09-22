@@ -1,127 +1,127 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.EditorialRequest;
+import com.arrupeteca.dto.response.EditorialResponse;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.EditorialMapper;
-import com.arrupeteca.mapper.GeneroMapper;
 import com.arrupeteca.persistence.entity.Editorial;
-import com.arrupeteca.persistence.projection.EditorialResumen;
 import com.arrupeteca.persistence.repository.EditorialRepository;
 import com.arrupeteca.service.EditorialService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class EditorialServiceImpl implements EditorialService {
 
     private final EditorialRepository editorialRepository;
-
     private final EditorialMapper editorialMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion) {
-
-        Pageable pageable = construirPageable(page,size,ordenarPor,direccion);
-        return editorialRepository.findByBorradoLogicoFalse(pageable);
+    @Cacheable(value = "editoriales-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<EditorialResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo editoriales activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return editorialRepository.buscarActivosPorNombre(filtro).stream()
+                .map(editorialMapper::toResponse)
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public EditorialResumen obtenerPorIdActivo(Long id) {
-        return editorialRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Editorial con ID: "+id+", o no esta activo"));
+    public Page<EditorialResponse> obtenerTodos(String nombre, String correo, String personaContacto, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de editoriales con filtros - nombre: {}, correo: {}, personaContacto: {}, borradoLogico: {}, pageable: {}",
+                nombre, correo, personaContacto, borradoLogico, pageable);
+        String nFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        String cFiltro = (correo != null && !correo.trim().isEmpty()) ? correo.trim() : null;
+        String pFiltro = (personaContacto != null && !personaContacto.trim().isEmpty()) ? personaContacto.trim() : null;
+        return editorialRepository.busquedaAdmin(nFiltro, cFiltro, pFiltro, borradoLogico, pageable)
+                .map(editorialMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page,size,ordenarPor,direccion);
-        return editorialRepository.findAllProjectedBy(pageable);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public EditorialResumen obtenerPorId(Long id) {
-        return editorialRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro una Editorial con ID: "+id));
-
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public Page<EditorialResumen> busquedaMaestraAdmin(Boolean esBorrado, String termino, int page, int size, String ordenarPor, String direccion) {
-        Pageable pageable = construirPageable(page, size, ordenarPor, direccion);
-        return editorialRepository.busquedaMaestraAdmin(esBorrado, termino, pageable);
+    public EditorialResponse obtenerPorId(Long id) {
+        log.debug("Buscando editoriales por ID: {}", id);
+        return editorialRepository.findById(id)
+                .map(editorialMapper::toResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) editorial con ID: " + id));
     }
 
     @Override
     @Transactional
-    public EditorialResumen crear(EditorialRequest request) {
-        if(editorialRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("El nombre: "+request.getNombre()+" ya ha sido utilizado");
-        }
-        if(editorialRepository.existsByCorreoIgnoreCase(request.getCorreo())){
-            throw new RuntimeException("El correo: " + request.getCorreo() + " ya está registrado en otra editorial");
-        }
-        Editorial EditorialMapeada = editorialMapper.toEntity(request);
-        Editorial EditorialGuarda = editorialRepository.save(EditorialMapeada);
-        return obtenerPorId(EditorialGuarda.getId());
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
+    public EditorialResponse crear(EditorialRequest request) {
+        log.info("Creando nueva editorial con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        String correoTrimmed = request.correo().trim();
+        validarUnicidad(nombreTrimmed, correoTrimmed, null);
+
+        Editorial editorial = editorialMapper.toEntity(request);
+        editorial.setNombre(nombreTrimmed);
+        editorial.setCorreo(correoTrimmed);
+
+        Editorial guardada = editorialRepository.save(editorial);
+        log.info("Editorial creada exitosamente con ID: {}", guardada.getId());
+        return editorialMapper.toResponse(guardada);
     }
 
     @Override
     @Transactional
-    public EditorialResumen actualizar(Long id, EditorialRequest request) {
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
+    public EditorialResponse actualizar(Long id, EditorialRequest request) {
+        log.info("Actualizando editorial con ID: {}", id);
+        Editorial editorialExistente = editorialRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró una editorial con ID: " + id));
 
-        Editorial EditorialEncontrada = editorialRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontro Editorial con ID: "+id));
+        String nombreTrimmed = request.nombre().trim();
+        String correoTrimmed = request.correo().trim();
+        validarUnicidad(nombreTrimmed, correoTrimmed, editorialExistente);
 
-        if (!EditorialEncontrada.getNombre().equalsIgnoreCase(request.getNombre())
-                && editorialRepository.existsByNombreIgnoreCase(request.getNombre())){
-            throw new RuntimeException("Ya existe una editorial con el nombre: "+request.getNombre());
+        editorialMapper.updateEntity(request, editorialExistente);
+        editorialExistente.setNombre(nombreTrimmed);
+        editorialExistente.setCorreo(correoTrimmed);
+
+        Editorial actualizada = editorialRepository.save(editorialExistente);
+        log.info("Editorial con ID: {} actualizada exitosamente", id);
+        return editorialMapper.toResponse(actualizada);
+    }
+
+    private void validarUnicidad(String nombreNuevo, String correoNuevo, Editorial editorialExistente) {
+        boolean esNuevo = (editorialExistente == null);
+        boolean nombreCambio = !esNuevo && !editorialExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+        boolean correoCambio = !esNuevo && !editorialExistente.getCorreo().equalsIgnoreCase(correoNuevo);
+
+        if ((esNuevo || nombreCambio) && editorialRepository.existsByNombreIgnoreCase(nombreNuevo)) {
+            log.warn("Intento de duplicar editorial por nombre: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe una editorial con el nombre: " + nombreNuevo);
         }
-
-        if (!EditorialEncontrada.getCorreo().equalsIgnoreCase(request.getCorreo())
-                && editorialRepository.existsByCorreoIgnoreCase(request.getCorreo())){
-            throw new RuntimeException("Ya existe una editorial con el correo: "+request.getCorreo());
+        if ((esNuevo || correoCambio) && editorialRepository.existsByCorreoIgnoreCase(correoNuevo)) {
+            log.warn("Intento de duplicar editorial por correo: {}", correoNuevo);
+            throw new ValidacionNegocioException("Ya existe una editorial con el correo: " + correoNuevo);
         }
-
-        editorialMapper.updateEntity(request, EditorialEncontrada);
-        Editorial EditorialActualizada = editorialRepository.save(EditorialEncontrada);
-
-        return obtenerPorId(EditorialEncontrada.getId());
     }
 
     @Override
     @Transactional
+    @CacheEvict(value = "editoriales-activas", allEntries = true)
     public void cambiarEstado(Long id, boolean estado) {
-        if (!editorialRepository.existsById(id)){
-            throw new RuntimeException("No se encontro Editorial con ID: "+id);
+        log.info("Cambiando estado de borrado de editoriales ID: {} a {}", id, !estado);
+        if (!editorialRepository.existsById(id)) {
+            throw new ValidacionNegocioException("No se encontró un(a) editorial con ID: " + id);
         }
-        if (estado)
+        if (estado) {
             editorialRepository.activar(id);
-        else
+        } else {
             editorialRepository.desactivar(id);
-    }
-
-    //----------------------------------------
-
-    private Pageable construirPageable(int page, int size, String ordenarPor, String direccion){
-
-        String campoOrden = (ordenarPor == null || ordenarPor.trim().isEmpty()) ? "nombre" : ordenarPor;
-
-        Sort.Direction direction = (direccion != null && direccion.equalsIgnoreCase("DESC"))
-                ? Sort.Direction.DESC : Sort.Direction.ASC;
-
-        Sort sort = Sort.by(direction, campoOrden);
-
-        return PageRequest.of(page, size, sort);
+        }
     }
 }

@@ -1,28 +1,26 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.ObraRequest;
-import com.arrupeteca.persistence.projection.ObraResumen;
+import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
+import com.arrupeteca.dto.response.summary.ObraResumen;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface ObraService {
 
-    Page<ObraResumen> obtenerTodosActivos(int page, int size, String ordenarPor, String direccion);
+    Page<ObraResumen> busquedaAdmin(
+            Boolean borradoLogico, Long idGenero, Long idCategoria, Long idEtiqueta,
+            String termino, Integer anioInicio, Integer anioFin,
+            Pageable pageable);
 
-    ObraResumen obtenerPorIdActivo(Long id);
+    ObraDetalleResponse busquedaAdminPorId(Long id);
 
-    Page<ObraResumen> busquedaGlobal(String palabra, int page, int size, String ordenarPor, String direccion);
+    ObraDetalleResponse crear(ObraRequest request);
 
-    Page<ObraResumen> obtenerTodos(int page, int size, String ordenarPor, String direccion);
-
-    ObraResumen obtenerPorId(Long id);
-
-    Page<ObraResumen> busquedaMaestraAdmin(
-            Boolean esBorrado, String termino, Integer anioInicio, Integer anioFin,
-            int page, int size, String ordenarPor, String direccion);
-
-    ObraResumen crear(ObraRequest request);
-
-    ObraResumen actualizar(Long id, ObraRequest request);
+    ObraDetalleResponse actualizar(Long id, ObraRequest request);
 
     void cambiarEstado(Long id, boolean estado);
+
+    java.util.List<ObraResumen> buscarDuplicados(String termino, Long idExcluir);
 }
+

@@ -1,118 +1,115 @@
 package com.arrupeteca.service.impl;
 
 import com.arrupeteca.dto.request.PlantaRequest;
+import com.arrupeteca.dto.response.PlantaResponse;
+import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.mapper.PlantaMapper;
 import com.arrupeteca.persistence.entity.Planta;
-import com.arrupeteca.persistence.projection.PlantaResumen;
-import com.arrupeteca.persistence.repository.EdificioRepository;
 import com.arrupeteca.persistence.repository.PlantaRepository;
 import com.arrupeteca.service.PlantaService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class PlantaServiceImpl implements PlantaService {
 
-    private final PlantaMapper plantaMapper;
     private final PlantaRepository plantaRepository;
-    private final EdificioRepository edificioRepository;
+    private final PlantaMapper plantaMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public List<PlantaResumen> obtenerTodosActivos() {
-        return plantaRepository.findByBorradoLogicoFalse();
+    @Cacheable(value = "plantas-activas", key = "#nombre != null ? #nombre : 'todos'")
+    public List<PlantaResponse> obtenerTodosActivos(String nombre) {
+        log.debug("Obteniendo plantas de edificios activos(as) (filtro nombre: '{}')", nombre);
+        String filtro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return plantaRepository.buscarActivosPorNombre(filtro).stream()
+                .map(plantaMapper::toResponse)
+                .toList();
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public PlantaResumen obtenerPorIdActivo(Long id) {
-        return plantaRepository.findProjectedByIdAndBorradoLogicoFalse(id)
-                .orElseThrow(() -> new RuntimeException("No existe una planta activa con el ID: " + id));
+    public Page<PlantaResponse> obtenerTodos(Long idEdificio, String nombre, Boolean borradoLogico, Pageable pageable) {
+        log.debug("Búsqueda de plantas con filtros - idEdificio: {}, nombre: {}, borradoLogico: {}, pageable: {}", idEdificio, nombre, borradoLogico, pageable);
+        String nombreFiltro = (nombre != null && !nombre.trim().isEmpty()) ? nombre.trim() : null;
+        return plantaRepository.busquedaAdmin(idEdificio, nombreFiltro, borradoLogico, pageable)
+                .map(plantaMapper::toResponse);
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<PlantaResumen> obtenerTodos() {
-        return plantaRepository.findAllProjectedBy();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PlantaResumen obtenerPorId(Long id) {
-        return plantaRepository.findProjectedById(id)
-                .orElseThrow(() -> new RuntimeException("No existe una planta con el ID: " + id));
+    public PlantaResponse obtenerPorId(Long id) {
+        log.debug("Buscando plantas de edificios por ID: {}", id);
+        return plantaRepository.findById(id)
+                .map(plantaMapper::toResponse)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) planta con ID: " + id));
     }
 
     @Override
     @Transactional
-    public PlantaResumen crear(PlantaRequest request) {
-        if (plantaRepository.existsByNombreIgnoreCaseAndEdificio_Id(request.getNombre(), request.getIdEdificio())) {
-            throw new RuntimeException("Ya existe la planta '" + request.getNombre() + "' en el edificio indicado.");
+    @CacheEvict(value = "plantas-activas", allEntries = true)
+    public PlantaResponse crear(PlantaRequest request) {
+        log.info("Creando nuevo(a) planta con nombre: {}", request.nombre());
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, request.idEdificio(), null);
+
+        Planta planta = plantaMapper.toEntity(request);
+        planta.setNombre(nombreTrimmed);
+
+        Planta guardado = plantaRepository.save(planta);
+        log.info("Planta creado(a) exitosamente con ID: {}", guardado.getId());
+        return plantaMapper.toResponse(guardado);
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "plantas-activas", allEntries = true)
+    public PlantaResponse actualizar(Long id, PlantaRequest request) {
+        log.info("Actualizando planta con ID: {}", id);
+        Planta plantaExistente = plantaRepository.findById(id)
+                .orElseThrow(() -> new ValidacionNegocioException("No se encontró un(a) planta con ID: " + id));
+
+        String nombreTrimmed = request.nombre().trim();
+        validarUnicidad(nombreTrimmed, request.idEdificio(), plantaExistente);
+
+        plantaMapper.updateEntity(request, plantaExistente);
+        plantaExistente.setNombre(nombreTrimmed);
+
+        Planta actualizado = plantaRepository.save(plantaExistente);
+        log.info("Planta con ID: {} actualizado(a) exitosamente", id);
+        return plantaMapper.toResponse(actualizado);
+    }
+
+    private void validarUnicidad(String nombreNuevo, Long idEdificio, Planta plantaExistente) {
+        boolean esNuevo = (plantaExistente == null);
+        boolean nombreCambio = !esNuevo && !plantaExistente.getNombre().equalsIgnoreCase(nombreNuevo);
+
+        if ((esNuevo || nombreCambio) && plantaRepository.existsByNombreIgnoreCaseAndEdificioId(nombreNuevo, idEdificio)) {
+            log.warn("Intento de duplicar plantas de edificios: {}", nombreNuevo);
+            throw new ValidacionNegocioException("Ya existe un(a) planta con ese nombre en el/la edificio seleccionado(a)");
         }
-
-        Planta plantaCreada = plantaMapper.toEntity(request);
-        asignarRelaciones(plantaCreada, request);
-
-        Planta plantaGuardada = plantaRepository.save(plantaCreada);
-        return obtenerPorId(plantaGuardada.getId());
     }
 
     @Override
     @Transactional
-    public PlantaResumen actualizar(Long id, PlantaRequest request) {
-        Planta plantaEncontrada = plantaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("No se encontró planta con ID: " + id));
-
-        boolean cambioNombre = !plantaEncontrada.getNombre().equalsIgnoreCase(request.getNombre());
-        boolean cambioEdificio = !plantaEncontrada.getEdificio().getId().equals(request.getIdEdificio());
-
-        if ((cambioNombre || cambioEdificio) &&
-                plantaRepository.existsByNombreIgnoreCaseAndEdificio_Id(request.getNombre(), request.getIdEdificio())) {
-            throw new RuntimeException("Ya existe una planta con el nombre '" + request.getNombre() + "' en este edificio.");
-        }
-
-        plantaMapper.updateEntity(request, plantaEncontrada);
-        asignarRelaciones(plantaEncontrada, request);
-
-        Planta plantaActualizada = plantaRepository.save(plantaEncontrada);
-        return obtenerPorId(plantaActualizada.getId());
-    }
-
-    @Override
-    @Transactional
-    public void cambiarBorradoLogico(Long id, Boolean estado) {
+    @CacheEvict(value = "plantas-activas", allEntries = true)
+    public void cambiarEstado(Long id, boolean estado) {
+        log.info("Cambiando estado de borrado de plantas de edificios ID: {} a {}", id, !estado);
         if (!plantaRepository.existsById(id)) {
-            throw new RuntimeException("No se encontró planta con ID: " + id);
+            throw new ValidacionNegocioException("No se encontró un(a) planta con ID: " + id);
         }
-
         if (estado) {
-            plantaRepository.activarPlanta(id);
+            plantaRepository.activar(id);
         } else {
-            plantaRepository.desactivarPlanta(id);
-        }
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<PlantaResumen> obtenerPorIdEdificio(Long idEdificio) {
-
-        if(!edificioRepository.existsById(idEdificio)){
-            throw new RuntimeException("No existe un edificio con ID: "+idEdificio);
-        }
-
-        return plantaRepository.findProjectedByEdificio_IdAndBorradoLogicoFalse(idEdificio);
-    }
-
-    //------------------
-
-    private void asignarRelaciones(Planta planta, PlantaRequest request) {
-        if (request.getIdEdificio() != null) {
-            planta.setEdificio(edificioRepository.findById(request.getIdEdificio())
-                    .orElseThrow(() -> new RuntimeException("No existe un edificio con ID: " + request.getIdEdificio())));
+            plantaRepository.desactivar(id);
         }
     }
 }

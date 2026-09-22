@@ -1,33 +1,29 @@
 package com.arrupeteca.dto.request;
 
-import com.arrupeteca.persistence.entity.Libro;
-import com.arrupeteca.persistence.entity.Mueble;
-import com.arrupeteca.persistence.enums.Disponibilidad;
-import com.arrupeteca.persistence.enums.EstadoFisico;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.*;
+import jakarta.validation.constraints.AssertTrue;
+import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
+import org.openapitools.jackson.nullable.JsonNullable;
 
-@Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
+@Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EjemplarLibroRequest {
+public record EjemplarLibroRequest(
+    JsonNullable<String> comentario,
+    JsonNullable<Long> idEstadoFisico,
+    JsonNullable<Long> idDisponibilidad,
+    JsonNullable<Long> idLibro,
+    JsonNullable<Long> idMueble,
+    Long version
+) {
+    public EjemplarLibroRequest {}
 
-    @Size(message = "El comentario no puede exceder los 255 caracteres")
-    private String comentario;
-
-    private EstadoFisico estadoFisico;
-
-    private Disponibilidad disponibilidad;
-
-    @NotNull(message = "Se debe elegir un libro")
-    private Long idLibro;
-
-    @NotNull(message = "Por favor ingresar donde se econtrara el ejemplar")
-    private Long idMueble;
-
+    @AssertTrue(message = "El comentario no puede exceder los 255 caracteres")
+    public boolean isComentarioValido() {
+        if (comentario == null || !comentario.isPresent() || comentario.get() == null) {
+            return true;
+        }
+        return comentario.get().length() <= 255;
+    }
 }

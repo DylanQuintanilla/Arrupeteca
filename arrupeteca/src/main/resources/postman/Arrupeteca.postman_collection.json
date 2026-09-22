@@ -1,0 +1,2458 @@
+{
+  "info": {
+    "_postman_id": "8b5f6e8d-4a2c-4b5c-8d7e-9f0a1b2c3d4e",
+    "name": "Arrupeteca API (Exhaustiva)",
+    "description": "Colección de Postman exhaustiva para la API de Arrupeteca. Mapeo real del backend preservando payloads originales.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Catálogo",
+      "item": [
+        {
+          "name": "Autor",
+          "item": [
+            {
+              "name": "Búsqueda Global Avanzada",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/autores/busqueda?palabra=nombre"
+              }
+            },
+            {
+              "name": "Listar Autores Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/autores"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/autores/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Verificar Duplicados",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/autores/verificar-duplicados?termino=nombre"
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/autores/admin/busqueda-maestra?esBorrado=false&idNacionalidad=1&idPais=1&idGenero=1&idObra=1&termino=nombre&anioInicio=1900&anioFin=2000"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/autores/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/autores/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Autor",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/autores",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Gabriel García Márquez\",\n  \"seudonimo\": \"Gabo\",\n  \"anioNacimiento\": 1927,\n  \"anioFallecimiento\": 2014,\n  \"biografia\": \"Escritor colombiano.\",\n  \"idPaisNacimiento\": 1,\n  \"idNacionalidad\": 1,\n  \"idGeneroPrincipal\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/autores/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/autores/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Gabriel García Márquez\",\n  \"seudonimo\": \"Gabo\",\n  \"anioNacimiento\": 1927,\n  \"anioFallecimiento\": 2014,\n  \"biografia\": \"Escritor colombiano ganador del Premio Nobel de Literatura.\",\n  \"idPaisNacimiento\": 1,\n  \"idNacionalidad\": 1,\n  \"idGeneroPrincipal\": 1,\n  \"version\": 0\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/autores/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Libro",
+          "item": [
+            {
+              "name": "Búsqueda Global",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/libros/global?palabra=isbn"
+              }
+            },
+            {
+              "name": "Listar Libros Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/libros"
+              }
+            },
+            {
+              "name": "Listar por Obra",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/obra/:idObra",
+                "variable": [
+                  {
+                    "key": "idObra",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/libros/admin/busqueda-maestra?esBorrado=false&idObra=1&idEditorial=1&idFormato=1&idGrado=1&idCiclo=1&termino=isbn&anioInicio=1900&anioFin=2024"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/libros/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Libro",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/libros",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"978-0-307-35044-3\",\n  \"anioPublicacion\": 1967,\n  \"precio\": 25.5,\n  \"idObra\": 1,\n  \"idFormato\": 1,\n  \"idEditorial\": 1,\n  \"idIdiomas\": [\n    1\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"isbn\": \"978-0-307-35044-3\",\n  \"anioPublicacion\": 1967,\n  \"precio\": 30,\n  \"urlImagen\": \"https://covers.openlibrary.org/b/id/8259449-L.jpg\",\n  \"mora\": 0.5,\n  \"grado\": \"BACHILLERATO\",\n  \"ciclo\": \"PRIMER\",\n  \"idObra\": 1,\n  \"idFormato\": 1,\n  \"idEditorial\": 1,\n  \"idIdiomas\": [\n    1\n  ],\n  \"version\": 0\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/libros/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obra",
+          "item": [
+            {
+              "name": "Búsqueda Global",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/obras/global?palabra=titulo"
+              }
+            },
+            {
+              "name": "Listar Obras Activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/obras"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/obras/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/obras/admin/busqueda-maestra?esBorrado=false&termino=soledad&anioInicio=1960&anioFin=1970"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/obras/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/obras/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Obra",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/obras",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"titulo\": \"Cien años de soledad\",\n  \"resumen\": \"Historia de Macondo.\",\n  \"idGeneros\": [\n    1\n  ],\n  \"idCategorias\": [\n    1\n  ],\n  \"autores\": [\n    {\n      \"idAutor\": 1,\n      \"idTipoAutoria\": 1\n    }\n  ],\n  \"anioCreacion\": 1967\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/obras/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/obras/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"titulo\": \"Cien años de soledad\",\n  \"resumen\": \"Novela que narra la historia de la familia Buendía en el pueblo ficticio de Macondo.\",\n  \"anioCreacion\": 1967,\n  \"idGeneros\": [\n    1\n  ],\n  \"idCategorias\": [\n    1\n  ],\n  \"autores\": [\n    {\n      \"idAutor\": 1,\n      \"idTipoAutoria\": 1\n    }\n  ],\n  \"version\": 0\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/obras/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ciclo",
+          "item": [
+            {
+              "name": "Obtener ciclos activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos"
+              }
+            },
+            {
+              "name": "Tabla de administración de ciclos (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (ciclo)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva ciclo",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva ciclo\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/ciclos"
+              }
+            },
+            {
+              "name": "Actualizar ciclo",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"ciclo Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar ciclo (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar ciclo",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/ciclos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Grado",
+          "item": [
+            {
+              "name": "Obtener grados activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados"
+              }
+            },
+            {
+              "name": "Tabla de administración de grados (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (grado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva grado",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva grado\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/grados"
+              }
+            },
+            {
+              "name": "Actualizar grado",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"grado Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar grado (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/grados/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar grado",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/grados/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Estado Físico",
+          "item": [
+            {
+              "name": "Obtener estado físicos activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos"
+              }
+            },
+            {
+              "name": "Tabla de administración de estado físicos (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (estado físico)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva estado físico",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva estado físico\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/estados-fisicos"
+              }
+            },
+            {
+              "name": "Actualizar estado físico",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"estado físico Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar estado físico (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar estado físico",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/estados-fisicos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Disponibilidad",
+          "item": [
+            {
+              "name": "Obtener disponibilidads activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades"
+              }
+            },
+            {
+              "name": "Tabla de administración de disponibilidads (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (disponibilidad)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva disponibilidad",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva disponibilidad\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/disponibilidades"
+              }
+            },
+            {
+              "name": "Actualizar disponibilidad",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"disponibilidad Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar disponibilidad (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar disponibilidad",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/disponibilidades/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Etiqueta",
+          "item": [
+            {
+              "name": "Obtener etiquetas activas (para dropdowns)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas"
+              }
+            },
+            {
+              "name": "Tabla de administración de etiquetas (Paginado)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas/all?page=0&size=20&sort=nombre"
+              }
+            },
+            {
+              "name": "Obtener por ID (etiqueta)",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Registrar nueva etiqueta",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"Nueva etiqueta\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/etiquetas"
+              }
+            },
+            {
+              "name": "Actualizar etiqueta",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n    \"nombre\": \"etiqueta Actualizada\"\n}"
+                },
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar etiqueta (Borrado lógico)",
+              "request": {
+                "method": "DELETE",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar etiqueta",
+              "request": {
+                "method": "PATCH",
+                "url": "{{baseUrl}}/api/v1/etiquetas/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Inventario y Ubicaciones",
+      "item": [
+        {
+          "name": "Edificio",
+          "item": [
+            {
+              "name": "Listar Edificios Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/edificios"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/edificios/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/edificios/admin"
+              }
+            },
+            {
+              "name": "Crear Edificio",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/edificios",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Edificio Central\",\n  \"descripcion\": \"Biblioteca\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/edificios/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Edificio Central (Editado)\",\n  \"descripcion\": \"Biblioteca Central\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/edificios/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/edificios/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ejemplar",
+          "item": [
+            {
+              "name": "Búsqueda Global",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ejemplares/global?palabra=BIB"
+              }
+            },
+            {
+              "name": "Listar Ejemplares Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ejemplares"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/ejemplares/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ejemplares/admin/busqueda-maestra?esBorrado=false&idLibro=1&idMueble=1&idEstadoFisico=1&idDisponibilidad=1&termino=BIB"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/ejemplares/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/ejemplares/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Ejemplar",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/ejemplares",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"idLibro\": 1,\n  \"idMueble\": 1,\n  \"idPropio\": \"BIB-001\",\n  \"estadoFisico\": \"NUEVO\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/ejemplares/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/ejemplares/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"comentario\": \"Ejemplar en buen estado con marcas menores.\",\n  \"estadoFisico\": \"BUEN_ESTADO\",\n  \"disponibilidad\": \"DISPONIBLE\",\n  \"idLibro\": 1,\n  \"idMueble\": 1,\n  \"version\": 0\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/ejemplares/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mueble",
+          "item": [
+            {
+              "name": "Búsqueda Global",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/muebles/global?palabra=Estante"
+              }
+            },
+            {
+              "name": "Listar Muebles Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/muebles"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/muebles/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/muebles/admin/busqueda-maestra?esBorrado=false&idSalon=1&idPlanta=1&idEdificio=1&termino=Estante"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/muebles/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/muebles/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Mueble",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/muebles",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Estante 1\",\n  \"idSalon\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/muebles/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Estante 1 Modificado\",\n  \"idSalon\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/muebles/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/muebles/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Planta",
+          "item": [
+            {
+              "name": "Listar Plantas Activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/plantas"
+              }
+            },
+            {
+              "name": "Listar por Edificio",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/edificio/:idEdificio",
+                "variable": [
+                  {
+                    "key": "idEdificio",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/plantas/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Planta",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/plantas",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Planta 1\",\n  \"idEdificio\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Planta 1 (Editada)\",\n  \"idEdificio\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/plantas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Salón",
+          "item": [
+            {
+              "name": "Listar por Planta",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/planta/:idPlanta",
+                "variable": [
+                  {
+                    "key": "idPlanta",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Listar Salones Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/salones"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/salones/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Salón",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/salones",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Salón de Lectura\",\n  \"idPlanta\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Salón de Lectura (Editado)\",\n  \"idPlanta\": 1\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/salones/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maestros",
+      "item": [
+        {
+          "name": "Categoría",
+          "item": [
+            {
+              "name": "Listar Categorías Activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/categorias"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/categorias/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/categorias/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/categorias/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Categoría",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/categorias",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Ficción\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/categorias/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Ficción (Editada)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/categorias/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/categorias/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Editorial",
+          "item": [
+            {
+              "name": "Listar Editoriales Activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/editoriales"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/editoriales/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Búsqueda Maestra",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/editoriales/admin/busqueda-maestra?esBorrado=false&termino=Planeta"
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/editoriales/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/editoriales/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Editorial",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/editoriales",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Editorial Planeta\",\n  \"direccion\": \"Calle Falsa 123\",\n  \"correo\": \"contacto@planeta.com\",\n  \"telefono\": \"2222-3333\",\n  \"personaContacto\": \"Juan Pérez\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/editoriales/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Planeta Editada\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/editoriales/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/editoriales/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Formato",
+          "item": [
+            {
+              "name": "Listar Formatos Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/formatos"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/formatos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/formatos/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/formatos/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Formato",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/formatos",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Tapa Dura\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/formatos/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Tapa Dura (Editado)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/formatos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/formatos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Género",
+          "item": [
+            {
+              "name": "Listar Géneros Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/generos"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/generos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/generos/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/generos/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Género",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/generos",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Novela\",\n  \"descripcion\": \"Género literario narrativo\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/generos/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Novela (Editado)\",\n  \"descripcion\": \"Descripción actualizada\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/generos/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/generos/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Idioma",
+          "item": [
+            {
+              "name": "Listar Idiomas Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/idiomas"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/idiomas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/idiomas/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/idiomas/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Idioma",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/idiomas",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Español\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/idiomas/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Español (Editado)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/idiomas/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/idiomas/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nacionalidad",
+          "item": [
+            {
+              "name": "Listar Nacionalidades Activas",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/nacionalidades"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/nacionalidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/nacionalidades/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/nacionalidades/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Nacionalidad",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/nacionalidades",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Salvadoreña\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/nacionalidades/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Salvadoreña (Editada)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/nacionalidades/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/nacionalidades/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "País",
+          "item": [
+            {
+              "name": "Listar Países Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/paises"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/paises/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/paises/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/paises/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear País",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/paises",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"El Salvador\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/paises/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"El Salvador (Editado)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/paises/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/paises/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tipo de Autoría",
+          "item": [
+            {
+              "name": "Listar Tipos de Autoría Activos",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/tipo-autorias"
+              }
+            },
+            {
+              "name": "Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Admin: Historial Completo",
+              "request": {
+                "method": "GET",
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/admin"
+              }
+            },
+            {
+              "name": "Admin: Obtener por ID",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/admin/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Crear Tipo de Autoría",
+              "request": {
+                "method": "POST",
+                "url": "{{baseUrl}}/api/v1/tipo-autorias",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Autor Principal\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Actualizar",
+              "request": {
+                "method": "PUT",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/:id",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombre\": \"Autor Principal (Editado)\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Activar",
+              "request": {
+                "method": "PATCH",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/:id/activar",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Desactivar",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": "{{baseUrl}}/api/v1/tipo-autorias/:id",
+                "variable": [
+                  {
+                    "key": "id",
+                    "value": "1"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080",
+      "type": "string"
+    }
+  ]
+}

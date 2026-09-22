@@ -1,197 +1,69 @@
 package com.arrupeteca.persistence.repository;
 
+import com.arrupeteca.dto.response.summary.AutorResumenResponse;
 import com.arrupeteca.persistence.entity.Autor;
-import com.arrupeteca.persistence.projection.AutorResumen;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
+import java.time.Year;
 import java.util.List;
 import java.util.Optional;
 
-@Repository
 public interface AutorRepository extends JpaRepository<Autor, Long> {
 
-    // --- USUARIOS (Alumnos / Maestros) ---
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Page<AutorResumen> findByBorradoLogicoFalse(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<AutorResumen> findProjectedByIdAndBorradoLogicoFalse(Long id);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    @Query(value = """
-        SELECT a FROM Autor a
-        LEFT JOIN a.paisNacimiento p
-        LEFT JOIN a.nacionalidad n
-        LEFT JOIN a.generoPrincipal g
-        LEFT JOIN a.obraCumbre o
-        WHERE
-            a.borradoLogico = false
-            AND ( :inicio IS NULL OR a.anioNacimiento >= :inicio )
-            AND ( :fin IS NULL OR a.anioNacimiento <= :fin )
-            AND (
-                :palabra IS NULL OR :palabra = '' OR
-                (
-                    LOWER(g.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(o.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(p.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(n.nombre) LIKE LOWER(CONCAT('%', :palabra, '%'))
-                )
-            )
-    """,
-            countQuery = """
-        SELECT COUNT(a) FROM Autor a
-        LEFT JOIN a.paisNacimiento p
-        LEFT JOIN a.nacionalidad n
-        LEFT JOIN a.generoPrincipal g
-        LEFT JOIN a.obraCumbre o
-        WHERE
-            a.borradoLogico = false
-            AND ( :inicio IS NULL OR a.anioNacimiento >= :inicio )
-            AND ( :fin IS NULL OR a.anioNacimiento <= :fin )
-            AND (
-                :palabra IS NULL OR :palabra = '' OR
-                (
-                    LOWER(g.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(o.titulo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(p.nombre) LIKE LOWER(CONCAT('%', :palabra, '%')) OR
-                    LOWER(n.nombre) LIKE LOWER(CONCAT('%', :palabra, '%'))
-                )
-            )
-    """)
-    Page<AutorResumen> busquedaGlobalAvanzada(
-            @Param("palabra") String palabra,
-            @Param("inicio") Integer inicio,
-            @Param("fin") Integer fin,
-            Pageable pageable
-    );
-
-    // --- ADMIN ---
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Page<AutorResumen> findAllProjectedBy(Pageable pageable);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    Optional<AutorResumen> findProjectedById(Long id);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    @Query(value = """
-        SELECT a FROM Autor a
-        LEFT JOIN a.nacionalidad n
-        LEFT JOIN a.paisNacimiento p
-        LEFT JOIN a.generoPrincipal g
-        LEFT JOIN a.obraCumbre o
-        WHERE
-            ( :esBorrado IS NULL OR a.borradoLogico = :esBorrado )
-            AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
-            AND ( :idPais IS NULL OR p.id = :idPais )
-            AND ( :idGenero IS NULL OR g.id = :idGenero )
-            AND ( :idObra IS NULL OR o.id = :idObra )
-            AND (
-                :terminoBusqueda IS NULL OR :terminoBusqueda = '' OR
-                (
-                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
-                    OR
-                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
-                )
-            )
-            AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
-            AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
-    """,
-            countQuery = """
-        SELECT COUNT(a) FROM Autor a
-        LEFT JOIN a.nacionalidad n
-        LEFT JOIN a.paisNacimiento p
-        LEFT JOIN a.generoPrincipal g
-        LEFT JOIN a.obraCumbre o
-        WHERE
-            ( :esBorrado IS NULL OR a.borradoLogico = :esBorrado )
-            AND ( :idNacionalidad IS NULL OR n.id = :idNacionalidad )
-            AND ( :idPais IS NULL OR p.id = :idPais )
-            AND ( :idGenero IS NULL OR g.id = :idGenero )
-            AND ( :idObra IS NULL OR o.id = :idObra )
-            AND (
-                :terminoBusqueda IS NULL OR :terminoBusqueda = '' OR
-                (
-                    LOWER(a.nombre) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
-                    OR
-                    LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :terminoBusqueda, '%'))
-                )
-            )
-            AND ( :anioInicio IS NULL OR a.anioNacimiento >= :anioInicio )
-            AND ( :anioFin IS NULL OR a.anioNacimiento <= :anioFin )
-    """)
-    Page<AutorResumen> busquedaMaestraAdmin(
-            @Param("esBorrado") Boolean esBorrado,
+    @Query("SELECT new com.arrupeteca.dto.response.summary.AutorResumenResponse(" +
+           "a.id, a.nombre, a.seudonimo, a.anioNacimiento, a.anioFallecimiento, " +
+           "a.borradoLogico, p.nombre, n.nombre, g.nombre, o.titulo, " +
+           "a.biografia) " +
+           "FROM Autor a " +
+           "LEFT JOIN a.paisNacimiento p " +
+           "LEFT JOIN a.nacionalidad n " +
+           "LEFT JOIN a.generoPrincipal g " +
+           "LEFT JOIN a.obraCumbre o " +
+           "WHERE (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico) " +
+           "AND (:idNacionalidad IS NULL OR n.id = :idNacionalidad) " +
+           "AND (:idPais IS NULL OR p.id = :idPais) " +
+           "AND (:idGenero IS NULL OR g.id = :idGenero) " +
+           "AND (:idObraCumbre IS NULL OR o.id = :idObraCumbre) " +
+           "AND (:termino IS NULL OR :termino = '' OR LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "     OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:anioInicio IS NULL OR a.anioFallecimiento >= :anioInicio OR a.anioFallecimiento IS NULL) " +
+           "AND (:anioFin IS NULL OR a.anioNacimiento <= :anioFin)")
+    Page<AutorResumenResponse> busqueda(
+            @Param("borradoLogico") Boolean borradoLogico,
             @Param("idNacionalidad") Long idNacionalidad,
             @Param("idPais") Long idPais,
             @Param("idGenero") Long idGenero,
-            @Param("idObra") Long idObra,
-            @Param("terminoBusqueda") String terminoBusqueda,
-            @Param("anioInicio") Integer anioInicio,
-            @Param("anioFin") Integer anioFin,
-            Pageable pageable
-    );
+            @Param("idObraCumbre") Long idObraCumbre,
+            @Param("anioInicio") Year anioInicio,
+            @Param("anioFin") Year anioFin,
+            @Param("termino") String termino,
+            Pageable pageable);
 
-    @Modifying
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("SELECT a FROM Autor a WHERE a.id = :id AND (:borradoLogico IS NULL OR a.borradoLogico = :borradoLogico)")
+    Optional<Autor> busquedaPorId(@Param("id") Long id, @Param("borradoLogico") Boolean borradoLogico);
+
+    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
+    @Query("SELECT a FROM Autor a " +
+           "WHERE (LOWER(a.nombre) LIKE LOWER(CONCAT('%', :termino, '%')) " +
+           "   OR LOWER(a.seudonimo) LIKE LOWER(CONCAT('%', :termino, '%'))) " +
+           "AND (:idExcluir IS NULL OR a.id != :idExcluir)")
+    List<Autor> buscarDuplicados(@Param("termino") String termino, @Param("idExcluir") Long idExcluir, Sort sort);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = true WHERE a.id = :id")
-    void desactivarAutor(@Param("id") Long id);
+    void desactivar(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE Autor a SET a.borradoLogico = false WHERE a.id = :id")
-    void activarAutor(@Param("id") Long id);
-
-    boolean existsByIdAndBorradoLogicoFalse(Long id);
+    void activar(@Param("id") Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
-
-    boolean existsBySeudonimoIgnoreCase(String seudonimo);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    @Query(value = """
-        SELECT a FROM Autor a
-        WHERE 
-            a.borradoLogico = false
-            AND a.anioNacimiento <= :fin 
-            AND (a.anioFallecimiento >= :inicio OR a.anioFallecimiento IS NULL)
-    """,
-            countQuery = """
-        SELECT COUNT(a) FROM Autor a
-        WHERE 
-            a.borradoLogico = false
-            AND a.anioNacimiento <= :fin 
-            AND (a.anioFallecimiento >= :inicio OR a.anioFallecimiento IS NULL)
-    """)
-    Page<AutorResumen> buscarAutoresVivosEnRango(@Param("inicio") Integer anioInicio,
-                                                 @Param("fin") Integer anioFin,
-                                                 Pageable pageable);
-
-    @EntityGraph(attributePaths = {"paisNacimiento", "nacionalidad", "generoPrincipal", "obraCumbre"})
-    @Query("""
-    SELECT a FROM Autor a
-    WHERE 
-        (
-           LOWER(a.nombre) = LOWER(:termino) 
-           OR 
-           LOWER(a.seudonimo) = LOWER(:termino)
-        )
-        AND (:idExcluir IS NULL OR a.id <> :idExcluir)
-        AND a.borradoLogico = false
-""")
-    List<AutorResumen> buscarPosiblesDuplicados(
-            @Param("termino") String termino,
-            @Param("idExcluir") Long idExcluir
-    );
-
 }

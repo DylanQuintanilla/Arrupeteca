@@ -1,24 +1,22 @@
 package com.arrupeteca.service;
 
 import com.arrupeteca.dto.request.TipoAutoriaRequest;
-import com.arrupeteca.persistence.projection.TipoAutoriaResumen;
+import com.arrupeteca.dto.response.TipoAutoriaResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
 public interface TipoAutoriaService {
 
-    List<TipoAutoriaResumen> obtenerTodosActivos();
+    List<TipoAutoriaResponse> obtenerTodosActivos(String nombre);
 
-    TipoAutoriaResumen obtenerPorIdActivo(Long id);
+    Page<TipoAutoriaResponse> obtenerTodos(String nombre, Boolean borradoLogico, Pageable pageable);
 
-    List<TipoAutoriaResumen> obtenerTodos();
+    TipoAutoriaResponse obtenerPorId(Long id);
 
-    TipoAutoriaResumen obtenerPorId(Long id);
+    TipoAutoriaResponse crear(TipoAutoriaRequest request);
 
-    TipoAutoriaResumen crear(TipoAutoriaRequest request);
+    TipoAutoriaResponse actualizar(Long id, TipoAutoriaRequest request);
 
-    TipoAutoriaResumen actualizar(Long id, TipoAutoriaRequest request);
-
-    void cambiarEstado(Long id, boolean estado);
-
-}
+    void cambiarEstado(Long id, boolean estado);}
