@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.EtiquetaRequest;
 import com.arrupeteca.dto.response.EtiquetaResponse;
 import com.arrupeteca.persistence.entity.Etiqueta;

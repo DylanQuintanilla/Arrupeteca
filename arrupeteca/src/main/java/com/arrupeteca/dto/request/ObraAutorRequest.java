@@ -10,8 +10,10 @@ import lombok.extern.jackson.Jacksonized;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ObraAutorRequest(
     @NotNull(message = "El ID del autor es obligatorio")
+    @jakarta.validation.constraints.Positive(message = "El ID del autor debe ser un número positivo")
     Long idAutor,
 
     @NotNull(message = "El ID del tipo de autoría es obligatorio")
+    @jakarta.validation.constraints.Positive(message = "El ID del tipo de autoría debe ser un número positivo")
     Long idTipoAutoria
 ) {}

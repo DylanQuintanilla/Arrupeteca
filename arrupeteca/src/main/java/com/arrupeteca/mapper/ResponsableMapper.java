@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.ResponsableRequest;
 import com.arrupeteca.dto.response.ResponsableResponse;
 import com.arrupeteca.persistence.entity.Responsable;

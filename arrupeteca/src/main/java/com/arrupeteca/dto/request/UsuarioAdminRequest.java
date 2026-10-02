@@ -14,4 +14,14 @@ public record UsuarioAdminRequest(
     JsonNullable<String> carnet,
     JsonNullable<Long> idTipoUsuario,
     JsonNullable<Boolean> bloqueadoPorMora
-) { }
+) {
+    public UsuarioAdminRequest {}
+
+    @jakarta.validation.constraints.AssertTrue(message = "El ID del tipo de usuario debe ser un número positivo")
+    public boolean isIdTipoUsuarioValido() {
+        if (idTipoUsuario == null || !idTipoUsuario.isPresent() || idTipoUsuario.get() == null) {
+            return true;
+        }
+        return idTipoUsuario.get() > 0;
+    }
+}

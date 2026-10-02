@@ -16,5 +16,6 @@ public record MuebleRequest(
     String nombre,
 
     @NotNull(message = "Se debe especificar el salon")
+    @jakarta.validation.constraints.Positive(message = "El ID del salón debe ser un número positivo")
     Long idSalon
 ) {}

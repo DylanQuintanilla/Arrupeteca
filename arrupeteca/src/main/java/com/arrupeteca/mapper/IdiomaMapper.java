@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.IdiomaRequest;
 import com.arrupeteca.dto.response.IdiomaResponse;
 import com.arrupeteca.persistence.entity.Idioma;

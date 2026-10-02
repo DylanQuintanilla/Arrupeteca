@@ -26,4 +26,19 @@ public record EjemplarLibroRequest(
         }
         return comentario.get().length() <= 255;
     }
+
+    @AssertTrue(message = "Los IDs relacionados al ejemplar deben ser números positivos")
+    public boolean isIdsValidos() {
+        return esPositivo(idEstadoFisico)
+            && esPositivo(idDisponibilidad)
+            && esPositivo(idLibro)
+            && esPositivo(idMueble);
+    }
+
+    private boolean esPositivo(JsonNullable<Long> id) {
+        if (id == null || !id.isPresent() || id.get() == null) {
+            return true;
+        }
+        return id.get() > 0;
+    }
 }

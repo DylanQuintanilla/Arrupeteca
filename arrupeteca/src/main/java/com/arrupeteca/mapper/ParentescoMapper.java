@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.ParentescoRequest;
 import com.arrupeteca.dto.response.ParentescoResponse;
 import com.arrupeteca.persistence.entity.Parentesco;

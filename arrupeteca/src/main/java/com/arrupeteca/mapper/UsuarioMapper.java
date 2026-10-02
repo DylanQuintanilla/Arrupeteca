@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.ActualizarPerfilRequest;
 import com.arrupeteca.dto.request.UsuarioAdminRequest;
 import com.arrupeteca.dto.response.detail.UsuarioDetalleResponse;

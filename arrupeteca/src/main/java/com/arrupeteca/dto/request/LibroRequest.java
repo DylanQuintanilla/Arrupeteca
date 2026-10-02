@@ -70,4 +70,20 @@ public record LibroRequest(
         }
         return mora.get().compareTo(BigDecimal.ZERO) >= 0;
     }
+
+    @AssertTrue(message = "Los IDs relacionados al libro deben ser números positivos")
+    public boolean isIdsValidos() {
+        return esPositivo(idGrado)
+            && esPositivo(idCiclo)
+            && esPositivo(idObra)
+            && esPositivo(idFormato)
+            && esPositivo(idEditorial);
+    }
+
+    private boolean esPositivo(JsonNullable<Long> id) {
+        if (id == null || !id.isPresent() || id.get() == null) {
+            return true;
+        }
+        return id.get() > 0;
+    }
 }

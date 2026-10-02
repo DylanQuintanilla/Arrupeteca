@@ -16,5 +16,6 @@ public record PlantaRequest(
     String nombre,
 
     @NotNull(message = "Se debe especificar el edificio")
+    @jakarta.validation.constraints.Positive(message = "El ID del edificio debe ser un número positivo")
     Long idEdificio
 ) {}

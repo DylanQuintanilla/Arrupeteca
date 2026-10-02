@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.ObraRequest;
 import com.arrupeteca.dto.response.detail.ObraDetalleResponse;
 import com.arrupeteca.dto.response.summary.ObraResumen;

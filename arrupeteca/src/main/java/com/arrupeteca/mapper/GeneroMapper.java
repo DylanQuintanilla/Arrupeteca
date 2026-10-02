@@ -1,6 +1,6 @@
 package com.arrupeteca.mapper;
 
-import com.arrupeteca.config.CentralMapperConfig;
+import com.arrupeteca.mapper.CentralMapperConfig;
 import com.arrupeteca.dto.request.GeneroRequest;
 import com.arrupeteca.dto.response.GeneroResponse;
 import com.arrupeteca.persistence.entity.Genero;

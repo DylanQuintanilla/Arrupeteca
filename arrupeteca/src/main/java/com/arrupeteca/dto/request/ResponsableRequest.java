@@ -13,6 +13,7 @@ import lombok.extern.jackson.Jacksonized;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record ResponsableRequest(
     @NotNull(message = "El ID del usuario es obligatorio")
+    @jakarta.validation.constraints.Positive(message = "El ID del usuario debe ser un número positivo")
     Long idUsuario,
 
     @NotBlank(message = "Los nombres del responsable no pueden estar vacíos")
@@ -35,6 +36,7 @@ public record ResponsableRequest(
     String dui,
 
     @NotNull(message = "El ID del parentesco es obligatorio")
+    @jakarta.validation.constraints.Positive(message = "El ID del parentesco debe ser un número positivo")
     Long idParentesco
 ) {
     public ResponsableRequest { }

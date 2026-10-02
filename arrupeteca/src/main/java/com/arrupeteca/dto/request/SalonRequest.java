@@ -16,5 +16,6 @@ public record SalonRequest(
     String nombre,
 
     @NotNull(message = "Se debe especificar la planta")
+    @jakarta.validation.constraints.Positive(message = "El ID de la planta debe ser un número positivo")
     Long idPlanta
 ) {}
