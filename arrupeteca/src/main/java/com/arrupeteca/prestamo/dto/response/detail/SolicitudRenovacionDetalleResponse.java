@@ -1,10 +1,12 @@
 package com.arrupeteca.prestamo.dto.response.detail;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 
 @Builder
+@Jacksonized
 public record SolicitudRenovacionDetalleResponse(
     Long id,
     Long idEjemplarPrestamo,

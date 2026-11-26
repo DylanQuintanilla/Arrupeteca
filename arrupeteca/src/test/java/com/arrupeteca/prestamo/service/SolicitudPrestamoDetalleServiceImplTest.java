@@ -6,12 +6,12 @@ import com.arrupeteca.persistence.entity.Obra;
 import com.arrupeteca.persistence.repository.LibroRepository;
 import com.arrupeteca.prestamo.dto.request.SolicitudPrestamoDetalleRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudPrestamoDetalleItemResponse;
-import com.arrupeteca.prestamo.internal.entity.SolicitudPrestamo;
-import com.arrupeteca.prestamo.internal.entity.SolicitudPrestamoDetalle;
-import com.arrupeteca.prestamo.internal.mapper.SolicitudPrestamoDetalleMapper;
-import com.arrupeteca.prestamo.internal.repository.SolicitudPrestamoDetalleRepository;
-import com.arrupeteca.prestamo.internal.repository.SolicitudPrestamoRepository;
-import com.arrupeteca.prestamo.internal.service.impl.SolicitudPrestamoDetalleServiceImpl;
+import com.arrupeteca.prestamo.persistence.entity.SolicitudPrestamo;
+import com.arrupeteca.prestamo.persistence.entity.SolicitudPrestamoDetalle;
+import com.arrupeteca.prestamo.mapper.SolicitudPrestamoDetalleMapper;
+import com.arrupeteca.prestamo.persistence.repository.SolicitudPrestamoDetalleRepository;
+import com.arrupeteca.prestamo.persistence.repository.SolicitudPrestamoRepository;
+import com.arrupeteca.prestamo.service.impl.SolicitudPrestamoDetalleServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,7 +85,7 @@ class SolicitudPrestamoDetalleServiceImplTest {
         when(solicitudRepository.findById(100L)).thenReturn(Optional.of(solicitud));
         when(libroRepository.findById(50L)).thenReturn(Optional.of(libro));
         when(detalleMapper.toEntity(request)).thenReturn(entity);
-        when(detalleRepository.save(any(SolicitudPrestamoDetalle.class))).thenReturn(entity);
+        when(detalleRepository.saveAndFlush(any(SolicitudPrestamoDetalle.class))).thenReturn(entity);
         when(detalleMapper.toResponse(entity)).thenReturn(response);
 
         SolicitudPrestamoDetalleItemResponse result = detalleService.agregarDetalle(request);

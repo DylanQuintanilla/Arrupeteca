@@ -1,24 +1,20 @@
 package com.arrupeteca.prestamo.dto.response.summary;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 
 import java.time.LocalDateTime;
 
-@Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class SolicitudRenovacionResumen {
-    private Long id;
-    private Long idEjemplarPrestamo;
-    private Long idUsuario;
-    private String nombreUsuario;
-    private Long idEstadoSolicitud;
-    private String estadoSolicitud;
-    private Integer diasSolicitados;
-    private LocalDateTime fechaSolicitud;
-    private Boolean borradoLogico;
-}
+@Jacksonized
+public record SolicitudRenovacionResumen(
+    Long id,
+    Long idEjemplarPrestamo,
+    Long idUsuario,
+    String nombreUsuario,
+    Long idEstadoSolicitud,
+    String estadoSolicitud,
+    Integer diasSolicitados,
+    LocalDateTime fechaSolicitud,
+    Boolean borradoLogico
+) {}

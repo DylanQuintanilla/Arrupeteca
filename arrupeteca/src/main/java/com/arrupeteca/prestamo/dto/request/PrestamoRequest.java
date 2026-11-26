@@ -2,7 +2,6 @@ package com.arrupeteca.prestamo.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -19,11 +18,18 @@ public record PrestamoRequest(
     JsonNullable<LocalDateTime> fechaPrestamo,
     JsonNullable<LocalDateTime> fechaLimiteDevolucion,
     JsonNullable<Long> entregadoPor,
-    @Size(max = 255, message = "El comentario no puede exceder 255 caracteres")
     JsonNullable<String> comentarios,
     Long version
 ) {
     public PrestamoRequest {}
+
+    @AssertTrue(message = "El comentario no puede exceder 255 caracteres")
+    public boolean isComentariosValido() {
+        if (comentarios == null || !comentarios.isPresent() || comentarios.get() == null) {
+            return true;
+        }
+        return comentarios.get().length() <= 255;
+    }
 
     @AssertTrue(message = "Los IDs relacionados al préstamo deben ser números positivos")
     public boolean isIdsValidos() {

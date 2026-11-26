@@ -4,7 +4,7 @@ import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.SolicitudRenovacionRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudRenovacionDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudRenovacionResumen;
-import com.arrupeteca.prestamo.internal.service.SolicitudRenovacionService;
+import com.arrupeteca.prestamo.service.SolicitudRenovacionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -126,6 +126,31 @@ class SolicitudRenovacionControllerTest extends BaseControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.exito").value(true))
                 .andExpect(jsonPath("$.data.idEstadoSolicitud").value(2));
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/renovaciones/admin/{id} - Should update partially")
+    void shouldUpdatePartially() throws Exception {
+        SolicitudRenovacionRequest request = SolicitudRenovacionRequest.builder()
+                .diasSolicitados(JsonNullable.of(10))
+                .motivoSolicitud(JsonNullable.of("Actualizado"))
+                .build();
+
+        SolicitudRenovacionDetalleResponse response = SolicitudRenovacionDetalleResponse.builder()
+                .id(1L)
+                .diasSolicitados(10)
+                .motivoSolicitud("Actualizado")
+                .build();
+
+        when(renovacionService.actualizar(any(), any())).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/renovaciones/admin/1")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data.diasSolicitados").value(10));
     }
 
     @Test

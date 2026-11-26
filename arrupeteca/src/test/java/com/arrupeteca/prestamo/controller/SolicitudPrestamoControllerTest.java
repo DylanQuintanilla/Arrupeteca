@@ -4,7 +4,7 @@ import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.SolicitudPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudPrestamoDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudPrestamoResumen;
-import com.arrupeteca.prestamo.internal.service.SolicitudPrestamoService;
+import com.arrupeteca.prestamo.service.SolicitudPrestamoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -103,7 +102,7 @@ class SolicitudPrestamoControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/solicitudes-prestamo/admin/{id} - Should update")
+    @DisplayName("PATCH /api/v1/solicitudes-prestamo/admin/{id} - Should update")
     void shouldUpdate() throws Exception {
         SolicitudPrestamoRequest request = SolicitudPrestamoRequest.builder()
                 .idEstadoSolicitud(JsonNullable.of(2L))
@@ -116,7 +115,7 @@ class SolicitudPrestamoControllerTest extends BaseControllerTest {
 
         when(solicitudPrestamoService.actualizar(any(), any())).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/solicitudes-prestamo/admin/1")
+        mockMvc.perform(patch("/api/v1/solicitudes-prestamo/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

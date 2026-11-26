@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, Long> {
 
@@ -30,6 +31,8 @@ public interface DisponibilidadRepository extends JpaRepository<Disponibilidad, 
     void activar(@Param("id") Long id);
 
     boolean existsByNombreIgnoreCase(String nombre);
+
+    Optional<Disponibilidad> findFirstByNombreIgnoreCaseAndBorradoLogicoFalse(String nombre);
 
     @Query("SELECT d FROM Disponibilidad d WHERE d.borradoLogico = false AND " +
            "(:nombre IS NULL OR LOWER(d.nombre) LIKE LOWER(CONCAT('%', :nombre, '%'))) " +

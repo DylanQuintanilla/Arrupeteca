@@ -4,7 +4,7 @@ import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.PrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.PrestamoDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.PrestamoResumen;
-import com.arrupeteca.prestamo.internal.service.PrestamoService;
+import com.arrupeteca.prestamo.service.PrestamoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -25,7 +25,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -102,7 +101,7 @@ class PrestamoControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/prestamos/admin/{id} - Should update")
+    @DisplayName("PATCH /api/v1/prestamos/admin/{id} - Should update")
     void shouldUpdate() throws Exception {
         PrestamoRequest request = PrestamoRequest.builder()
                 .idEstadoPrestamo(JsonNullable.of(2L))
@@ -115,7 +114,7 @@ class PrestamoControllerTest extends BaseControllerTest {
 
         when(prestamoService.actualizar(any(), any())).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/prestamos/admin/1")
+        mockMvc.perform(patch("/api/v1/prestamos/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

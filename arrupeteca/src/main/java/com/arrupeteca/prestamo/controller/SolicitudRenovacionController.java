@@ -4,7 +4,7 @@ import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.prestamo.dto.request.SolicitudRenovacionRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudRenovacionDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudRenovacionResumen;
-import com.arrupeteca.prestamo.internal.service.SolicitudRenovacionService;
+import com.arrupeteca.prestamo.service.SolicitudRenovacionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -16,7 +16,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -32,7 +31,6 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/v1/renovaciones")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Solicitudes de Renovación y Prórrogas", description = "Endpoints para la solicitud y aprobación de prórrogas de tiempo de préstamo")
 public class SolicitudRenovacionController {
 
@@ -74,6 +72,17 @@ public class SolicitudRenovacionController {
         SolicitudRenovacionDetalleResponse creado = renovacionService.solicitarRenovacion(request);
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.exito("Solicitud de renovación enviada correctamente", creado));
+    }
+
+    @PatchMapping("/admin/{id}")
+    @Operation(
+        summary = "Actualizar solicitud de renovación",
+        description = "Permite actualizar parcialmente los campos de una solicitud de renovación existente."
+    )
+    public ResponseEntity<ApiResponse<SolicitudRenovacionDetalleResponse>> actualizar(
+            @PathVariable Long id, @Valid @RequestBody SolicitudRenovacionRequest request) {
+        SolicitudRenovacionDetalleResponse actualizado = renovacionService.actualizar(id, request);
+        return ResponseEntity.ok(ApiResponse.exito("Solicitud de renovación actualizada correctamente", actualizado));
     }
 
     @PatchMapping("/admin/{id}/responder")

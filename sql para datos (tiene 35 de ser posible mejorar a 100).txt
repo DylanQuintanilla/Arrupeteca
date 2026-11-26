@@ -1,7 +1,29 @@
+/* ============================================================================
+   ARRUPETECA - SCRIPT DE DATOS DE PRUEBA COMPLETO (MySQL)
+   Compatible con todos los módulos: Catálogo, Seguridad/Usuarios, Préstamos y Transferencias
+   Nota: Arrancar Spring Boot al menos 1 vez primero (ddl-auto=update) para crear las tablas.
+   ============================================================================ */
+
 /* DESACTIVAR RESTRICCIONES DE LLAVE FORÁNEA */
 SET FOREIGN_KEY_CHECKS = 0;
 
-/* LIMPIAR TABLAS CON DELETE (Evita el error #1701 de MySQL) */
+/* LIMPIAR TABLAS CON DELETE (Hijas -> Padres, incluyendo Préstamos y Transferencias) */
+DELETE FROM solicitud_renovacion;
+DELETE FROM ejemplar_prestamo;
+DELETE FROM prestamo;
+DELETE FROM solicitud_prestamo_detalle;
+DELETE FROM solicitud_prestamo;
+DELETE FROM estado_ejemplar_prestamo;
+DELETE FROM estado_prestamo;
+DELETE FROM estado_solicitud;
+
+DELETE FROM ejemplar_transferencia;
+DELETE FROM transferencia;
+DELETE FROM detalle_solicitud_transferencia;
+DELETE FROM solicitud_transferencia;
+DELETE FROM estado_transferencia;
+DELETE FROM estado_solicitud_transferencia;
+
 DELETE FROM responsable;
 DELETE FROM parentesco;
 DELETE FROM usuario;
@@ -34,6 +56,22 @@ DELETE FROM estado_fisico;
 DELETE FROM disponibilidad;
 
 /* RESTABLECER LOS CONTADORES AUTO_INCREMENT A 1 */
+ALTER TABLE solicitud_renovacion AUTO_INCREMENT = 1;
+ALTER TABLE ejemplar_prestamo AUTO_INCREMENT = 1;
+ALTER TABLE prestamo AUTO_INCREMENT = 1;
+ALTER TABLE solicitud_prestamo_detalle AUTO_INCREMENT = 1;
+ALTER TABLE solicitud_prestamo AUTO_INCREMENT = 1;
+ALTER TABLE estado_ejemplar_prestamo AUTO_INCREMENT = 1;
+ALTER TABLE estado_prestamo AUTO_INCREMENT = 1;
+ALTER TABLE estado_solicitud AUTO_INCREMENT = 1;
+
+ALTER TABLE ejemplar_transferencia AUTO_INCREMENT = 1;
+ALTER TABLE transferencia AUTO_INCREMENT = 1;
+ALTER TABLE detalle_solicitud_transferencia AUTO_INCREMENT = 1;
+ALTER TABLE solicitud_transferencia AUTO_INCREMENT = 1;
+ALTER TABLE estado_transferencia AUTO_INCREMENT = 1;
+ALTER TABLE estado_solicitud_transferencia AUTO_INCREMENT = 1;
+
 ALTER TABLE responsable AUTO_INCREMENT = 1;
 ALTER TABLE parentesco AUTO_INCREMENT = 1;
 ALTER TABLE usuario AUTO_INCREMENT = 1;
@@ -64,9 +102,9 @@ ALTER TABLE disponibilidad AUTO_INCREMENT = 1;
 /* ACTIVAR RESTRICCIONES DE NUEVO */
 SET FOREIGN_KEY_CHECKS = 1;
 
-/* 1. TABLAS MAESTRAS SIMPLES Y CATÁLOGOS */
+/* 1. TABLAS MAESTRAS SIMPLES Y CATÁLOGOS BASE */
 INSERT INTO tipo_usuario (nombre, borrado_logico) VALUES
-('admin', 0), ('alumno', 0), ('maestro', 0), ('personal administrativo', 0);
+('admin', 0), ('alumno', 0), ('maestro', 0), ('personal administrativo', 0), ('bibliotecario', 0);
 
 INSERT INTO parentesco (nombre, borrado_logico) VALUES
 ('Padre', 0), ('Madre', 0), ('Tutor Legal', 0), ('Hermano/a', 0), ('Otro', 0);
@@ -91,11 +129,13 @@ INSERT INTO idioma (nombre, borrado_logico) VALUES
 
 INSERT INTO nacionalidad (nombre, borrado_logico) VALUES
 ('Salvadoreña', 0), ('Estadounidense', 0), ('Española', 0), ('Colombiana', 0), ('Mexicana', 0),
-('Británica', 0), ('Argentina', 0), ('Francesa', 0), ('Alemana', 0), ('Chilena', 0);
+('Británica', 0), ('Argentina', 0), ('Francesa', 0), ('Alemana', 0), ('Chilena', 0),
+('Guatemalteca', 0), ('Peruana', 0), ('Uruguaya', 0), ('Italiana', 0), ('Rusa', 0);
 
 INSERT INTO pais (nombre, borrado_logico) VALUES
 ('El Salvador', 0), ('Estados Unidos', 0), ('España', 0), ('Colombia', 0), ('México', 0),
-('Reino Unido', 0), ('Argentina', 0), ('Francia', 0), ('Alemania', 0), ('Chile', 0);
+('Reino Unido', 0), ('Argentina', 0), ('Francia', 0), ('Alemania', 0), ('Chile', 0),
+('Guatemala', 0), ('Perú', 0), ('Uruguay', 0), ('Italia', 0), ('Rusia', 0);
 
 INSERT INTO tipo_autoria (nombre, borrado_logico) VALUES
 ('Escritor', 0), ('Ilustrador', 0), ('Traductor', 0), ('Compilador', 0), ('Editor', 0);
@@ -120,16 +160,40 @@ INSERT INTO estado_fisico (nombre, borrado_logico) VALUES
 INSERT INTO disponibilidad (nombre, borrado_logico) VALUES
 ('Disponible', 0), ('Prestado', 0), ('Reservado', 0), ('Mantenimiento', 0), ('Perdido', 0), ('Botado', 0), ('Donado', 0);
 
-/* 2. USUARIOS DE PRUEBA Y SEGURIDAD (Contraseña para ambos: Password123!) */
+/* 1B. CATÁLOGOS OBLIGATORIOS DE PRÉSTAMOS Y TRANSFERENCIAS */
+/* Nota: Los IDs 1 son usados por defecto en los servicios (1=PENDIENTE, 1=ACTIVO, 1=EN_PRESTAMO) */
+INSERT INTO estado_solicitud (nombre, borrado_logico) VALUES
+('PENDIENTE', 0), ('APROBADA', 0), ('RECHAZADA', 0), ('ENTREGADA', 0), ('CANCELADA', 0);
+
+INSERT INTO estado_prestamo (nombre, borrado_logico) VALUES
+('ACTIVO', 0), ('FINALIZADO', 0), ('CON_MORA', 0), ('VENCIDO', 0), ('CANCELADO', 0), ('ENTREGADO', 0);
+
+INSERT INTO estado_ejemplar_prestamo (nombre, borrado_logico) VALUES
+('EN_PRESTAMO', 0), ('DEVUELTO', 0), ('PERDIDO', 0), ('REPUESTO', 0), ('DANADO', 0);
+
+/* Nota: El servicio y listener de Transferencias validan los nombres exactos APROBADA y FINALIZADA */
+INSERT INTO estado_solicitud_transferencia (nombre, borrado_logico) VALUES
+('PENDIENTE', 0), ('APROBADA', 0), ('RECHAZADA', 0), ('FINALIZADA', 0);
+
+INSERT INTO estado_transferencia (nombre, borrado_logico) VALUES
+('PENDIENTE', 0), ('EN_TRANSITO', 0), ('CONFIRMADA', 0), ('CANCELADA', 0);
+
+/* 2. USUARIOS DE PRUEBA Y SEGURIDAD (Contraseña para todos: Password123!) */
 INSERT INTO usuario (nombres, apellidos, correo, contrasena, carnet, bloqueado_por_mora, fecha_registro, ultima_fecha_actividad, id_tipo, borrado_logico) VALUES
 ('Administrador', 'Sistema', 'admin@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ADM-0001', 0, NOW(), NOW(), 1, 0),
-('Carlos', 'Pérez', 'alumno@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-001', 0, NOW(), NOW(), 2, 0);
+('Carlos', 'Pérez', 'alumno@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-001', 0, NOW(), NOW(), 2, 0),
+('Lucía', 'Hernández', 'lucia.hernandez@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-002', 0, NOW(), NOW(), 2, 0),
+('Mateo', 'Ramírez', 'mateo.ramirez@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'ALU-2026-003', 1, NOW(), NOW(), 2, 0),
+('Sofía', 'Castillo', 'maestro@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'DOC-2026-001', 0, NOW(), NOW(), 3, 0),
+('Diego', 'Morales', 'bibliotecario@arrupeteca.com', '$2a$12$NBKBxYFKEVLPqH//GUr/Z.OxOkHw.EgEi5rZVUC7CFbGni1Ui8dBC', 'PER-2026-001', 0, NOW(), NOW(), 5, 0);
 
-/* 3. RESPONSABLE DE ALUMNO */
+/* 3. RESPONSABLES DE ALUMNO */
 INSERT INTO responsable (nombres, apellidos, correo, telefono, dui, id_usuario, id_parentesco, borrado_logico) VALUES
-('Juan', 'Pérez', 'juan.perez@gmail.com', '7890-1234', '01234567-8', 2, 1, 0);
+('Juan', 'Pérez', 'juan.perez@gmail.com', '7890-1234', '01234567-8', 2, 1, 0),
+('Ana', 'Hernández', 'ana.hernandez@gmail.com', '7745-8890', '02345678-9', 3, 2, 0),
+('Roberto', 'Ramírez', 'roberto.ramirez@gmail.com', '7612-3344', '03456789-0', 4, 3, 0);
 
-/* 4. OBRAS (35 Obras) */
+/* 4. OBRAS (100 Obras: 1..35 originales + 36..100 adicionales) */
 INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Pobrecito Poeta que era yo', 1976, 'Novela collage autobiográfica de la generación comprometida salvadoreña.', 0, 0, NOW(), NOW(), 'SYSTEM'),
 ('It (Eso)', 1986, 'Obra maestra del terror contemporáneo sobre una entidad ancestral en Derry.', 0, 0, NOW(), NOW(), 'SYSTEM'),
@@ -165,9 +229,74 @@ INSERT INTO obra (titulo, anio_creacion, resumen, borrado_logico, version, fecha
 ('Clean Architecture', 2017, 'Principios universales de arquitectura de software para mantener sistemas mantenibles y desacoplados.', 0, 0, NOW(), NOW(), 'SYSTEM'),
 ('El túnel', 1948, 'Novela existencialista sobre la obsesión fatal del pintor Juan Pablo Castel.', 0, 0, NOW(), NOW(), 'SYSTEM'),
 ('Pedro Páramo', 1955, 'Viaje de Juan Preciado a Comala, un pueblo donde habitan los murmullos de los muertos.', 0, 0, NOW(), NOW(), 'SYSTEM'),
-('El señor presidente', 1946, 'Obra maestra de la narrativa sobre las dictaduras iberoamericanas.', 0, 0, NOW(), NOW(), 'SYSTEM');
+('El señor presidente', 1946, 'Obra maestra de la narrativa sobre las dictaduras iberoamericanas.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Crimen y castigo', 1866, 'Profundo estudio psicológico de Raskólnikov tras cometer un asesinato en San Petersburgo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Los hermanos Karamázov', 1880, 'Drama filosófico y moral sobre la fe, la duda y los conflictos familiares en Rusia.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Guerra y paz', 1869, 'Epopeya histórica de la sociedad rusa durante las guerras napoleónicas.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Anna Karénina', 1877, 'Tragedia pasional y retrato crítico de la aristocracia rusa del siglo XIX.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La Divina Comedia', 1320, 'Poema épico medieval que recorre el Infierno, el Purgatorio y el Paraíso.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El nombre de la rosa', 1980, 'Novela histórica y de misterio ambientada en una abadía benedictina medieval.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Las ciudades invisibles', 1972, 'Relatos poéticos dialogados entre Marco Polo y Kublai Kan sobre urbes imaginarias.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Los miserables', 1862, 'Novela social sobre la redención de Jean Valjean y la justicia en la Francia del siglo XIX.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El conde de Montecristo', 1844, 'Clásico de aventuras sobre la traición, el encierro y la venganza de Edmundo Dantés.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Viaje al centro de la Tierra', 1864, 'Aventura científica por cavernas volcánicas hacia el interior del planeta.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Veinte mil leguas de viaje submarino', 1870, 'Expedición a bordo del submarino Nautilus liderada por el capitán Nemo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La vuelta al mundo en ochenta días', 1872, 'Apuesta contrarreloj de Phileas Fogg para rodear el globo en el siglo XIX.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El extranjero', 1942, 'Novela filosófica del absurdo centrada en la indiferencia existencial de Meursault.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La peste', 1947, 'Crónica alegórica de solidaridad y resistencia frente a una epidemia en Orán.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Ficciones', 1944, 'Colección de relatos laberínticos sobre bibliotecas infinitas, espejos y paradojas.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Bestiario', 1951, 'Primer volumen de cuentos fantásticos de Cortázar con irrupciones insólitas en lo cotidiano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La tregua', 1960, 'Diario íntimo de Martín Santomé sobre el amor tardío y la rutina burocrática.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Gracias por el fuego', 1965, 'Novela sobre tensiones generacionales, prensa y corrupción política en Montevideo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Las venas abiertas de América Latina', 1971, 'Ensayo histórico sobre los recursos, colonización y desarrollo económico latinoamericano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El llano en llamas', 1953, 'Cuentos rurales del México posrevolucionario marcados por la aridez y la memoria.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Hombres de maíz', 1949, 'Novela mítica basada en las tradiciones mayas guatemaltecas.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Conversación en La Catedral', 1969, 'Retrato coral de la sociedad peruana bajo el régimen autoritario de mediados del siglo XX.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La fiesta del Chivo', 2000, 'Novela histórica sobre los últimos días de la dictadura de Trujillo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Paula', 1994, 'Memoria epistolar íntima dedicada por Isabel Allende a su hija.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Eva Luna', 1987, 'Historia picaresca y mágica de una narradora nacida en América del Sur.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El coronel no tiene quien le escriba', 1961, 'Relato breve sobre la dignidad y espera interminable de un veterano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Del amor y otros demonios', 1994, 'Novela ambientada en la Cartagena colonial sobre superstición y encierro.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Cuentos completos de Salarrué', 1968, 'Compilación esencial de narrativa regionalista salvadoreña.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Las historias prohibidas del Pulgarcito', 1974, 'Crónica poética e histórica sobre la memoria e identidad de El Salvador.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Taberna y otros lugares', 1969, 'Poemario laureado con el Premio Casa de las Américas.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Caperucita en la Zona Roja', 1977, 'Novela salvadoreña sobre amor y resistencia urbana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Estrellas en el pozo', 1934, 'Poemario temprano de delicado lirismo salvadoreño.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Canto general', 1950, 'Poema épico que recorre la geografía e historia de América Latina.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Odas elementales', 1954, 'Versos sencillos dedicados a los objetos cotidianos y la naturaleza.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Bodas de sangre', 1933, 'Tragedia rural andaluza de pasiones, honor y fatalidad.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La casa de Bernarda Alba', 1936, 'Drama sobre la represión familiar y el luto en la España rural.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Romancero gitano', 1928, 'Poemario que fusiona simbolismo vanguardista y tradición popular.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Campos de Castilla', 1912, 'Poesía reflexiva sobre el paisaje, la historia y el alma española.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Platero y yo', 1914, 'Prosa poética sobre la entrañable amistad entre un poeta y su burro.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La Galatea', 1585, 'Novela pastoril temprana escrita por Miguel de Cervantes.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Novelas ejemplares', 1613, 'Doce relatos breves cervantinos con trasfondo moral y satírico.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El laberinto de la soledad', 1950, 'Ensayo fundamental sobre la identidad, historia y cultura mexicana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Como agua para chocolate', 1989, 'Novela de realismo mágico estructurada alrededor de recetas culinarias.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Aura', 1962, 'Novela corta gótica de atmósfera onírica en la Ciudad de México.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La muerte de Artemio Cruz', 1962, 'Recuento fragmentado del poder y las contradicciones del siglo XX mexicano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Crónicas marcianas', 1950, 'Relatos poéticos de ciencia ficción sobre la colonización de Marte.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El hombre ilustrado', 1951, 'Colección de cuentos unidos por los tatuajes animados de un viajero.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Yo, robot', 1950, 'Relatos interconectados que introducen las Tres Leyes de la Robótica.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El fin de la eternidad', 1955, 'Novela sobre viajes en el tiempo y manipulación de la historia humana.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Bóvedas de acero', 1954, 'Novela policíaca futurista protagonizada por Elijah Baley y R. Daneel.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El sabueso de los Baskerville', 1902, 'Caso clásico de Sherlock Holmes frente a una leyenda en el páramo.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Estudio en escarlata', 1887, 'Primera novela en la que aparece el detective Sherlock Holmes.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La máquina del tiempo', 1895, 'Obra fundacional sobre un científico que viaja al lejano futuro de la humanidad.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('La guerra de los mundos', 1898, 'Relato pionero de invasión extraterrestre sobre Inglaterra.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Un cuento de Navidad', 1843, 'Clásico relato sobre la transformación moral de Ebenezer Scrooge.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Oliver Twist', 1838, 'Crítica social victoriana narrada a través de las desventuras de un huérfano.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Grandes esperanzas', 1861, 'Novela de aprendizaje sobre ambición, redención y afectos de Pip.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Sentido y sensibilidad', 1811, 'Retrato de las hermanas Dashwood entre la razón y el sentimiento.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Emma', 1815, 'Comedia de costumbres sobre una joven entusiasta de emparejar a otros.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El proceso', 1925, 'Obra póstuma sobre Josef K., arrestado por un tribunal absurdo e inaccesible.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El castillo', 1926, 'Historia inconclusa de un agrimensor atrapado ante una burocracia impenetrable.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Misery', 1987, 'Thriller psicológico sobre un escritor secuestrado por su admiradora obsesiva.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('Carrie', 1974, 'Primera novela de Stephen King sobre aislamiento escolar y telequinesis.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('El viejo y el mar', 1952, 'Relato épico de resistencia entre un pescador cubano y un enorme pez espada.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+('The Pragmatic Programmer', 1999, 'Guía práctica de ingeniería de software sobre oficio, automatización y arquitectura adaptable.', 0, 0, NOW(), NOW(), 'SYSTEM');
 
-/* 5. AUTORES (25 Autores) */
+/* 5. AUTORES (25 originales + 24 reales para completar todas las 100 obras) */
 INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biografia, borrado_logico, id_pais_nacimiento, id_nacionalidad, id_genero_principal, id_obra, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Roque Dalton García', NULL, 1935, 1975, 'Poeta y ensayista salvadoreño.', 0, 1, 1, 4, 1, 0, NOW(), NOW(), 'SYSTEM'),
 ('Stephen Edwin King', 'Richard Bachman', 1947, NULL, 'El rey del terror contemporáneo.', 0, 2, 2, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
@@ -188,40 +317,98 @@ INSERT INTO autor (nombre, seudonimo, anio_nacimiento, anio_fallecimiento, biogr
 ('Arthur Conan Doyle', NULL, 1859, 1930, 'Médico y escritor británico, creador de Sherlock Holmes.', 0, 6, 6, 3, 18, 0, NOW(), NOW(), 'SYSTEM'),
 ('Robert C. Martin', 'Uncle Bob', 1952, NULL, 'Ingeniero de software estadounidense y divulgador ágil.', 0, 2, 2, 5, 19, 0, NOW(), NOW(), 'SYSTEM'),
 ('Erich Gamma', NULL, 1961, NULL, 'Informático suizo coautor de la banda Gang of Four.', 0, 9, 9, 5, 20, 0, NOW(), NOW(), 'SYSTEM'),
-('Mario Vargas Llosa', NULL, 1936, NULL, 'Premio Nobel de Literatura hispano-peruano.', 0, 3, 3, 1, 21, 0, NOW(), NOW(), 'SYSTEM'),
+('Mario Vargas Llosa', NULL, 1936, NULL, 'Premio Nobel de Literatura hispano-peruano.', 0, 12, 12, 1, 21, 0, NOW(), NOW(), 'SYSTEM'),
 ('Pablo Neruda', 'Ricardo Eliécer Neftalí Reyes', 1904, 1973, 'Poeta chileno, Premio Nobel de Literatura.', 0, 10, 10, 4, 22, 0, NOW(), NOW(), 'SYSTEM'),
 ('Gustavo Adolfo Bécquer', NULL, 1836, 1870, 'Poeta y narrador español del romanticismo.', 0, 3, 3, 4, 23, 0, NOW(), NOW(), 'SYSTEM'),
 ('Bram Stoker', NULL, 1847, 1912, 'Escritor irlandés célebre por su obra maestra Drácula.', 0, 6, 6, 3, 24, 0, NOW(), NOW(), 'SYSTEM'),
 ('Howard Phillips Lovecraft', 'H.P. Lovecraft', 1890, 1937, 'Maestro del terror cósmico y de la ciencia ficción gótica.', 0, 2, 2, 3, 25, 0, NOW(), NOW(), 'SYSTEM'),
-('Jane Austen', NULL, 1775, 1817, 'Novelista británica cumbre de la literatura universal.', 0, 6, 6, 1, 26, 0, NOW(), NOW(), 'SYSTEM');
+('Jane Austen', NULL, 1775, 1817, 'Novelista británica cumbre de la literatura universal.', 0, 6, 6, 1, 26, 0, NOW(), NOW(), 'SYSTEM'),
+('Ray Douglas Bradbury', 'Ray Bradbury', 1920, 2012, 'Autor estadounidense referente de la ciencia ficción poética.', 0, 2, 2, 2, 30, 0, NOW(), NOW(), 'SYSTEM'),
+('Aldous Leonard Huxley', 'Aldous Huxley', 1894, 1963, 'Escritor y filósofo británico autor de Un mundo feliz.', 0, 6, 6, 2, 31, 0, NOW(), NOW(), 'SYSTEM'),
+('Ernesto Sabato', NULL, 1911, 2011, 'Novelista y ensayista argentino, Premio Cervantes.', 0, 7, 7, 1, 33, 0, NOW(), NOW(), 'SYSTEM'),
+('Juan Nepomuceno Carlos Pérez Rulfo', 'Juan Rulfo', 1917, 1986, 'Maestro mexicano del realismo rural y la brevedad narrativa.', 0, 5, 5, 1, 34, 0, NOW(), NOW(), 'SYSTEM'),
+('Miguel Ángel Asturias', NULL, 1899, 1974, 'Escritor guatemalteco, Premio Nobel de Literatura en 1967.', 0, 11, 11, 1, 35, 0, NOW(), NOW(), 'SYSTEM'),
+('Fiódor Mijáilovich Dostoyevski', 'Fiódor Dostoyevski', 1821, 1881, 'Gigante de la novela psicológica y filosófica rusa.', 0, 15, 15, 1, 36, 0, NOW(), NOW(), 'SYSTEM'),
+('Lev Nikoláievich Tolstói', 'León Tolstói', 1828, 1910, 'Maestro ruso de la épica realista y ensayo moral.', 0, 15, 15, 1, 38, 0, NOW(), NOW(), 'SYSTEM'),
+('Dante Alighieri', NULL, 1265, 1321, 'Poeta italiano padre de la lengua italiana moderna.', 0, 14, 14, 4, 40, 0, NOW(), NOW(), 'SYSTEM'),
+('Umberto Eco', NULL, 1932, 2016, 'Semiólogo y novelista italiano de proyección universal.', 0, 14, 14, 1, 41, 0, NOW(), NOW(), 'SYSTEM'),
+('Italo Calvino', NULL, 1923, 1985, 'Narrador italiano maestro de la literatura imaginativa.', 0, 14, 14, 2, 42, 0, NOW(), NOW(), 'SYSTEM'),
+('Victor Marie Hugo', 'Victor Hugo', 1802, 1885, 'Poeta, dramaturgo y novelista del romanticismo francés.', 0, 8, 8, 1, 43, 0, NOW(), NOW(), 'SYSTEM'),
+('Alexandre Dumas', 'Alejandro Dumas', 1802, 1870, 'Novelista francés célebre por sus aventuras históricas.', 0, 8, 8, 1, 44, 0, NOW(), NOW(), 'SYSTEM'),
+('Jules Gabriel Verne', 'Julio Verne', 1828, 1905, 'Pionero francés de la ciencia ficción y novela de aventuras.', 0, 8, 8, 2, 45, 0, NOW(), NOW(), 'SYSTEM'),
+('Albert Camus', NULL, 1913, 1960, 'Escritor y filósofo francés, Premio Nobel de Literatura.', 0, 8, 8, 5, 48, 0, NOW(), NOW(), 'SYSTEM'),
+('Mario Benedetti', NULL, 1920, 2009, 'Poeta y novelista uruguayo de la Generación del 45.', 0, 13, 13, 4, 52, 0, NOW(), NOW(), 'SYSTEM'),
+('Eduardo Hughes Galeano', 'Eduardo Galeano', 1940, 2015, 'Periodista y escritor uruguayo de ensayo histórico y crónica.', 0, 13, 13, 5, 54, 0, NOW(), NOW(), 'SYSTEM'),
+('Federico García Lorca', NULL, 1898, 1936, 'Poeta y dramaturgo español clave de la Generación del 27.', 0, 3, 3, 4, 70, 0, NOW(), NOW(), 'SYSTEM'),
+('Octavio Paz Lozano', 'Octavio Paz', 1914, 1998, 'Poeta y ensayista mexicano, Premio Nobel de Literatura.', 0, 5, 5, 5, 77, 0, NOW(), NOW(), 'SYSTEM'),
+('Laura Esquivel', NULL, 1950, NULL, 'Escritora mexicana creadora de Como agua para chocolate.', 0, 5, 5, 1, 78, 0, NOW(), NOW(), 'SYSTEM'),
+('Carlos Fuentes Macías', 'Carlos Fuentes', 1928, 2012, 'Figura central de la novela mexicana del siglo XX.', 0, 5, 5, 1, 79, 0, NOW(), NOW(), 'SYSTEM'),
+('Herbert George Wells', 'H. G. Wells', 1866, 1946, 'Novelista británico pionero de la ciencia ficción moderna.', 0, 6, 6, 2, 88, 0, NOW(), NOW(), 'SYSTEM'),
+('Charles John Huffam Dickens', 'Charles Dickens', 1812, 1870, 'Novelista británico referente de la época victoriana.', 0, 6, 6, 1, 90, 0, NOW(), NOW(), 'SYSTEM'),
+('Ernest Miller Hemingway', 'Ernest Hemingway', 1899, 1961, 'Narrador estadounidense, Premio Nobel de Literatura.', 0, 2, 2, 1, 99, 0, NOW(), NOW(), 'SYSTEM'),
+('Andrew Hunt', 'Andy Hunt', 1964, NULL, 'Ingeniero de software coautor de The Pragmatic Programmer.', 0, 2, 2, 5, 100, 0, NOW(), NOW(), 'SYSTEM');
 
-/* 6. RELACIONES DE OBRA Y AUTOR */
+/* 6. RELACIONES DE OBRA Y AUTOR (100 obras mapeadas a su autor real) */
 INSERT INTO obra_autor (id_obra, id_autor, id_tipo_autoria, borrado_logico) VALUES
 (1, 1, 1, 0), (2, 2, 1, 0), (3, 3, 1, 0), (4, 4, 1, 0), (5, 5, 1, 0),
 (6, 6, 1, 0), (7, 6, 1, 0), (8, 7, 1, 0), (9, 8, 1, 0), (10, 9, 1, 0),
 (11, 10, 1, 0), (12, 11, 1, 0), (13, 12, 1, 0), (14, 13, 1, 0), (15, 14, 1, 0),
 (16, 15, 1, 0), (17, 16, 1, 0), (18, 17, 1, 0), (19, 18, 1, 0), (20, 19, 1, 0),
 (21, 20, 1, 0), (22, 21, 1, 0), (23, 22, 1, 0), (24, 23, 1, 0), (25, 24, 1, 0),
-(26, 25, 1, 0), (27, 2, 1, 0), (28, 4, 1, 0), (29, 4, 1, 0), (30, 6, 1, 0),
-(31, 6, 1, 0), (32, 18, 1, 0), (33, 7, 1, 0), (34, 4, 1, 0), (35, 4, 1, 0);
+(26, 25, 1, 0), (27, 2, 1, 0), (28, 4, 1, 0), (29, 4, 1, 0), (30, 26, 1, 0),
+(31, 27, 1, 0), (32, 18, 1, 0), (33, 28, 1, 0), (34, 29, 1, 0), (35, 30, 1, 0),
+(36, 31, 1, 0), (37, 31, 1, 0), (38, 32, 1, 0), (39, 32, 1, 0), (40, 33, 1, 0),
+(41, 34, 1, 0), (42, 35, 1, 0), (43, 36, 1, 0), (44, 37, 1, 0), (45, 38, 1, 0),
+(46, 38, 1, 0), (47, 38, 1, 0), (48, 39, 1, 0), (49, 39, 1, 0), (50, 7, 1, 0),
+(51, 11, 1, 0), (52, 40, 1, 0), (53, 40, 1, 0), (54, 41, 1, 0), (55, 29, 1, 0),
+(56, 30, 1, 0), (57, 20, 1, 0), (58, 20, 1, 0), (59, 15, 1, 0), (60, 15, 1, 0),
+(61, 4, 1, 0), (62, 4, 1, 0), (63, 10, 1, 0), (64, 1, 1, 0), (65, 1, 1, 0),
+(66, 9, 1, 0), (67, 8, 1, 0), (68, 21, 1, 0), (69, 21, 1, 0), (70, 42, 1, 0),
+(71, 42, 1, 0), (72, 42, 1, 0), (73, 22, 1, 0), (74, 3, 1, 0), (75, 3, 1, 0),
+(76, 3, 1, 0), (77, 43, 1, 0), (78, 44, 1, 0), (79, 45, 1, 0), (80, 45, 1, 0),
+(81, 26, 1, 0), (82, 26, 1, 0), (83, 16, 1, 0), (84, 16, 1, 0), (85, 16, 1, 0),
+(86, 17, 1, 0), (87, 17, 1, 0), (88, 46, 1, 0), (89, 46, 1, 0), (90, 47, 1, 0),
+(91, 47, 1, 0), (92, 47, 1, 0), (93, 25, 1, 0), (94, 25, 1, 0), (95, 13, 1, 0),
+(96, 13, 1, 0), (97, 2, 1, 0), (98, 2, 1, 0), (99, 48, 1, 0), (100, 49, 1, 0);
 
 INSERT INTO obra_genero (id_obra, id_genero) VALUES
 (1, 1), (1, 4), (2, 3), (3, 1), (4, 1), (5, 4), (6, 2), (7, 1), (8, 5), (9, 4),
 (10, 1), (11, 1), (12, 1), (13, 3), (13, 2), (14, 1), (15, 1), (16, 1), (17, 2),
 (18, 3), (19, 5), (20, 5), (21, 1), (22, 4), (23, 4), (24, 3), (25, 3), (26, 1),
-(27, 3), (28, 1), (29, 1), (30, 2), (31, 2), (32, 5), (33, 1), (34, 1), (35, 1);
+(27, 3), (28, 1), (29, 1), (30, 2), (31, 2), (32, 5), (33, 1), (34, 1), (35, 1),
+(36, 3), (37, 5), (38, 1), (39, 1), (40, 4), (41, 1), (42, 2), (43, 1), (44, 1), (45, 2),
+(46, 2), (47, 1), (48, 5), (49, 1), (50, 5), (51, 3), (52, 1), (53, 1), (54, 5), (55, 1),
+(56, 1), (57, 1), (58, 1), (59, 5), (60, 1), (61, 1), (62, 1), (63, 1), (64, 5), (65, 4),
+(66, 1), (67, 4), (68, 4), (69, 4), (70, 4), (71, 4), (72, 4), (73, 4), (74, 4), (75, 1),
+(76, 1), (77, 5), (78, 1), (79, 3), (80, 1), (81, 2), (82, 2), (83, 2), (84, 2), (85, 2),
+(86, 3), (87, 3), (88, 2), (89, 2), (90, 1), (91, 1), (92, 1), (93, 1), (94, 1), (95, 3),
+(96, 3), (97, 3), (98, 3), (99, 1), (100, 5);
 
 INSERT INTO obra_categoria (id_obra, id_categoria) VALUES
 (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1), (8, 1), (9, 1), (10, 1),
 (11, 1), (12, 1), (13, 1), (14, 1), (15, 5), (16, 1), (17, 1), (18, 1), (19, 4), (20, 4),
 (21, 1), (22, 1), (23, 1), (24, 1), (25, 1), (26, 1), (27, 1), (28, 1), (29, 1), (30, 1),
-(31, 1), (32, 4), (33, 1), (34, 1), (35, 1);
+(31, 1), (32, 4), (33, 1), (34, 1), (35, 1),
+(36, 1), (37, 1), (38, 1), (39, 1), (40, 2), (41, 1), (42, 1), (43, 1), (44, 5), (45, 5),
+(46, 5), (47, 5), (48, 1), (49, 1), (50, 1), (51, 1), (52, 1), (53, 1), (54, 2), (55, 1),
+(56, 1), (57, 1), (58, 1), (59, 1), (60, 1), (61, 1), (62, 1), (63, 1), (64, 2), (65, 1),
+(66, 1), (67, 1), (68, 1), (69, 1), (70, 1), (71, 1), (72, 1), (73, 1), (74, 5), (75, 1),
+(76, 1), (77, 2), (78, 1), (79, 1), (80, 1), (81, 1), (82, 1), (83, 4), (84, 1), (85, 1),
+(86, 1), (87, 1), (88, 1), (89, 1), (90, 5), (91, 5), (92, 1), (93, 1), (94, 1), (95, 1),
+(96, 1), (97, 1), (98, 1), (99, 5), (100, 4);
 
 INSERT INTO obra_etiqueta (id_obra, id_etiqueta) VALUES
 (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4), (8, 4), (9, 4), (10, 4),
 (11, 4), (12, 4), (13, 4), (14, 4), (15, 2), (16, 4), (17, 4), (18, 4), (19, 1), (20, 1),
 (21, 4), (22, 4), (23, 4), (24, 4), (25, 4), (26, 4), (27, 4), (28, 4), (29, 4), (30, 4),
-(31, 4), (32, 1), (33, 4), (34, 4), (35, 4);
+(31, 4), (32, 1), (33, 4), (34, 4), (35, 4),
+(36, 4), (37, 4), (38, 4), (39, 4), (40, 4), (41, 5), (42, 5), (43, 4), (44, 2), (45, 2),
+(46, 2), (47, 2), (48, 4), (49, 4), (50, 4), (51, 5), (52, 4), (53, 5), (54, 4), (55, 4),
+(56, 4), (57, 4), (58, 5), (59, 3), (60, 3), (61, 4), (62, 5), (63, 4), (64, 4), (65, 4),
+(66, 4), (67, 3), (68, 4), (69, 4), (70, 4), (71, 4), (72, 4), (73, 4), (74, 2), (75, 4),
+(76, 4), (77, 4), (78, 3), (79, 5), (80, 4), (81, 4), (82, 5), (83, 1), (84, 5), (85, 5),
+(86, 4), (87, 4), (88, 4), (89, 4), (90, 2), (91, 2), (92, 4), (93, 3), (94, 3), (95, 5),
+(96, 5), (97, 5), (98, 5), (99, 4), (100, 1);
 
 /* 7. EDITORIALES (10 Editoriales) Y UBICACIÓN */
 INSERT INTO editorial (nombre, direccion, correo, telefono, persona_contacto, borrado_logico) VALUES
@@ -245,7 +432,7 @@ INSERT INTO salon (nombre, id_planta, borrado_logico) VALUES
 INSERT INTO mueble (nombre, id_salon, borrado_logico) VALUES
 ('Mostrador Principal', 1, 0), ('Estante de Reservas', 1, 0), ('Estantería A-F (Literatura)', 2, 0), ('Estantería G-Z (Ciencias)', 2, 0), ('Estantería A-F (Revistas)', 3, 0);
 
-/* 8. LIBROS (50 Libros de Prueba) */
+/* 8. LIBROS (50 originales + 20 adicionales de nuevas obras = 70 Libros) */
 INSERT INTO libro (isbn, anio_publicacion, precio, mora, url_imagen, borrado_logico, id_grado, id_ciclo, id_obra, id_editorial, id_formato, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('978-99923-45-01-2', 2010, 12.50, 0.25, 'https://m.media-amazon.com/images/I/51+Z+A+b+L.jpg', 0, 17, 4, 1, 1, 2, 0, NOW(), NOW(), 'SYSTEM'),
 ('978-15011-42-97-0', 2016, 24.99, 0.50, 'https://images.images-pop.com/cover/9781501142970.jpg', 0, NULL, NULL, 2, 2, 1, 0, NOW(), NOW(), 'SYSTEM'),
@@ -296,7 +483,27 @@ INSERT INTO libro (isbn, anio_publicacion, precio, mora, url_imagen, borrado_log
 ('978-01404-39-08-3', 2010, 10.50, 0.15, 'https://images.openlibrary.org/b/id/sherlockholmes.jpg', 0, 12, 3, 18, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
 ('978-84204-71-84-6', 2014, 15.00, 0.30, 'https://images.openlibrary.org/b/id/laciudadyperros.jpg', 0, 17, 4, 21, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
 ('978-01414-39-85-3', 2012, 12.50, 0.20, 'https://images.openlibrary.org/b/id/draculastoker.jpg', 0, 17, 4, 24, 10, 3, 0, NOW(), NOW(), 'SYSTEM'),
-('978-01414-39-52-5', 2015, 11.99, 0.20, 'https://images.openlibrary.org/b/id/orgulloyprejuicio.jpg', 0, 13, 3, 26, 10, 3, 0, NOW(), NOW(), 'SYSTEM');
+('978-01414-39-52-5', 2015, 11.99, 0.20, 'https://images.openlibrary.org/b/id/orgulloyprejuicio.jpg', 0, 13, 3, 26, 10, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-74-10-0', 2014, 18.50, 0.30, 'https://images.openlibrary.org/b/id/crimenycastigo.jpg', 0, 21, 4, 36, 7, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84910-51-11-4', 2018, 22.00, 0.35, 'https://images.openlibrary.org/b/id/guerraypaz.jpg', 0, 21, 4, 38, 2, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-10-01-6', 2010, 19.00, 0.30, 'https://images.openlibrary.org/b/id/divinacomedia.jpg', 0, 17, 4, 40, 7, 1, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84975-95-00-1', 2013, 16.50, 0.25, 'https://images.openlibrary.org/b/id/nombredelarosa.jpg', 0, 17, 4, 41, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-66-01-3', 2016, 17.50, 0.25, 'https://images.openlibrary.org/b/id/losmiserables.jpg', 0, 17, 4, 43, 7, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-22-02-6', 2015, 15.50, 0.20, 'https://images.openlibrary.org/b/id/montecristo.jpg', 0, 13, 3, 44, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84663-31-03-6', 2017, 12.00, 0.15, 'https://images.openlibrary.org/b/id/viajecentrotierra.jpg', 0, 11, 3, 45, 3, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-33-04-6', 2014, 13.00, 0.20, 'https://images.openlibrary.org/b/id/elextranjero.jpg', 0, 21, 4, 48, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84264-15-05-9', 2016, 14.50, 0.25, 'https://images.openlibrary.org/b/id/ficcionesborges.jpg', 0, 21, 4, 50, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-99749-50-06-8', 2011, 11.75, 0.20, 'https://images.openlibrary.org/b/id/latregua.jpg', 0, 17, 4, 52, 4, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-96823-01-07-0', 2012, 16.00, 0.25, 'https://images.openlibrary.org/b/id/venasabiertas.jpg', 0, 21, 4, 54, 5, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84376-33-08-4', 2014, 10.50, 0.15, 'https://images.openlibrary.org/b/id/bodasdesangre.jpg', 0, 17, 4, 70, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-60716-12-09-0', 2015, 14.00, 0.20, 'https://images.openlibrary.org/b/id/laberintosol.jpg', 0, 21, 4, 77, 5, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-60707-22-10-4', 2013, 13.25, 0.20, 'https://images.openlibrary.org/b/id/comoaguachocolate.jpg', 0, 17, 4, 78, 6, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84450-71-11-3', 2016, 12.80, 0.20, 'https://images.openlibrary.org/b/id/cronicasmarcianas.jpg', 0, 13, 3, 81, 6, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84350-15-12-8', 2018, 14.50, 0.25, 'https://images.openlibrary.org/b/id/yorobotasimov.jpg', 0, 15, 4, 83, 2, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84206-78-13-0', 2012, 11.90, 0.20, 'https://images.openlibrary.org/b/id/guerramundos.jpg', 0, 13, 3, 89, 7, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84910-58-14-4', 2015, 12.50, 0.15, 'https://images.openlibrary.org/b/id/cuentonavidad.jpg', 0, 9, 2, 90, 3, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('978-84975-96-15-2', 2014, 11.00, 0.15, 'https://images.openlibrary.org/b/id/viejomar.jpg', 0, 13, 3, 99, 2, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('978-01359-57-05-9', 2019, 48.00, 0.80, 'https://m.media-amazon.com/images/I/51W1sBPO7tL.jpg', 0, 24, 4, 100, 8, 1, 0, NOW(), NOW(), 'SYSTEM');
 
 INSERT INTO libro_idioma (id_libro, id_idioma) VALUES
 (1, 1), (2, 2), (3, 1), (4, 1), (5, 1), (6, 2), (7, 1), (8, 1), (9, 1), (10, 1),
@@ -304,9 +511,11 @@ INSERT INTO libro_idioma (id_libro, id_idioma) VALUES
 (19, 2), (20, 2), (21, 1), (22, 1), (23, 1), (24, 2), (25, 2), (26, 2), (27, 2),
 (28, 1), (29, 1), (30, 2), (31, 2), (32, 2), (33, 1), (34, 1), (35, 1), (36, 1),
 (37, 2), (38, 1), (39, 1), (40, 2), (41, 1), (42, 1), (43, 1), (44, 2), (45, 1),
-(46, 1), (47, 2), (48, 1), (49, 2), (50, 2);
+(46, 1), (47, 2), (48, 1), (49, 2), (50, 2),
+(51, 1), (52, 1), (53, 1), (54, 1), (55, 1), (56, 1), (57, 1), (58, 1), (59, 1), (60, 1),
+(61, 1), (62, 1), (63, 1), (64, 1), (65, 1), (66, 1), (67, 1), (68, 1), (69, 1), (70, 2);
 
-/* 9. EJEMPLARES DE LIBROS (50+ Ejemplares de Prueba) */
+/* 9. EJEMPLARES DE LIBROS (53 originales + 17 adicionales = 70 Ejemplares) */
 INSERT INTO ejemplar_libro (comentario, id_estado_fisico, id_disponibilidad, borrado_logico, id_libro, id_mueble, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
 ('Copia de exhibición principal', 1, 1, 0, 1, 1, 0, NOW(), NOW(), 'SYSTEM'),
 ('Disponible en estantería', 3, 1, 0, 1, 3, 0, NOW(), NOW(), 'SYSTEM'),
@@ -360,4 +569,72 @@ INSERT INTO ejemplar_libro (comentario, id_estado_fisico, id_disponibilidad, bor
 ('Sherlock Holmes casos selectos', 2, 1, 0, 47, 3, 0, NOW(), NOW(), 'SYSTEM'),
 ('La ciudad y los perros rústica', 3, 1, 0, 48, 3, 0, NOW(), NOW(), 'SYSTEM'),
 ('Drácula edición comentada', 1, 1, 0, 49, 3, 0, NOW(), NOW(), 'SYSTEM'),
-('Orgullo y prejuicio rústica', 2, 1, 0, 50, 3, 0, NOW(), NOW(), 'SYSTEM');
+('Orgullo y prejuicio rústica', 2, 1, 0, 50, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Crimen y castigo edición anotada', 1, 1, 0, 51, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Guerra y paz tomo único', 2, 1, 0, 52, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Divina Comedia ilustrada', 1, 1, 0, 53, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('El nombre de la rosa rústica', 2, 1, 0, 54, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Los miserables edición íntegra', 1, 1, 0, 55, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Conde de Montecristo tomo I', 2, 1, 0, 56, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Viaje al centro de la Tierra juvenil', 1, 1, 0, 57, 2, 0, NOW(), NOW(), 'SYSTEM'),
+('El extranjero edición bolsillo', 2, 1, 0, 58, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Ficciones edición crítica', 1, 1, 0, 59, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('La tregua edición escolar', 2, 1, 0, 60, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Las venas abiertas de América Latina', 1, 1, 0, 61, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Bodas de sangre edición anotada', 2, 1, 0, 62, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('El laberinto de la soledad ensayo', 1, 1, 0, 63, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('Como agua para chocolate rústica', 2, 1, 0, 64, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Crónicas marcianas bolsillo', 1, 1, 0, 65, 3, 0, NOW(), NOW(), 'SYSTEM'),
+('Yo, robot colección ciencia', 1, 1, 0, 66, 4, 0, NOW(), NOW(), 'SYSTEM'),
+('The Pragmatic Programmer 20th Anniv', 1, 1, 0, 70, 4, 0, NOW(), NOW(), 'SYSTEM');
+
+/* 10. DATOS DE PRUEBA PARA EL MÓDULO DE PRÉSTAMOS */
+INSERT INTO solicitud_prestamo (id_usuario, id_estado_solicitud, fecha_solicitud, fecha_limite_retiro, fecha_revision, revisado_por, comentario_respuesta, creado_por_admin, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(2, 4, DATE_SUB(NOW(), INTERVAL 4 DAY), DATE_SUB(NOW(), INTERVAL 2 DAY), DATE_SUB(NOW(), INTERVAL 3 DAY), 1, 'Solicitud aprobada y entregada en ventanilla.', 0, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(3, 4, DATE_SUB(NOW(), INTERVAL 12 DAY), DATE_SUB(NOW(), INTERVAL 10 DAY), DATE_SUB(NOW(), INTERVAL 11 DAY), 1, 'Entrega completada correctamente.', 0, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 1, NOW(), DATE_ADD(NOW(), INTERVAL 2 DAY), NULL, NULL, NULL, 0, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(5, 2, DATE_SUB(NOW(), INTERVAL 1 DAY), DATE_ADD(NOW(), INTERVAL 3 DAY), NOW(), 1, 'Aprobada para préstamo docente.', 0, 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO solicitud_prestamo_detalle (id_solicitud, id_libro, cantidad_solicitada, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(1, 2, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(1, 7, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 9, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 19, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(3, 1, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(4, 19, 2, 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO prestamo (id_solicitud, id_usuario, id_estado_prestamo, fecha_prestamo, fecha_limite_devolucion, entregado_por, comentarios, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(1, 2, 1, DATE_SUB(NOW(), INTERVAL 3 DAY), DATE_ADD(NOW(), INTERVAL 4 DAY), 1, 'Préstamo activo dentro del plazo normal.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 3, 2, DATE_SUB(NOW(), INTERVAL 11 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY), 1, 'Préstamo finalizado con devolución completa.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+(NULL, 4, 3, DATE_SUB(NOW(), INTERVAL 15 DAY), DATE_SUB(NOW(), INTERVAL 8 DAY), 6, 'Préstamo directo en ventanilla con mora pendiente.', 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO ejemplar_prestamo (id_prestamo, id_ejemplar, id_estado_ejemplar_prestamo, id_estado_fisico_entrega, id_estado_fisico_devolucion, fecha_devolucion_real, mora_calculada, mora_pagada, exento_mora, recibido_por, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(1, 3, 1, 2, NULL, NULL, 0.00, 0, 0, NULL, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(1, 8, 1, 3, NULL, NULL, 0.00, 0, 0, NULL, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 10, 2, 1, 1, DATE_SUB(NOW(), INTERVAL 5 DAY), 0.00, 0, 0, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 21, 2, 1, 2, DATE_SUB(NOW(), INTERVAL 3 DAY), 0.00, 0, 1, 1, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(3, 18, 1, 3, NULL, NULL, 3.50, 0, 0, NULL, 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO solicitud_renovacion (id_ejemplar_prestamo, id_usuario, id_estado_solicitud, dias_solicitados, nueva_fecha_limite_propuesta, fecha_solicitud, fecha_revision, revisado_por, motivo_solicitud, motivo_respuesta, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(1, 2, 1, 5, DATE_ADD(NOW(), INTERVAL 9 DAY), NOW(), NULL, NULL, 'Requiero más días para terminar la lectura.', NULL, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(2, 2, 2, 3, DATE_ADD(NOW(), INTERVAL 7 DAY), DATE_SUB(NOW(), INTERVAL 1 DAY), NOW(), 1, 'Extensión breve para exposición en clase.', 'Prórroga aprobada.', 0, 0, NOW(), NOW(), 'SYSTEM');
+
+/* 11. DATOS DE PRUEBA PARA EL MÓDULO DE TRANSFERENCIAS */
+INSERT INTO solicitud_transferencia (id_usuario, id_salon_destino, id_estado_solicitud_transferencia, motivo, motivo_rechazo, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(5, 2, 4, 'Reubicación de ejemplares literarios a Colección General.', NULL, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(5, 5, 2, 'Dotación temporal de manuales de programación para Sala de Cómputo.', NULL, 0, 0, NOW(), NOW(), 'SYSTEM'),
+(6, 4, 1, 'Solicitud de libros de consulta para cubículos de estudio.', NULL, 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO detalle_solicitud_transferencia (id_solicitud_transferencia, id_libro, cantidad) VALUES
+(1, 1, 1),
+(2, 19, 1),
+(2, 20, 1),
+(3, 32, 1);
+
+INSERT INTO transferencia (id_solicitud_transferencia, id_usuario_envia, id_usuario_recibe, id_mueble_origen, id_mueble_destino, id_estado_transferencia, fecha_envio, fecha_recepcion, observacion_recepcion, confirmada, motivo, borrado_logico, version, fecha_creacion, fecha_actualizacion, creado_por) VALUES
+(1, 1, 5, 1, 3, 3, DATE_SUB(NOW(), INTERVAL 5 DAY), DATE_SUB(NOW(), INTERVAL 4 DAY), 'Ejemplar recibido en perfecto estado.', 1, 'Traslado inicial completado.', 0, 0, NOW(), NOW(), 'SYSTEM'),
+(NULL, 6, NULL, 3, 4, 2, DATE_SUB(NOW(), INTERVAL 1 DAY), NULL, NULL, 0, 'Reorganización interna en tránsito pendiente de confirmación.', 0, 0, NOW(), NOW(), 'SYSTEM');
+
+INSERT INTO ejemplar_transferencia (id_transferencia, id_ejemplar_libro, id_estado_fisico_al_momento, recibido) VALUES
+(1, 1, 1, 1),
+(2, 35, 1, 0);

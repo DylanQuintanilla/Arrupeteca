@@ -177,4 +177,24 @@ class SecurityConfigTest {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    @DisplayName("Endpoint administrativo de catálogo con rol bibliotecario debe retornar 403 Forbidden")
+    void debeDenegarAccesoACatalogoAdminConRolBibliotecario() throws Exception {
+        TipoUsuario tipoBibliotecario = TipoUsuario.builder().id(5L).nombre("bibliotecario").build();
+        Usuario usuarioBibliotecario = Usuario.builder()
+                .id(5L)
+                .correo("bibliotecario@arrupeteca.com")
+                .tipoUsuario(tipoBibliotecario)
+                .build();
+
+        given(usuarioRepository.findByCorreoAndBorradoLogicoFalse("bibliotecario@arrupeteca.com"))
+                .willReturn(java.util.Optional.of(usuarioBibliotecario));
+
+        String token = jwtService.generateToken(usuarioBibliotecario);
+
+        mockMvc.perform(get("/api/v1/categorias/admin/all")
+                .header("Authorization", "Bearer " + token))
+                .andExpect(status().isForbidden());
+    }
+
 }

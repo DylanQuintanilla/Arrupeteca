@@ -1,11 +1,13 @@
 package com.arrupeteca.prestamo.dto.response.detail;
 
 import lombok.Builder;
+import lombok.extern.jackson.Jacksonized;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Builder
+@Jacksonized
 public record EjemplarPrestamoDetalleResponse(
     Long id,
     Long idPrestamo,

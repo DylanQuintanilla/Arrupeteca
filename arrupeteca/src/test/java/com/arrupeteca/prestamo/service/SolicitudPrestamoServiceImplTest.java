@@ -6,12 +6,12 @@ import com.arrupeteca.persistence.repository.UsuarioRepository;
 import com.arrupeteca.prestamo.dto.request.SolicitudPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudPrestamoDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudPrestamoResumen;
-import com.arrupeteca.prestamo.internal.entity.EstadoSolicitud;
-import com.arrupeteca.prestamo.internal.entity.SolicitudPrestamo;
-import com.arrupeteca.prestamo.internal.mapper.SolicitudPrestamoMapper;
-import com.arrupeteca.prestamo.internal.repository.EstadoSolicitudRepository;
-import com.arrupeteca.prestamo.internal.repository.SolicitudPrestamoRepository;
-import com.arrupeteca.prestamo.internal.service.impl.SolicitudPrestamoServiceImpl;
+import com.arrupeteca.prestamo.persistence.entity.EstadoSolicitud;
+import com.arrupeteca.prestamo.persistence.entity.SolicitudPrestamo;
+import com.arrupeteca.prestamo.mapper.SolicitudPrestamoMapper;
+import com.arrupeteca.prestamo.persistence.repository.EstadoSolicitudRepository;
+import com.arrupeteca.prestamo.persistence.repository.SolicitudPrestamoRepository;
+import com.arrupeteca.prestamo.service.impl.SolicitudPrestamoServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -47,9 +47,6 @@ class SolicitudPrestamoServiceImplTest {
 
     @Mock
     private SolicitudPrestamoMapper solicitudPrestamoMapper;
-
-    @Mock
-    private org.springframework.context.ApplicationEventPublisher events;
 
     @InjectMocks
     private SolicitudPrestamoServiceImpl solicitudPrestamoService;
@@ -117,7 +114,7 @@ class SolicitudPrestamoServiceImplTest {
         when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
         when(estadoSolicitudRepository.findById(1L)).thenReturn(Optional.of(estado));
         when(solicitudPrestamoMapper.toEntity(request)).thenReturn(entity);
-        when(solicitudPrestamoRepository.save(any(SolicitudPrestamo.class))).thenReturn(entity);
+        when(solicitudPrestamoRepository.saveAndFlush(any(SolicitudPrestamo.class))).thenReturn(entity);
         when(solicitudPrestamoMapper.toDetalleResponse(entity)).thenReturn(detail);
 
         SolicitudPrestamoDetalleResponse result = solicitudPrestamoService.crear(request);

@@ -4,7 +4,7 @@ import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.prestamo.dto.request.SolicitudPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudPrestamoDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudPrestamoResumen;
-import com.arrupeteca.prestamo.internal.service.SolicitudPrestamoService;
+import com.arrupeteca.prestamo.service.SolicitudPrestamoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -16,13 +16,11 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,7 +31,6 @@ import java.time.LocalDateTime;
 @RestController
 @RequestMapping("/api/v1/solicitudes-prestamo")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Solicitudes de Préstamo", description = "Endpoints para la gestión de solicitudes de préstamo de libros")
 public class SolicitudPrestamoController {
 
@@ -77,7 +74,7 @@ public class SolicitudPrestamoController {
                 .body(ApiResponse.exito("Solicitud de préstamo creada exitosamente", creado));
     }
 
-    @PutMapping("/admin/{id}")
+    @PatchMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar solicitud de préstamo",
         description = "Actualiza el estado u observaciones de una solicitud de préstamo existente."

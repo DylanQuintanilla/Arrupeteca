@@ -53,7 +53,7 @@ public class ResponsableController {
     public ResponseEntity<ApiResponse<Page<ResponsableResponse>>> obtenerTodos(
             @RequestParam(required = false) String nombre,
             @RequestParam(required = false) Boolean borradoLogico,
-            @ParameterObject @PageableDefault(size = 20, sort = "nombre") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "nombres") Pageable pageable) {
         return ResponseEntity.ok(ApiResponse.exito("Tabla de responsable", responsableService.obtenerTodos(nombre, borradoLogico, pageable)));
     }
 

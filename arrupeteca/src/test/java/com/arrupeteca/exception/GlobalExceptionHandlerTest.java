@@ -13,6 +13,7 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -156,6 +157,18 @@ class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertFalse(response.getBody().isExito());
         assertEquals("Error al procesar el cuerpo de la petición. Formato inválido.",
+                response.getBody().getMensaje());
+    }
+
+    @Test
+    void handleMissingServletRequestParameterShouldReturnBadRequest() {
+        MissingServletRequestParameterException ex = new MissingServletRequestParameterException("termino", "String");
+
+        ResponseEntity<ApiResponse<Void>> response = handler.handleMissingServletRequestParameter(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertFalse(response.getBody().isExito());
+        assertEquals("El parámetro obligatorio 'termino' no fue proporcionado.",
                 response.getBody().getMensaje());
     }
 }

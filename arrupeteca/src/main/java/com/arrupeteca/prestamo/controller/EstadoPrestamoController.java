@@ -3,7 +3,7 @@ package com.arrupeteca.prestamo.controller;
 import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.prestamo.dto.request.EstadoPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.EstadoPrestamoResponse;
-import com.arrupeteca.prestamo.internal.service.EstadoPrestamoService;
+import com.arrupeteca.prestamo.service.EstadoPrestamoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

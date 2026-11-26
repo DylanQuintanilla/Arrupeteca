@@ -6,13 +6,16 @@ import com.arrupeteca.persistence.repository.UsuarioRepository;
 import com.arrupeteca.prestamo.dto.request.PrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.PrestamoDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.PrestamoResumen;
-import com.arrupeteca.prestamo.internal.entity.EstadoPrestamo;
-import com.arrupeteca.prestamo.internal.entity.Prestamo;
-import com.arrupeteca.prestamo.internal.mapper.PrestamoMapper;
-import com.arrupeteca.prestamo.internal.repository.EstadoPrestamoRepository;
-import com.arrupeteca.prestamo.internal.repository.PrestamoRepository;
-import com.arrupeteca.prestamo.internal.repository.SolicitudPrestamoRepository;
-import com.arrupeteca.prestamo.internal.service.impl.PrestamoServiceImpl;
+import com.arrupeteca.prestamo.persistence.entity.EstadoPrestamo;
+import com.arrupeteca.prestamo.persistence.entity.EstadoSolicitud;
+import com.arrupeteca.prestamo.persistence.entity.Prestamo;
+import com.arrupeteca.prestamo.persistence.entity.SolicitudPrestamo;
+import com.arrupeteca.prestamo.mapper.PrestamoMapper;
+import com.arrupeteca.prestamo.persistence.repository.EstadoPrestamoRepository;
+import com.arrupeteca.prestamo.persistence.repository.EstadoSolicitudRepository;
+import com.arrupeteca.prestamo.persistence.repository.PrestamoRepository;
+import com.arrupeteca.prestamo.persistence.repository.SolicitudPrestamoRepository;
+import com.arrupeteca.prestamo.service.impl.PrestamoServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,6 +47,9 @@ class PrestamoServiceImplTest {
     private EstadoPrestamoRepository estadoPrestamoRepository;
 
     @Mock
+    private EstadoSolicitudRepository estadoSolicitudRepository;
+
+    @Mock
     private SolicitudPrestamoRepository solicitudPrestamoRepository;
 
     @Mock
@@ -51,9 +57,6 @@ class PrestamoServiceImplTest {
 
     @Mock
     private PrestamoMapper prestamoMapper;
-
-    @Mock
-    private org.springframework.context.ApplicationEventPublisher events;
 
     @InjectMocks
     private PrestamoServiceImpl prestamoService;
@@ -125,7 +128,7 @@ class PrestamoServiceImplTest {
         when(usuarioRepository.findById(2L)).thenReturn(Optional.of(bibliotecario));
         when(estadoPrestamoRepository.findById(1L)).thenReturn(Optional.of(estado));
         when(prestamoMapper.toEntity(request)).thenReturn(entity);
-        when(prestamoRepository.save(any(Prestamo.class))).thenReturn(entity);
+        when(prestamoRepository.saveAndFlush(any(Prestamo.class))).thenReturn(entity);
         when(prestamoMapper.toDetalleResponse(entity)).thenReturn(detail);
 
         PrestamoDetalleResponse result = prestamoService.crear(request);
@@ -144,5 +147,72 @@ class PrestamoServiceImplTest {
 
         prestamoService.cambiarEstado(1L, false);
         verify(prestamoRepository).desactivar(1L);
+    }
+
+    @Test
+    @DisplayName("Should update idSolicitud and entregadoPor on prestamo")
+    void shouldUpdateSolicitudAndEntregadoPor() {
+        Usuario nuevoBibliotecario = Usuario.builder().id(5L).borradoLogico(false).build();
+        EstadoSolicitud estadoPendiente = EstadoSolicitud.builder().id(1L).nombre("PENDIENTE").build();
+        EstadoSolicitud estadoEntregada = EstadoSolicitud.builder().id(4L).nombre("ENTREGADA").build();
+        SolicitudPrestamo nuevaSolicitud = SolicitudPrestamo.builder()
+                .id(20L).borradoLogico(false).estadoSolicitud(estadoPendiente).build();
+
+        LocalDateTime fechaPrestamo = LocalDateTime.of(2026, 3, 1, 9, 0);
+        Prestamo existente = Prestamo.builder()
+                .id(1L)
+                .fechaPrestamo(fechaPrestamo)
+                .fechaLimiteDevolucion(fechaPrestamo.plusDays(7))
+                .build();
+
+        PrestamoRequest request = PrestamoRequest.builder()
+                .entregadoPor(JsonNullable.of(5L))
+                .idSolicitud(JsonNullable.of(20L))
+                .build();
+
+        PrestamoDetalleResponse detail = PrestamoDetalleResponse.builder().id(1L).idSolicitud(20L).entregadoPorId(5L).build();
+
+        when(prestamoRepository.busquedaPorId(1L, null)).thenReturn(Optional.of(existente));
+        when(usuarioRepository.findById(5L)).thenReturn(Optional.of(nuevoBibliotecario));
+        when(solicitudPrestamoRepository.findById(20L)).thenReturn(Optional.of(nuevaSolicitud));
+        when(estadoSolicitudRepository.findFirstByNombreIgnoreCaseAndBorradoLogicoFalse("ENTREGADA"))
+                .thenReturn(Optional.of(estadoEntregada));
+        when(solicitudPrestamoRepository.save(nuevaSolicitud)).thenReturn(nuevaSolicitud);
+        when(prestamoRepository.saveAndFlush(existente)).thenReturn(existente);
+        when(prestamoMapper.toDetalleResponse(existente)).thenReturn(detail);
+
+        PrestamoDetalleResponse result = prestamoService.actualizar(1L, request);
+
+        assertThat(result).isEqualTo(detail);
+        assertThat(existente.getEntregadoPor()).isEqualTo(nuevoBibliotecario);
+        assertThat(existente.getSolicitudPrestamo()).isEqualTo(nuevaSolicitud);
+        assertThat(nuevaSolicitud.getEstadoSolicitud()).isEqualTo(estadoEntregada);
+    }
+
+    @Test
+    @DisplayName("Should reject linking solicitud already ENTREGADA")
+    void shouldRejectSolicitudAlreadyEntregada() {
+        EstadoSolicitud estadoEntregada = EstadoSolicitud.builder().id(4L).nombre("ENTREGADA").build();
+        SolicitudPrestamo solicitudEntregada = SolicitudPrestamo.builder()
+                .id(20L).borradoLogico(false).estadoSolicitud(estadoEntregada).build();
+        Usuario usuario = Usuario.builder().id(10L).borradoLogico(false).bloqueadoPorMora(false).build();
+        Usuario bibliotecario = Usuario.builder().id(2L).borradoLogico(false).build();
+        EstadoPrestamo estadoActivo = EstadoPrestamo.builder().id(1L).nombre("ACTIVO").borradoLogico(false).build();
+
+        PrestamoRequest request = PrestamoRequest.builder()
+                .idUsuario(JsonNullable.of(10L))
+                .entregadoPor(JsonNullable.of(2L))
+                .idEstadoPrestamo(JsonNullable.of(1L))
+                .idSolicitud(JsonNullable.of(20L))
+                .build();
+
+        when(usuarioRepository.findById(10L)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findById(2L)).thenReturn(Optional.of(bibliotecario));
+        when(estadoPrestamoRepository.findById(1L)).thenReturn(Optional.of(estadoActivo));
+        when(solicitudPrestamoRepository.findById(20L)).thenReturn(Optional.of(solicitudEntregada));
+
+        assertThatThrownBy(() -> prestamoService.crear(request))
+                .isInstanceOf(ValidacionNegocioException.class)
+                .hasMessageContaining("ENTREGADA");
     }
 }

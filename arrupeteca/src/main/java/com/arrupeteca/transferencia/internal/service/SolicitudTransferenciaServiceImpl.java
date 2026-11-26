@@ -1,5 +1,6 @@
 package com.arrupeteca.transferencia.internal.service;
 
+import com.arrupeteca.config.CatalogoEstadosConstants;
 import com.arrupeteca.exception.ValidacionNegocioException;
 import com.arrupeteca.persistence.entity.Libro;
 import com.arrupeteca.persistence.entity.Salon;
@@ -239,7 +240,8 @@ public class SolicitudTransferenciaServiceImpl implements SolicitudTransferencia
         SolicitudTransferencia guardada = solicitudRepository.saveAndFlush(existente);
 
         if (estadoModificado && nuevoEstado != null) {
-            boolean aprobada = nuevoEstado.getNombre() != null && nuevoEstado.getNombre().equalsIgnoreCase("APROBADA");
+            boolean aprobada = nuevoEstado.getNombre() != null
+                    && CatalogoEstadosConstants.EstadoSolicitudTransferencia.APROBADA.equalsIgnoreCase(nuevoEstado.getNombre());
             events.publishEvent(new SolicitudTransferenciaEvaluadaEvent(
                     guardada.getId(),
                     guardada.getUsuario().getId(),

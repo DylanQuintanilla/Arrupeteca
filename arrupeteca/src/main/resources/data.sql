@@ -3,7 +3,8 @@ INSERT INTO tipo_usuario (id_tipo, nombre, borrado_logico) VALUES
   (1, 'admin', 0),
   (2, 'alumno', 0),
   (3, 'maestro', 0),
-  (4, 'personal administrativo', 0);
+  (4, 'personal administrativo', 0),
+  (5, 'bibliotecario', 0);
 
 -- DDL/DML de semilla para parentesco
 INSERT INTO parentesco (id_parentesco, nombre, borrado_logico) VALUES

@@ -3,7 +3,7 @@ package com.arrupeteca.prestamo.controller;
 import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.EjemplarPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.EjemplarPrestamoDetalleResponse;
-import com.arrupeteca.prestamo.internal.service.EjemplarPrestamoService;
+import com.arrupeteca.prestamo.service.EjemplarPrestamoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -21,7 +21,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -73,13 +72,39 @@ class EjemplarPrestamoControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PATCH /api/v1/ejemplares-prestamo/admin/pagar-mora/{id} - Should pay mora")
+    @DisplayName("PATCH /api/v1/ejemplares-prestamo/admin/pagar-mora/{id} - Should pay mora and return detail")
     void shouldPayMora() throws Exception {
+        EjemplarPrestamoDetalleResponse response = EjemplarPrestamoDetalleResponse.builder()
+                .id(1L)
+                .moraPagada(true)
+                .build();
+        when(ejemplarPrestamoService.pagarMora(1L)).thenReturn(response);
+
         mockMvc.perform(patch("/api/v1/ejemplares-prestamo/admin/pagar-mora/1").with(csrf()))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.exito").value(true));
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.moraPagada").value(true));
 
         verify(ejemplarPrestamoService).pagarMora(1L);
+    }
+
+    @Test
+    @DisplayName("PATCH /api/v1/ejemplares-prestamo/admin/exentar-mora/{id} - Should exempt mora and return detail")
+    void shouldExentarMora() throws Exception {
+        EjemplarPrestamoDetalleResponse response = EjemplarPrestamoDetalleResponse.builder()
+                .id(1L)
+                .exentoMora(true)
+                .build();
+        when(ejemplarPrestamoService.exentarMora(1L)).thenReturn(response);
+
+        mockMvc.perform(patch("/api/v1/ejemplares-prestamo/admin/exentar-mora/1").with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exito").value(true))
+                .andExpect(jsonPath("$.data.id").value(1))
+                .andExpect(jsonPath("$.data.exentoMora").value(true));
+
+        verify(ejemplarPrestamoService).exentarMora(1L);
     }
 
     @Test

@@ -3,7 +3,7 @@ package com.arrupeteca.prestamo.controller;
 import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.SolicitudPrestamoDetalleRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudPrestamoDetalleItemResponse;
-import com.arrupeteca.prestamo.internal.service.SolicitudPrestamoDetalleService;
+import com.arrupeteca.prestamo.service.SolicitudPrestamoDetalleService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -20,7 +20,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -75,7 +74,7 @@ class SolicitudPrestamoDetalleControllerTest extends BaseControllerTest {
     }
 
     @Test
-    @DisplayName("PUT /api/v1/solicitudes-prestamo-detalle/admin/{id} - Should update detail")
+    @DisplayName("PATCH /api/v1/solicitudes-prestamo-detalle/admin/{id} - Should update detail")
     void shouldUpdateDetail() throws Exception {
         SolicitudPrestamoDetalleRequest request = SolicitudPrestamoDetalleRequest.builder()
                 .cantidadSolicitada(JsonNullable.of(5))
@@ -88,7 +87,7 @@ class SolicitudPrestamoDetalleControllerTest extends BaseControllerTest {
 
         when(detalleService.actualizarDetalle(any(), any())).thenReturn(response);
 
-        mockMvc.perform(put("/api/v1/solicitudes-prestamo-detalle/admin/1")
+        mockMvc.perform(patch("/api/v1/solicitudes-prestamo-detalle/admin/1")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))

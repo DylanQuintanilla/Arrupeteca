@@ -27,36 +27,28 @@ repositories {
 	mavenCentral()
 }
 
-dependencyManagement {
-	imports {
-		mavenBom 'org.springframework.modulith:spring-modulith-bom:1.3.2'
-	}
-}
-
 dependencies {
-	// --- 1. CORE DE SPRING BOOT Y MODULITH ---
+	// --- 1. CORE DE SPRING BOOT ---
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.modulith:spring-modulith-starter-core'
-	implementation 'org.springframework.modulith:spring-modulith-events-api'
 
 	// --- 2. BASE DE DATOS ---
 	runtimeOnly 'com.mysql:mysql-connector-j'
 
-	// --- 3. DOCUMENTACIÓN Y HERRAMIENTAS DE DESARROLLO ---
+	// --- 3. DOCUMENTACIÃ“N Y HERRAMIENTAS DE DESARROLLO ---
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.4'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 
-	// --- 4. MAPEO DE OBJETOS (ORDEN CRÍTICO) ---
-	// A) Lombok (Librería principal)
+	// --- 4. MAPEO DE OBJETOS (ORDEN CRÃTICO) ---
+	// A) Lombok (LibrerÃ­a principal)
 	compileOnly 'org.projectlombok:lombok'
-	// B) MapStruct (Librería principal)
+	// B) MapStruct (LibrerÃ­a principal)
 	implementation 'org.mapstruct:mapstruct:1.6.2'
 
-	// C) Procesadores: El orden aquí abajo es vital
+	// C) Procesadores: El orden aquÃ­ abajo es vital
 	annotationProcessor 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok-mapstruct-binding:0.2.0'
 	annotationProcessor 'org.mapstruct:mapstruct-processor:1.6.2'
@@ -72,7 +64,6 @@ dependencies {
 	// --- 6. PRUEBAS (TESTING) ---
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
-	testImplementation 'org.springframework.modulith:spring-modulith-starter-test'
 	testImplementation 'org.instancio:instancio-junit:5.0.2'
 	testImplementation 'org.springframework.boot:spring-boot-testcontainers'
 	testImplementation 'org.testcontainers:mysql'
@@ -87,7 +78,7 @@ tasks.named('test') {
 	finalizedBy jacocoTestReport
 }
 
-// Esta línea conecta la verificación de cobertura al comando "build"
+// Esta lÃ­nea conecta la verificaciÃ³n de cobertura al comando "build"
 check.dependsOn jacocoTestCoverageVerification
 
 jacocoTestReport {
@@ -96,7 +87,7 @@ jacocoTestReport {
 		xml.required = true
 		html.required = true
 	}
-	// Esta sección filtra los archivos del reporte final (HTML/XML)
+	// Esta secciÃ³n filtra los archivos del reporte final (HTML/XML)
 	afterEvaluate {
 		classDirectories.setFrom(files(classDirectories.files.collect {
 			fileTree(dir: it, exclude: [

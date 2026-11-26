@@ -3,20 +3,18 @@ package com.arrupeteca.prestamo.controller;
 import com.arrupeteca.dto.response.ApiResponse;
 import com.arrupeteca.prestamo.dto.request.EjemplarPrestamoRequest;
 import com.arrupeteca.prestamo.dto.response.detail.EjemplarPrestamoDetalleResponse;
-import com.arrupeteca.prestamo.internal.service.EjemplarPrestamoService;
+import com.arrupeteca.prestamo.service.EjemplarPrestamoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,7 +24,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/ejemplares-prestamo")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 @Tag(name = "Ejemplares Físicos en Préstamo", description = "Endpoints para la gestión individual y devolución de ejemplares físicos prestados")
 public class EjemplarPrestamoController {
 
@@ -63,7 +60,7 @@ public class EjemplarPrestamoController {
                 .body(ApiResponse.exito("Ejemplar agregado al préstamo correctamente", creado));
     }
 
-    @PutMapping("/admin/{id}")
+    @PatchMapping("/admin/{id}")
     @Operation(
         summary = "Actualizar estado de devolución / mora de un ejemplar",
         description = "Actualiza el estado físico de devolución, fecha real de entrega o mora calculada del ejemplar."
@@ -77,21 +74,21 @@ public class EjemplarPrestamoController {
     @PatchMapping("/admin/pagar-mora/{id}")
     @Operation(
         summary = "Pagar mora acumulada por un ejemplar prestado",
-        description = "Registra el pago en ventanilla de la mora acumulada por este ejemplar."
+        description = "Registra el pago en ventanilla de la mora acumulada por este ejemplar y retorna el detalle actualizado."
     )
-    public ResponseEntity<ApiResponse<Void>> pagarMora(@PathVariable Long id) {
-        ejemplarPrestamoService.pagarMora(id);
-        return ResponseEntity.ok(ApiResponse.exito("Mora del ejemplar registrada como pagada exitosamente"));
+    public ResponseEntity<ApiResponse<EjemplarPrestamoDetalleResponse>> pagarMora(@PathVariable Long id) {
+        EjemplarPrestamoDetalleResponse actualizado = ejemplarPrestamoService.pagarMora(id);
+        return ResponseEntity.ok(ApiResponse.exito("Mora del ejemplar registrada como pagada exitosamente", actualizado));
     }
 
     @PatchMapping("/admin/exentar-mora/{id}")
     @Operation(
         summary = "Exentar de mora un ejemplar de préstamo",
-        description = "Marca el ejemplar prestado como exento de mora y establece la mora calculada en cero."
+        description = "Marca el ejemplar prestado como exento de mora, establece la mora calculada en cero y retorna el detalle actualizado."
     )
-    public ResponseEntity<ApiResponse<Void>> exentarMora(@PathVariable Long id) {
-        ejemplarPrestamoService.exentarMora(id);
-        return ResponseEntity.ok(ApiResponse.exito("Ejemplar marcado como exento de mora exitosamente"));
+    public ResponseEntity<ApiResponse<EjemplarPrestamoDetalleResponse>> exentarMora(@PathVariable Long id) {
+        EjemplarPrestamoDetalleResponse actualizado = ejemplarPrestamoService.exentarMora(id);
+        return ResponseEntity.ok(ApiResponse.exito("Ejemplar marcado como exento de mora exitosamente", actualizado));
     }
 
     @DeleteMapping("/admin/{id}")

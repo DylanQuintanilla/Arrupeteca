@@ -2,7 +2,6 @@ package com.arrupeteca.prestamo.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.AssertTrue;
-import jakarta.validation.constraints.Size;
 import lombok.Builder;
 import lombok.extern.jackson.Jacksonized;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -18,14 +17,28 @@ public record SolicitudRenovacionRequest(
     JsonNullable<Long> idEstadoSolicitud,
     JsonNullable<Integer> diasSolicitados,
     JsonNullable<LocalDateTime> nuevaFechaLimitePropuesta,
-    @Size(max = 255, message = "El motivo de la solicitud no puede exceder 255 caracteres")
     JsonNullable<String> motivoSolicitud,
-    @Size(max = 255, message = "El motivo de la respuesta no puede exceder 255 caracteres")
     JsonNullable<String> motivoRespuesta,
     JsonNullable<Long> revisadoPor,
     Long version
 ) {
     public SolicitudRenovacionRequest {}
+
+    @AssertTrue(message = "El motivo de la solicitud no puede exceder 255 caracteres")
+    public boolean isMotivoSolicitudValido() {
+        if (motivoSolicitud == null || !motivoSolicitud.isPresent() || motivoSolicitud.get() == null) {
+            return true;
+        }
+        return motivoSolicitud.get().length() <= 255;
+    }
+
+    @AssertTrue(message = "El motivo de la respuesta no puede exceder 255 caracteres")
+    public boolean isMotivoRespuestaValido() {
+        if (motivoRespuesta == null || !motivoRespuesta.isPresent() || motivoRespuesta.get() == null) {
+            return true;
+        }
+        return motivoRespuesta.get().length() <= 255;
+    }
 
     @AssertTrue(message = "Los días de prórroga no pueden ser negativos ni cero (deben ser al menos 1 día)")
     public boolean isDiasSolicitadosValidos() {

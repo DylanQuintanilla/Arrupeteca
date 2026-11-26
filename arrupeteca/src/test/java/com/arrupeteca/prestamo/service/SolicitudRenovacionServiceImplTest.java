@@ -6,14 +6,16 @@ import com.arrupeteca.persistence.repository.UsuarioRepository;
 import com.arrupeteca.prestamo.dto.request.SolicitudRenovacionRequest;
 import com.arrupeteca.prestamo.dto.response.detail.SolicitudRenovacionDetalleResponse;
 import com.arrupeteca.prestamo.dto.response.summary.SolicitudRenovacionResumen;
-import com.arrupeteca.prestamo.internal.entity.EjemplarPrestamo;
-import com.arrupeteca.prestamo.internal.entity.EstadoSolicitud;
-import com.arrupeteca.prestamo.internal.entity.SolicitudRenovacion;
-import com.arrupeteca.prestamo.internal.mapper.SolicitudRenovacionMapper;
-import com.arrupeteca.prestamo.internal.repository.EjemplarPrestamoRepository;
-import com.arrupeteca.prestamo.internal.repository.EstadoSolicitudRepository;
-import com.arrupeteca.prestamo.internal.repository.SolicitudRenovacionRepository;
-import com.arrupeteca.prestamo.internal.service.impl.SolicitudRenovacionServiceImpl;
+import com.arrupeteca.prestamo.persistence.entity.EjemplarPrestamo;
+import com.arrupeteca.prestamo.persistence.entity.EstadoSolicitud;
+import com.arrupeteca.prestamo.persistence.entity.Prestamo;
+import com.arrupeteca.prestamo.persistence.entity.SolicitudRenovacion;
+import com.arrupeteca.prestamo.mapper.SolicitudRenovacionMapper;
+import com.arrupeteca.prestamo.persistence.repository.EjemplarPrestamoRepository;
+import com.arrupeteca.prestamo.persistence.repository.EstadoSolicitudRepository;
+import com.arrupeteca.prestamo.persistence.repository.PrestamoRepository;
+import com.arrupeteca.prestamo.persistence.repository.SolicitudRenovacionRepository;
+import com.arrupeteca.prestamo.service.impl.SolicitudRenovacionServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -45,6 +47,9 @@ class SolicitudRenovacionServiceImplTest {
     private EjemplarPrestamoRepository ejemplarPrestamoRepository;
 
     @Mock
+    private PrestamoRepository prestamoRepository;
+
+    @Mock
     private EstadoSolicitudRepository estadoSolicitudRepository;
 
     @Mock
@@ -52,9 +57,6 @@ class SolicitudRenovacionServiceImplTest {
 
     @Mock
     private SolicitudRenovacionMapper renovacionMapper;
-
-    @Mock
-    private org.springframework.context.ApplicationEventPublisher events;
 
     @InjectMocks
     private SolicitudRenovacionServiceImpl renovacionService;
@@ -102,7 +104,7 @@ class SolicitudRenovacionServiceImplTest {
         when(usuarioRepository.findById(5L)).thenReturn(Optional.of(usuario));
         when(estadoSolicitudRepository.findById(1L)).thenReturn(Optional.of(estado));
         when(renovacionMapper.toEntity(request)).thenReturn(entity);
-        when(renovacionRepository.save(any(SolicitudRenovacion.class))).thenReturn(entity);
+        when(renovacionRepository.saveAndFlush(any(SolicitudRenovacion.class))).thenReturn(entity);
         when(renovacionMapper.toDetalleResponse(entity)).thenReturn(response);
 
         SolicitudRenovacionDetalleResponse result = renovacionService.solicitarRenovacion(request);
@@ -139,5 +141,40 @@ class SolicitudRenovacionServiceImplTest {
 
         renovacionService.cambiarEstado(1L, false);
         verify(renovacionRepository).desactivar(1L);
+    }
+
+    @Test
+    @DisplayName("Should extend prestamo fechaLimiteDevolucion when aprobada")
+    void shouldExtendPrestamoFechaLimiteWhenAprobada() {
+        LocalDateTime inicio = LocalDateTime.now().minusDays(2);
+        LocalDateTime limiteOriginal = LocalDateTime.now().plusDays(3);
+        Prestamo prestamo = Prestamo.builder()
+                .id(5L)
+                .fechaPrestamo(inicio)
+                .fechaLimiteDevolucion(limiteOriginal)
+                .build();
+        EjemplarPrestamo ejemplarPrestamo = EjemplarPrestamo.builder().id(10L).prestamo(prestamo).build();
+        EstadoSolicitud aprobada = EstadoSolicitud.builder().id(2L).nombre("APROBADA").build();
+        SolicitudRenovacion solicitud = SolicitudRenovacion.builder()
+                .id(1L)
+                .ejemplarPrestamo(ejemplarPrestamo)
+                .diasSolicitados(5)
+                .build();
+
+        SolicitudRenovacionRequest request = SolicitudRenovacionRequest.builder()
+                .idEstadoSolicitud(JsonNullable.of(2L))
+                .motivoRespuesta(JsonNullable.of("Aprobada"))
+                .build();
+        SolicitudRenovacionDetalleResponse response = SolicitudRenovacionDetalleResponse.builder().id(1L).idEstadoSolicitud(2L).build();
+
+        when(renovacionRepository.busquedaPorId(1L, null)).thenReturn(Optional.of(solicitud));
+        when(estadoSolicitudRepository.findById(2L)).thenReturn(Optional.of(aprobada));
+        when(renovacionRepository.saveAndFlush(solicitud)).thenReturn(solicitud);
+        when(renovacionMapper.toDetalleResponse(solicitud)).thenReturn(response);
+
+        renovacionService.responderRenovacion(1L, request);
+
+        assertThat(prestamo.getFechaLimiteDevolucion()).isEqualTo(limiteOriginal.plusDays(5));
+        verify(prestamoRepository).save(prestamo);
     }
 }

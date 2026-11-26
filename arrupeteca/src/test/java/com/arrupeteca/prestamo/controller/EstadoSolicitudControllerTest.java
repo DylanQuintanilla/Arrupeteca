@@ -3,7 +3,7 @@ package com.arrupeteca.prestamo.controller;
 import com.arrupeteca.controller.BaseControllerTest;
 import com.arrupeteca.prestamo.dto.request.EstadoSolicitudRequest;
 import com.arrupeteca.prestamo.dto.response.EstadoSolicitudResponse;
-import com.arrupeteca.prestamo.internal.service.EstadoSolicitudService;
+import com.arrupeteca.prestamo.service.EstadoSolicitudService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
